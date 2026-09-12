@@ -1,13 +1,21 @@
-# Portal de empleos
+# Web App Empleo
 
+Frontend del Portal de Empleos.
 
+## Tecnología
+Angular
 
-| NOMBRE | CARGO | ACTIVIDADES |
-| --- | --- | --- |
-| JHUNIOR H.| ARQUITECTO| A|
-| VICTOR H. | QA FUNCIONAL| A|
-| MARCELO R.| DEVELOPER FRONTEND| A |
-| VICTOR R. | DEVELOPER FRONTEND| A |
-| LUIS V.   | DEVELOPER BACKEND| A |
-| STEPHANY T.| DEVELOPER BACKEND| A |
-| GIAN Q.| DEVELOPER BACKEND| A |
+## Responsabilidades
+- Interfaz de candidatos
+- Interfaz de empresas
+- Kanban de postulantes
+- Dashboard
+- Consumo de APIs REST
+
+## Ramas
+main
+develop
+
+## Desarrollo
+feature/*
+bugfix/*
