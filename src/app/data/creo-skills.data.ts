@@ -39,3 +39,9 @@ export const AREA_SKILLS: Record<string, string[]> = {
     "Investigación y Datos": ["Investigación científica", "Estadística", "SPSS", "Análisis de datos", "Redacción académica", "Revisión sistemática", "Bioestadística", "R", "Power BI"],
     "Negocios y Administración": ["Excel avanzado", "Power BI", "Marketing digital", "Contabilidad financiera", "Negociación"],
 };
+
+export const CREO_SECTORS: string[] = [
+    "Salud y Medicina", "Ciencias e Investigación", "Tecnología e Informática",
+    "Educación", "Administración y Negocios", "Comunicación y Marketing",
+    "Diseño y Artes", "Derecho", "Ingeniería", "Otro",
+];

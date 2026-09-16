@@ -99,9 +99,9 @@ export const routes: Routes = [
         loadComponent: () => import('./screens/creo/creo-register-company/creo-register-company.component').then(m => m.CreoRegisterCompanyComponent)
       },
       {
-        path: 'success',
+        path: 'success/:role',
         loadComponent: () => import('./screens/creo/creo-success/creo-success.component').then(m => m.CreoSuccessComponent)
-      }
+      },
     ]
   },
   { path: '**', redirectTo: 'creo/landing' }

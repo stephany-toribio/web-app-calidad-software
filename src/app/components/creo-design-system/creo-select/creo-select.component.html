@@ -1,0 +1,20 @@
+<div class="flex flex-col gap-1.5" style="font-family: Inter, system-ui, sans-serif;">
+    <label class="text-sm font-medium flex items-center gap-1" style="color: #111111;">
+        {{ label }}
+        <span *ngIf="required" class="text-xs font-semibold" style="color: #F2B705;">*</span>
+    </label>
+    <div class="relative">
+        <select [value]="value" (change)="onChange($event)"
+            class="w-full h-11 px-3.5 pr-10 rounded-xl border text-sm outline-none transition-all duration-150 appearance-none bg-white cursor-pointer"
+            [style.color]="value ? '#111111' : '#94A3B8'" [style.border-color]="error ? '#E5140D' : '#E2E8F0'">
+            <option value="" disabled selected>{{ placeholder }}</option>
+            <option *ngFor="let o of options" [value]="o" style="color: #111111;">{{ o }}</option>
+        </select>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+            class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+        </svg>
+    </div>
+    <p *ngIf="error" class="text-xs" style="color: #E5140D;">{{ error }}</p>
+</div>

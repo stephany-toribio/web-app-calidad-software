@@ -88,7 +88,7 @@ export class CreoRegisterCandidateComponent {
       this.errors = errs;
       if (Object.keys(errs).length === 0) {
         // Equivalente a onNavigate("candidate-home", { name: ... })
-        this.router.navigate(['/creo/candidate-dashboard'], { state: { name: this.name.split(' ')[0] } });
+        this.router.navigate(['/creo/success/candidate'], { state: { name: this.name.split(' ')[0] } });
       }
     }
   }
