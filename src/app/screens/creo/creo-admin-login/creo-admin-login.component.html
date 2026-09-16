@@ -1,6 +1,128 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Acceso Administrador</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Inicio de sesión administrativo - Creo Portal</p>
+<div class="min-h-screen flex" style="font-family: Inter, system-ui, sans-serif;">
+  <!-- Left brand panel -->
+  <div class="hidden lg:flex flex-col w-[46%] relative overflow-hidden" style="background-color: #111111;">
+    <div class="absolute inset-0 opacity-[0.025]"
+      style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 24px 24px;">
+    </div>
+    <div class="absolute top-0 left-0 right-0 h-1" style="background-color: #F2B705;"></div>
+
+    <div class="relative z-10 flex flex-col h-full p-12 xl:p-16">
+      <app-creo-wordmark size="md" [dark]="true"></app-creo-wordmark>
+
+      <div class="flex-1 flex flex-col justify-center gap-8">
+        <!-- Lock icon -->
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center"
+          style="background-color: rgba(242,183,5,0.1); border: 1px solid rgba(242,183,5,0.2);">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="4" y="13" width="20" height="13" rx="2.5" stroke="#F2B705" stroke-width="1.8" />
+            <path d="M9 13V9a5 5 0 0110 0v4" stroke="#F2B705" stroke-width="1.8" stroke-linecap="round" />
+            <circle cx="14" cy="19.5" r="1.8" fill="#F2B705" />
+            <path d="M14 21.5v2" stroke="#F2B705" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </div>
+
+        <div>
+          <p class="text-[11px] font-semibold tracking-[0.2em] uppercase mb-4" style="color: #F2B705;">
+            Acceso restringido
+          </p>
+          <h2 class="text-white text-3xl xl:text-4xl font-bold leading-tight tracking-tight mb-4">
+            Panel de<br />Administrador
+          </h2>
+          <p class="text-[15px] leading-relaxed max-w-xs" style="color: #64748B;">
+            Área exclusiva para administradores del sistema CREO+. Si no tienes credenciales, contacta al equipo
+            técnico.
+          </p>
+        </div>
+
+        <div class="flex items-start gap-3 p-4 rounded-2xl border"
+          style="border-color: rgba(255,255,255,0.07); background-color: rgba(255,255,255,0.04);">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="flex-shrink-0 mt-0.5">
+            <circle cx="7" cy="7" r="6.5" stroke="#F2B705" stroke-width="1.2" />
+            <path d="M7 5v2.5M7 9h.01" stroke="#F2B705" stroke-width="1.2" stroke-linecap="round" />
+          </svg>
+          <p class="text-[13px] leading-relaxed" style="color: #64748B;">
+            Bloqueado tras 5 intentos fallidos. Demo:
+            <span class="font-mono" style="color: #94A3B8;">admin&#64;creo.pe / admin123</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center pt-6 border-t" style="border-color: rgba(255,255,255,0.06);">
+        <p class="text-[11px]" style="color: #334155;">Creo Empleos · Panel de Administración</p>
       </div>
     </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="flex-1 flex items-center justify-center px-5 sm:px-8 py-10" style="background-color: #FFFFFF;">
+    <div class="w-full max-w-[400px]">
+      <!-- Mobile logo -->
+      <div class="lg:hidden mb-8">
+        <app-creo-wordmark size="md"></app-creo-wordmark>
+      </div>
+
+      <!-- Back link -->
+      <button (click)="goToLanding()" class="flex items-center gap-1.5 text-sm mb-8 transition-colors"
+        style="color: #94A3B8;" onmouseenter="this.style.color='#111111'" onmouseleave="this.style.color='#94A3B8'">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 11L5 7l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+        Volver al inicio de sesión
+      </button>
+
+      <!-- Header -->
+      <div class="mb-7">
+        <div
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest mb-5 border"
+          style="background-color: #F8FAFC; border-color: #E2E8F0; color: #64748B;">
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+            <path d="M4.5 1L1 2.5v2.5c0 2 1.5 3 3.5 3.5C6.5 8 8 7 8 5V2.5L4.5 1z" fill="currentColor" />
+          </svg>
+          Acceso de administrador
+        </div>
+        <h2 class="text-[1.65rem] font-bold tracking-tight mb-1.5" style="color: #111111;">
+          Panel de Administrador
+        </h2>
+        <p class="text-sm" style="color: #64748B;">
+          Usa tus credenciales de administrador CREO+
+        </p>
+      </div>
+
+      <!-- Lockout -->
+      <div class="mb-4" *ngIf="isLocked">
+        <app-creo-alert type="error" message="Acceso bloqueado. Contacta al soporte técnico de CREO+."></app-creo-alert>
+      </div>
+
+      <!-- Auth error -->
+      <div class="mb-4" *ngIf="!isLocked && attempted && errors['auth']">
+        <app-creo-alert type="error" [message]="errors['auth']"></app-creo-alert>
+      </div>
+
+      <form (submit)="handleSubmit($event)" class="flex flex-col gap-4">
+        <app-creo-field label="Correo electrónico" type="email" [value]="email" (valueChange)="onEmailChange($event)"
+          placeholder="admin@creo.pe" [error]="errors['email']" [required]="true"></app-creo-field>
+
+        <app-creo-field label="Contraseña" type="password" [value]="password" (valueChange)="onPasswordChange($event)"
+          placeholder="••••••••" [error]="errors['password']" [required]="true"></app-creo-field>
+
+        <app-creo-btn type="submit" [fullWidth]="true" [disabled]="isLocked">
+          Acceder al panel
+          <svg iconRight width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 7h8M8 4l3 3-3 3" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </app-creo-btn>
+      </form>
+
+      <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+        <p class="text-xs" style="color: #94A3B8;">
+          ¿No eres administrador?
+          <button (click)="goToLanding()" class="font-semibold hover:underline" style="color: #111111;">
+            Volver al login principal
+          </button>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
