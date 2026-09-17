@@ -27,7 +27,29 @@
         </div>
     </div>
 
-    <button type="button" (click)="handleAdd()" [disabled]="!area || !specialty"
+    <div>
+        <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">
+            Estado <span style="color: #E5140D;">*</span>
+        </label>
+        <select (change)="onEstadoChange($event)"
+            class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all cursor-pointer"
+            style="border-color: #E2E8F0; background-color: #FFFFFF;">
+            <option value="" disabled selected>Selecciona un estado</option>
+            <option *ngFor="let e of estadoOptions" [value]="e">{{ e }}</option>
+        </select>
+    </div>
+
+    <div *ngIf="showCiclo">
+        <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Ciclo actual</label>
+        <select (change)="onCicloChange($event)"
+            class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all cursor-pointer"
+            style="border-color: #E2E8F0; background-color: #FFFFFF;">
+            <option value="" disabled selected>Selecciona ciclo</option>
+            <option *ngFor="let c of cicloOptions" [value]="c">{{ c }}</option>
+        </select>
+    </div>
+
+    <button type="button" (click)="handleAdd()" [disabled]="!canAdd"
         class="self-start flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-40"
         style="border-color: #F2B705; background-color: #FFFBEB; color: #111111;">
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -43,10 +65,14 @@
             <span *ngFor="let c of careers"
                 class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                 style="background-color: #FEF3C7; color: #111111; border: 1px solid #F2B705;">
-                {{ c }}
+                {{ c.area }} · {{ c.specialty }}
+                <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full ml-0.5 italic"
+                    style="background-color: #F2B705; color: #111111;">
+                    {{ c.estado }}
+                </span>
                 <button type="button" (click)="remove.emit(c)"
                     class="ml-0.5 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
-                    [attr.aria-label]="'Quitar ' + c">
+                    [attr.aria-label]="'Quitar ' + c.specialty">
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round">
                         <path d="M2 2l8 8M10 2l-8 8" />

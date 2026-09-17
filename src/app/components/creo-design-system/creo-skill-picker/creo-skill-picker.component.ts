@@ -15,6 +15,7 @@ export class CreoSkillPickerComponent {
     @Input() selected: string[] = [];
     @Input() error?: string;
     @Input() suggestedSections: SkillSection[] = [];
+    @Input() maxSkills?: number;
 
     @Output() toggle = new EventEmitter<string>();
 
@@ -50,5 +51,9 @@ export class CreoSkillPickerComponent {
 
     onQueryChange(e: Event) {
         this.query = (e.target as HTMLInputElement).value;
+    }
+
+    isMaxReached(skill: string): boolean {
+        return !!this.maxSkills && this.selected.length >= this.maxSkills && !this.isSelected(skill);
     }
 }

@@ -16,6 +16,7 @@ export class CreoBtnComponent {
   @Input() disabled: boolean = false;
   @Input() loading: boolean = false;
   @Input() className: string = '';
+  @Input() iconRight: boolean = false;
 
   @Output() onClick = new EventEmitter<MouseEvent>();
 

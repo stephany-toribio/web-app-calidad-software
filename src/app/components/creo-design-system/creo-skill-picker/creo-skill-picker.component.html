@@ -31,7 +31,8 @@
                     </p>
                     <div class="flex flex-wrap gap-2">
                         <app-creo-chip *ngFor="let skill of sectionSkills(section)" [label]="skill"
-                            [selected]="isSelected(skill)" (chipClick)="toggle.emit(skill)">
+                            [selected]="isSelected(skill)"
+                            (chipClick)="isMaxReached(skill) ? null : toggle.emit(skill)">
                         </app-creo-chip>
                     </div>
                 </ng-container>
@@ -44,14 +45,14 @@
                 </p>
                 <div class="flex flex-wrap gap-2">
                     <app-creo-chip *ngFor="let skill of remainingCatalog" [label]="skill" [selected]="isSelected(skill)"
-                        (chipClick)="toggle.emit(skill)">
+                        (chipClick)="isMaxReached(skill) ? null : toggle.emit(skill)">
                     </app-creo-chip>
                 </div>
             </div>
 
             <div *ngIf="!suggestedSections || suggestedSections.length === 0" class="flex flex-wrap gap-2">
                 <app-creo-chip *ngFor="let skill of filteredCatalog" [label]="skill" [selected]="isSelected(skill)"
-                    (chipClick)="toggle.emit(skill)">
+                    (chipClick)="isMaxReached(skill) ? null : toggle.emit(skill)">
                 </app-creo-chip>
             </div>
         </ng-container>

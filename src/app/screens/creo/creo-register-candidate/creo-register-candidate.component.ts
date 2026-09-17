@@ -9,9 +9,10 @@ import { CreoAlertComponent } from '../../../components/creo-design-system/creo-
 import { CreoStepIndicatorComponent } from '../../../components/creo-design-system/creo-step-indicator/creo-step-indicator.component';
 import { CreoSkillPickerComponent } from '../../../components/creo-design-system/creo-skill-picker/creo-skill-picker.component';
 import { CareerSelectorComponent } from './career-selector/career-selector.component';
-import { CREO_SKILLS, AREA_SKILLS, SkillSection } from '../../../data/creo-skills.data';
+import { CREO_SKILLS, AREA_SKILLS, SkillSection, CareerEntry } from '../../../data/creo-skills.data';
 
 const STEPS = ['Datos personales', 'Perfil de habilidades'];
+const MAX_SKILLS = 15;
 
 @Component({
   selector: 'app-creo-register-candidate',
@@ -27,20 +28,25 @@ const STEPS = ['Datos personales', 'Perfil de habilidades'];
 export class CreoRegisterCandidateComponent {
   steps = STEPS;
   catalog = CREO_SKILLS;
+  maxSkills = MAX_SKILLS;
 
   step = 0;
-  name = '';
+  firstName = '';
+  lastName = '';
+  birthdate = '';
+  dni = '';
   email = '';
   password = '';
   phone = '';
-  careers: string[] = [];
+
+  careers: CareerEntry[] = [];
   skills: string[] = [];
   errors: Record<string, string> = {};
 
   constructor(private router: Router) { }
 
   get selectedAreas(): string[] {
-    return [...new Set(this.careers.map(c => c.split(' · ')[0]))];
+    return [...new Set(this.careers.map(c => c.area))];
   }
 
   get suggestedSections(): SkillSection[] {
@@ -50,20 +56,34 @@ export class CreoRegisterCandidateComponent {
   }
 
   toggleSkill(s: string) {
-    this.skills = this.skills.includes(s) ? this.skills.filter(x => x !== s) : [...this.skills, s];
+    if (this.skills.includes(s)) {
+      this.skills = this.skills.filter(x => x !== s);
+    } else if (this.skills.length < MAX_SKILLS) {
+      this.skills = [...this.skills, s];
+    }
   }
 
-  addCareer(c: string) {
+  addCareer(c: CareerEntry) {
     this.careers = [...this.careers, c];
   }
 
-  removeCareer(c: string) {
-    this.careers = this.careers.filter(x => x !== c);
+  removeCareer(c: CareerEntry) {
+    this.careers = this.careers.filter(x => x.area !== c.area || x.specialty !== c.specialty);
+  }
+
+  onDniInput(e: Event) {
+    this.dni = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 8);
+    const { dni, ...rest } = this.errors;
+    this.errors = rest;
   }
 
   validateStep0(): Record<string, string> {
     const e: Record<string, string> = {};
-    if (!this.name.trim()) e['name'] = 'El nombre completo es obligatorio';
+    if (!this.firstName.trim()) e['firstName'] = 'El nombre es obligatorio';
+    if (!this.lastName.trim()) e['lastName'] = 'El apellido es obligatorio';
+    if (!this.birthdate.trim()) e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    if (!this.dni.trim()) e['dni'] = 'El DNI es obligatorio';
+    else if (!/^\d{8}$/.test(this.dni)) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
     if (!this.email.trim()) e['email'] = 'El correo es obligatorio';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
     if (!this.password.trim()) e['password'] = 'La contraseña es obligatoria';
@@ -87,14 +107,9 @@ export class CreoRegisterCandidateComponent {
       if (this.skills.length === 0) errs['skills'] = 'Selecciona al menos una habilidad';
       this.errors = errs;
       if (Object.keys(errs).length === 0) {
-        // Equivalente a onNavigate("candidate-home", { name: ... })
-        this.router.navigate(['/creo/success/candidate'], { state: { name: this.name.split(' ')[0] } });
+        this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
       }
     }
-  }
-
-  goToLogin() {
-    this.router.navigate(['/creo/landing']);
   }
 
   goBack() {
@@ -103,6 +118,10 @@ export class CreoRegisterCandidateComponent {
     } else {
       this.step = 0;
     }
+  }
+
+  goToLogin() {
+    this.router.navigate(['/creo/landing']);
   }
 
   hasErrors(): boolean {

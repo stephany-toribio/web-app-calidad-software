@@ -1,6 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CAREER_TAXONOMY } from '../../../../data/creo-skills.data';
+import { CAREER_TAXONOMY, CareerEntry } from '../../../../data/creo-skills.data';
+
+const ESTADO_OPTIONS = ['Finalizado', 'Incompleta', 'En curso'];
+const CICLO_OPTIONS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
 @Component({
     selector: 'app-career-selector',
@@ -10,20 +13,28 @@ import { CAREER_TAXONOMY } from '../../../../data/creo-skills.data';
     styleUrl: './career-selector.component.css'
 })
 export class CareerSelectorComponent {
-    @Input() careers: string[] = [];
+    @Input() careers: CareerEntry[] = [];
     @Input() error?: string;
 
-    @Output() add = new EventEmitter<string>();
-    @Output() remove = new EventEmitter<string>();
+    @Output() add = new EventEmitter<CareerEntry>();
+    @Output() remove = new EventEmitter<CareerEntry>();
 
     taxonomy = CAREER_TAXONOMY;
     areas = Object.keys(CAREER_TAXONOMY);
+    estadoOptions = ESTADO_OPTIONS;
+    cicloOptions = CICLO_OPTIONS;
 
     area = '';
     specialty = '';
+    estado = '';
+    ciclo = '';
 
     get specialties(): string[] {
         return this.area ? (this.taxonomy[this.area] ?? []) : [];
+    }
+
+    get showCiclo(): boolean {
+        return this.estado === 'Incompleta' || this.estado === 'En curso';
     }
 
     onAreaChange(e: Event) {
@@ -35,10 +46,30 @@ export class CareerSelectorComponent {
         this.specialty = (e.target as HTMLSelectElement).value;
     }
 
+    onEstadoChange(e: Event) {
+        this.estado = (e.target as HTMLSelectElement).value;
+        this.ciclo = '';
+    }
+
+    onCicloChange(e: Event) {
+        this.ciclo = (e.target as HTMLSelectElement).value;
+    }
+
+    get canAdd(): boolean {
+        return !!(this.area && this.specialty && this.estado);
+    }
+
     handleAdd() {
-        if (!this.area || !this.specialty) return;
-        const chip = `${this.area} · ${this.specialty}`;
-        if (!this.careers.includes(chip)) this.add.emit(chip);
+        if (!this.canAdd) return;
+        const isDuplicate = this.careers.some(c => c.area === this.area && c.specialty === this.specialty);
+        if (isDuplicate) return;
+
+        const entry: CareerEntry = { area: this.area, specialty: this.specialty, estado: this.estado };
+        if (this.showCiclo && this.ciclo) entry.ciclo = this.ciclo;
+
+        this.add.emit(entry);
         this.specialty = '';
+        this.estado = '';
+        this.ciclo = '';
     }
 }
