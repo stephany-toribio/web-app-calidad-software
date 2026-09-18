@@ -15,6 +15,7 @@ export class CreoSkillPickerComponent {
     @Input() selected: string[] = [];
     @Input() error?: string;
     @Input() suggestedSections: SkillSection[] = [];
+    /** Cuando se define, limita el número total de habilidades seleccionables */
     @Input() maxSkills?: number;
 
     @Output() toggle = new EventEmitter<string>();
@@ -39,6 +40,10 @@ export class CreoSkillPickerComponent {
         return this.filteredCatalog.filter(s => !this.suggestedSkillSet.has(s));
     }
 
+    get atMax(): boolean {
+        return this.maxSkills !== undefined && this.selected.length >= this.maxSkills;
+    }
+
     sectionSkills(section: SkillSection): string[] {
         return this.trimmedQuery
             ? section.skills.filter(s => s.toLowerCase().includes(this.trimmedQuery))
@@ -49,11 +54,11 @@ export class CreoSkillPickerComponent {
         return this.selected.includes(skill);
     }
 
-    onQueryChange(e: Event) {
-        this.query = (e.target as HTMLInputElement).value;
+    chipDisabled(skill: string): boolean {
+        return this.atMax && !this.isSelected(skill);
     }
 
-    isMaxReached(skill: string): boolean {
-        return !!this.maxSkills && this.selected.length >= this.maxSkills && !this.isSelected(skill);
+    onQueryChange(e: Event) {
+        this.query = (e.target as HTMLInputElement).value;
     }
 }

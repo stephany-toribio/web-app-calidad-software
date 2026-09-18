@@ -71,6 +71,10 @@ export const routes: Routes = [
         loadComponent: () => import('./screens/creo/company-kanban/company-kanban.component').then(m => m.CompanyKanbanComponent)
       },
       {
+        path: 'choose-role',
+        loadComponent: () => import('./screens/creo/creo-choose-role/creo-choose-role.component').then(m => m.CreoChooseRoleComponent)
+      },
+      {
         path: 'admin-login',
         loadComponent: () => import('./screens/creo/creo-admin-login/creo-admin-login.component').then(m => m.CreoAdminLoginComponent)
       },

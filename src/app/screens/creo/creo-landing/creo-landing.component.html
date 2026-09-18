@@ -68,63 +68,13 @@
         <h2 class="text-[1.65rem] font-bold tracking-tight mb-1.5" style="color: #111111">
           Bienvenido de vuelta
         </h2>
-        <p class="text-slate-500 text-sm">Selecciona tu perfil e inicia sesión</p>
-      </div>
-
-      <!-- Role selector -->
-      <div class="grid grid-cols-2 gap-3 mb-6">
-        <!-- Candidate Role Button -->
-        <button type="button" (click)="setRole('candidate')"
-          class="flex flex-col items-start p-4 rounded-2xl border-2 text-left transition-all duration-150 cursor-pointer"
-          [style.border-color]="role() === 'candidate' ? '#F2B705' : '#E2E8F0'"
-          [style.background-color]="role() === 'candidate' ? '#FEF3C7' : '#FAFAFA'"
-          [style.box-shadow]="role() === 'candidate' ? '0 0 0 4px rgba(242,183,5,0.12)' : 'none'">
-          <span class="w-9 h-9 rounded-xl flex items-center justify-center"
-            [style.background-color]="role() === 'candidate' ? '#F2B705' : '#F1F5F9'"
-            [style.color]="role() === 'candidate' ? '#111111' : '#94A3B8'">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <circle cx="11" cy="7.5" r="4" stroke="currentColor" stroke-width="1.6" />
-              <path d="M3 20c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.6"
-                stroke-linecap="round" />
-            </svg>
-          </span>
-          <span class="text-sm font-bold mt-2.5 leading-tight block" style="color: #111111">
-            Soy Candidato
-          </span>
-          <span class="text-[11px] mt-0.5 leading-snug" style="color: #94A3B8">
-            Profesional o recién egresado
-          </span>
-        </button>
-
-        <!-- Company Role Button -->
-        <button type="button" (click)="setRole('company')"
-          class="flex flex-col items-start p-4 rounded-2xl border-2 text-left transition-all duration-150 cursor-pointer"
-          [style.border-color]="role() === 'company' ? '#F2B705' : '#E2E8F0'"
-          [style.background-color]="role() === 'company' ? '#FEF3C7' : '#FAFAFA'"
-          [style.box-shadow]="role() === 'company' ? '0 0 0 4px rgba(242,183,5,0.12)' : 'none'">
-          <span class="w-9 h-9 rounded-xl flex items-center justify-center"
-            [style.background-color]="role() === 'company' ? '#F2B705' : '#F1F5F9'"
-            [style.color]="role() === 'company' ? '#111111' : '#94A3B8'">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <rect x="3" y="9" width="16" height="11" rx="1.5" stroke="currentColor" stroke-width="1.6" />
-              <path d="M8 9V7a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              <path d="M3 13.5h16" stroke="currentColor" stroke-width="1.6" />
-              <rect x="9" y="15" width="4" height="3" rx="0.5" stroke="currentColor" stroke-width="1.2" />
-            </svg>
-          </span>
-          <span class="text-sm font-bold mt-2.5 leading-tight block" style="color: #111111">
-            Soy Empresa
-          </span>
-          <span class="text-[11px] mt-0.5 leading-snug" style="color: #94A3B8">
-            Quiero contratar talento
-          </span>
-        </button>
+        <p class="text-slate-500 text-sm">Ingresa tu correo y contraseña para continuar</p>
       </div>
 
       <!-- Lockout banner -->
       <div *ngIf="isLocked()" class="mb-4">
         <app-creo-alert type="error"
-          message="Cuenta bloqueada tras 5 intentos fallidos. Restablece tu contraseña para continuar."></app-creo-alert>
+          message="Cuenta bloqueada temporalmente tras 5 intentos fallidos. Intenta nuevamente en 15 minutos."></app-creo-alert>
       </div>
 
       <!-- Auth error -->
@@ -139,8 +89,7 @@
 
       <form (submit)="handleSubmit($event)" class="flex flex-col gap-4">
         <app-creo-field label="Correo electrónico" type="email" [value]="email()" (valueChange)="setEmail($event)"
-          [placeholder]="role() === 'candidate' ? 'tucorreo@upch.pe' : 'empresa@correo.com'" [error]="errors()['email']"
-          [required]="true"></app-creo-field>
+          placeholder="correo@ejemplo.com" [error]="errors()['email']" [required]="true"></app-creo-field>
 
         <app-creo-field label="Contraseña" type="password" [value]="password()" (valueChange)="setPassword($event)"
           placeholder="••••••••" [error]="errors()['password']" [required]="true"></app-creo-field>
@@ -157,8 +106,8 @@
         </div>
 
         <app-creo-btn type="submit" [fullWidth]="true" [disabled]="isLocked()">
-          Ingresar como {{ role() === 'candidate' ? 'Candidato' : 'Empresa' }}
-          <svg iconRight width="14" height="14" viewBox="0 0 14 14" fill="none">
+          Iniciar sesión
+          <svg icon-right width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M3 7h8M8 4l3 3-3 3" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
               stroke-linejoin="round" />
           </svg>
@@ -168,20 +117,20 @@
       <!-- Register link -->
       <div class="mt-6 pt-5 border-t border-slate-100 text-center">
         <p class="text-sm text-slate-500">
-          {{ role() === 'candidate' ? '¿Primera vez aquí?' : '¿Nueva empresa?' }}
-          <button type="button" (click)="doNavigate(role() === 'candidate' ? 'register-candidate' : 'register-company')"
-            class="font-semibold hover:underline" style="color: #111111">
+          ¿Primera vez aquí?
+          <button type="button" (click)="doNavigate('choose-role')" class="font-semibold hover:underline"
+            style="color: #111111">
             Crear cuenta
           </button>
         </p>
       </div>
 
-      <!-- Admin access — discrete -->
+      <!-- Demo hint: admin access via email -->
       <div class="mt-4 text-center">
-        <button type="button" (click)="doNavigate('admin-login')" class="text-xs hover:underline transition-colors"
-          style="color: #94A3B8" (mouseenter)="onAdminMouseEnter($event)" (mouseleave)="onAdminMouseLeave($event)">
-          Ingresar como administrador
-        </button>
+        <p class="text-[11px]" style="color: #CBD5E1">
+          Demo: usa <span class="font-mono font-medium" style="color: #94A3B8">admin&#64;creo.pe</span> para acceder
+          como administrador
+        </p>
       </div>
     </div>
   </div>

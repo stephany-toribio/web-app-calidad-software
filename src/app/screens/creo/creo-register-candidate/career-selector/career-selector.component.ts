@@ -1,6 +1,15 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CAREER_TAXONOMY, CareerEntry } from '../../../../data/creo-skills.data';
+import { CAREER_TAXONOMY } from '../../../../data/creo-skills.data';
+
+export interface CareerEntry {
+    area: string;
+    specialty: string;
+    estado: string;
+    ciclo?: string;
+}
+
+export const SECUNDARIA_VALUE = 'Secundaria / Sin estudios superiores';
 
 const ESTADO_OPTIONS = ['Finalizado', 'Incompleta', 'En curso'];
 const CICLO_OPTIONS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
@@ -23,23 +32,43 @@ export class CareerSelectorComponent {
     areas = Object.keys(CAREER_TAXONOMY);
     estadoOptions = ESTADO_OPTIONS;
     cicloOptions = CICLO_OPTIONS;
+    secundariaValue = SECUNDARIA_VALUE;
 
     area = '';
     specialty = '';
     estado = '';
     ciclo = '';
 
+    get isSecundaria(): boolean {
+        return this.area === SECUNDARIA_VALUE;
+    }
+
+    get hasSecundaria(): boolean {
+        return this.careers.some(c => c.area === SECUNDARIA_VALUE);
+    }
+
     get specialties(): string[] {
-        return this.area ? (this.taxonomy[this.area] ?? []) : [];
+        return (!this.isSecundaria && this.area) ? (this.taxonomy[this.area] ?? []) : [];
     }
 
     get showCiclo(): boolean {
-        return this.estado === 'Incompleta' || this.estado === 'En curso';
+        return !this.isSecundaria && (this.estado === 'Incompleta' || this.estado === 'En curso');
+    }
+
+    get canAdd(): boolean {
+        if (!this.area) return false;
+        return this.isSecundaria ? !this.hasSecundaria : !!(this.specialty && this.estado);
+    }
+
+    isEntrySecundaria(entry: CareerEntry): boolean {
+        return entry.area === SECUNDARIA_VALUE;
     }
 
     onAreaChange(e: Event) {
         this.area = (e.target as HTMLSelectElement).value;
         this.specialty = '';
+        this.estado = '';
+        this.ciclo = '';
     }
 
     onSpecialtyChange(e: Event) {
@@ -55,12 +84,17 @@ export class CareerSelectorComponent {
         this.ciclo = (e.target as HTMLSelectElement).value;
     }
 
-    get canAdd(): boolean {
-        return !!(this.area && this.specialty && this.estado);
-    }
-
     handleAdd() {
-        if (!this.canAdd) return;
+        if (!this.area) return;
+
+        if (this.isSecundaria) {
+            if (this.hasSecundaria) return;
+            this.add.emit({ area: SECUNDARIA_VALUE, specialty: '', estado: '' });
+            this.area = '';
+            return;
+        }
+
+        if (!this.specialty || !this.estado) return;
         const isDuplicate = this.careers.some(c => c.area === this.area && c.specialty === this.specialty);
         if (isDuplicate) return;
 
@@ -71,5 +105,9 @@ export class CareerSelectorComponent {
         this.specialty = '';
         this.estado = '';
         this.ciclo = '';
+    }
+
+    onRemove(entry: CareerEntry) {
+        this.remove.emit(entry);
     }
 }

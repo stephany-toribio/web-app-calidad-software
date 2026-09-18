@@ -11,6 +11,7 @@ import { CreoStepIndicatorComponent } from '../../../components/creo-design-syst
 import { CREO_SECTORS } from '../../../data/creo-skills.data';
 
 const TAKEN_RUCS = ['20100000001', '20234567890'];
+const TAKEN_EMAILS = ['admin@creo.pe', 'valeria.rojas@ejemplo.com', 'carlos@techcorp.pe'];
 type RucStatus = 'idle' | 'checking' | 'taken' | 'ok';
 
 @Component({
@@ -68,6 +69,14 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
     this.handleRucChange((e.target as HTMLInputElement).value);
   }
 
+  setEmail(v: string) {
+    this.email = v;
+    if (this.errors['emailTaken']) {
+      const { emailTaken, ...rest } = this.errors;
+      this.errors = rest;
+    }
+  }
+
   get rucDigitsRemaining(): number {
     return 11 - this.ruc.length;
   }
@@ -81,6 +90,7 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
     if (!this.sector) e['sector'] = 'Selecciona el sector de tu empresa';
     if (!this.email.trim()) e['email'] = 'El correo corporativo es obligatorio';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
+    else if (TAKEN_EMAILS.includes(this.email.trim().toLowerCase())) e['emailTaken'] = 'duplicate';
     if (!this.password.trim()) e['password'] = 'La contraseña es obligatoria';
     else if (this.password.length < 8) e['password'] = 'Mínimo 8 caracteres';
     if (!this.contactName.trim()) e['contactName'] = 'El nombre del contacto es obligatorio';

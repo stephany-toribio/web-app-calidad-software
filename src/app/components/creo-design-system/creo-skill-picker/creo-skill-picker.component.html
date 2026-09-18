@@ -10,6 +10,22 @@
             style="color: #111111; border-color: #E2E8F0; background-color: #FFFFFF;" />
     </div>
 
+    <!-- Contador + alerta de máximo -->
+    <div *ngIf="maxSkills !== undefined" class="flex flex-col gap-1.5">
+        <span class="self-start text-xs font-semibold px-2.5 py-1 rounded-full border"
+            style="background-color: #FEF3C7; border-color: #F2B705; color: #111111;">
+            {{ selected.length }} / {{ maxSkills }} seleccionadas
+        </span>
+        <div *ngIf="atMax" class="flex items-start gap-2 px-3.5 py-2.5 rounded-xl border text-xs"
+            style="background-color: #FFFBEB; border-color: #F2B705; color: #92400E;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="flex-shrink-0 mt-0.5">
+                <circle cx="7" cy="7" r="6.5" stroke="#D97706" stroke-width="1.2" />
+                <path d="M7 4.5v3M7 9.5h.01" stroke="#D97706" stroke-width="1.2" stroke-linecap="round" />
+            </svg>
+            Alcanzaste el máximo de {{ maxSkills }} habilidades. Quita una para elegir otra.
+        </div>
+    </div>
+
     <div class="min-h-[120px] max-h-72 overflow-y-auto rounded-xl border p-4 flex flex-col gap-4"
         style="background-color: #F8FAFC;" [style.border-color]="error ? '#E5140D' : '#E2E8F0'">
 
@@ -31,8 +47,8 @@
                     </p>
                     <div class="flex flex-wrap gap-2">
                         <app-creo-chip *ngFor="let skill of sectionSkills(section)" [label]="skill"
-                            [selected]="isSelected(skill)"
-                            (chipClick)="isMaxReached(skill) ? null : toggle.emit(skill)">
+                            [selected]="isSelected(skill)" [disabled]="chipDisabled(skill)"
+                            (chipClick)="toggle.emit(skill)">
                         </app-creo-chip>
                     </div>
                 </ng-container>
@@ -45,14 +61,14 @@
                 </p>
                 <div class="flex flex-wrap gap-2">
                     <app-creo-chip *ngFor="let skill of remainingCatalog" [label]="skill" [selected]="isSelected(skill)"
-                        (chipClick)="isMaxReached(skill) ? null : toggle.emit(skill)">
+                        [disabled]="chipDisabled(skill)" (chipClick)="toggle.emit(skill)">
                     </app-creo-chip>
                 </div>
             </div>
 
             <div *ngIf="!suggestedSections || suggestedSections.length === 0" class="flex flex-wrap gap-2">
                 <app-creo-chip *ngFor="let skill of filteredCatalog" [label]="skill" [selected]="isSelected(skill)"
-                    (chipClick)="isMaxReached(skill) ? null : toggle.emit(skill)">
+                    [disabled]="chipDisabled(skill)" (chipClick)="toggle.emit(skill)">
                 </app-creo-chip>
             </div>
         </ng-container>

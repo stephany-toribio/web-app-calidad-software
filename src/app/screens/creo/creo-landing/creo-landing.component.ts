@@ -8,12 +8,10 @@ import { CreoBtnComponent } from '../../../components/creo-design-system/creo-bt
 import { CreoFieldComponent } from '../../../components/creo-design-system/creo-field/creo-field.component';
 import { CreoAlertComponent } from '../../../components/creo-design-system/creo-alert/creo-alert.component';
 
-export type Role = 'candidate' | 'company';
-
 export const STATS = [
   { value: '2,400+', label: 'Egresados empleados' },
-  { value: '380',    label: 'Empresas aliadas' },
-  { value: '96%',    label: 'Satisfacción' },
+  { value: '380', label: 'Empresas aliadas' },
+  { value: '96%', label: 'Satisfacción' },
 ];
 
 export const MAX_ATTEMPTS = 5;
@@ -38,7 +36,6 @@ export class CreoLandingComponent {
   @Input() onNavigate?: (s: string, data?: Record<string, string>) => void;
   @Output() navigate = new EventEmitter<{ s: string; data?: Record<string, string> }>();
 
-  role = signal<Role>('candidate');
   email = signal<string>('');
   password = signal<string>('');
   errors = signal<Record<string, string>>({});
@@ -52,10 +49,6 @@ export class CreoLandingComponent {
     const errs = this.errors();
     return this.attempted() && !errs['auth'] && Object.keys(errs).length > 0;
   });
-
-  setRole(r: Role) {
-    this.role.set(r);
-  }
 
   setEmail(val: string) {
     this.email.set(val);
@@ -95,8 +88,16 @@ export class CreoLandingComponent {
 
     if (Object.keys(errs).length === 0) {
       const emailVal = this.email();
+
+      // Admin override: admin@creo.pe → panel de administrador
+      if (emailVal.trim().toLowerCase() === 'admin@creo.pe') {
+        this.doNavigate('admin-dashboard', { name: 'Administrador' });
+        return;
+      }
+
       const name = emailVal.split('@')[0].replace(/[._]/g, ' ').trim() || 'usuario';
-      const target = this.role() === 'candidate' ? 'candidate-dashboard' : 'company-home';
+      // Resolución simulada del rol a partir del correo (demo)
+      const target = emailVal.toLowerCase().includes('empresa') ? 'company-home' : 'candidate-dashboard';
       this.doNavigate(target, { name });
     } else {
       this.failedAttempts.update((n) => n + 1);
@@ -109,13 +110,5 @@ export class CreoLandingComponent {
     }
     this.navigate.emit({ s, data });
     this.router.navigate(['/creo', s]);
-  }
-
-  onAdminMouseEnter(e: MouseEvent) {
-    (e.currentTarget as HTMLElement).style.color = '#64748B';
-  }
-
-  onAdminMouseLeave(e: MouseEvent) {
-    (e.currentTarget as HTMLElement).style.color = '#94A3B8';
   }
 }
