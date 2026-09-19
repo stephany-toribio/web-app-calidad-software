@@ -35,7 +35,7 @@ Sigue estos pasos para levantar el entorno de desarrollo local:
 
 1. **Clona el repositorio:**
 
-    git clone https://github.com/JH-Compan/web-app-empleo/edit/develop
+    git clone https://github.com/JH-Compan/web-app-empleo/tree/develop
    
     cd Frontend
 
