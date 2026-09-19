@@ -1,0 +1,12 @@
+<div class="flex items-center" [ngClass]="gapClass" style="font-family: Inter, system-ui, sans-serif;">
+  <svg [attr.width]="iconSize" [attr.height]="iconSize" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="2" y="2" width="16" height="7" rx="1.5" fill="#F2B705" />
+    <rect x="11" y="11" width="7" height="11" rx="1.5" fill="#F2B705" />
+  </svg>
+  <div class="flex items-baseline gap-1.5">
+    <span [ngClass]="textClass" class="font-bold tracking-tight leading-none"
+      [style.color]="dark ? '#FFFFFF' : '#111111'">Creo</span>
+    <span [ngClass]="textClass" class="font-normal tracking-tight leading-none"
+      [style.color]="dark ? '#E2E8F0' : '#475569'" style="font-size: 0.9em;">Empleos</span>
+  </div>
+</div>

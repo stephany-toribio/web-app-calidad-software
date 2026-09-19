@@ -1,0 +1,222 @@
+<!-- Pantalla de confirmación tras guardar -->
+<div *ngIf="saved" class="min-h-screen flex flex-col" style="background-color: #FFFFFF; font-family: Inter, system-ui, sans-serif;">
+  <header class="bg-white border-b border-slate-100">
+    <div class="max-w-2xl mx-auto px-5 h-16 flex items-center">
+      <app-creo-wordmark size="sm"></app-creo-wordmark>
+    </div>
+  </header>
+  <div class="flex-1 flex items-center justify-center px-5 py-16">
+    <div class="w-full max-w-sm text-center">
+      <div class="flex justify-center mb-6">
+        <div class="w-20 h-20 rounded-full flex items-center justify-center"
+          style="background-color: #FEF3C7; border: 3px solid #F2B705;">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <path d="M8 18l7 7 13-13" stroke="#111111" stroke-width="2.8" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+      </div>
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border mb-5"
+        style="background-color: #FEF3C7; border-color: #F2B705; color: #111111;">
+        <span class="w-1.5 h-1.5 rounded-full" style="background-color: #F2B705;"></span>
+        Perfil actualizado
+      </div>
+      <h3 class="text-2xl font-bold tracking-tight mb-3" style="color: #111111;">Cambios guardados</h3>
+      <p class="text-sm leading-relaxed mb-8" style="color: #64748B;">
+        Tu perfil y habilidades se actualizaron correctamente. Los cambios son visibles de inmediato para los
+        empleadores.
+      </p>
+      <div class="flex flex-col gap-3">
+        <app-creo-btn [fullWidth]="true" (onClick)="keepEditing()">Seguir editando</app-creo-btn>
+        <app-creo-btn variant="secondary" [fullWidth]="true" (onClick)="goToDashboard()">Ir a mi
+          Dashboard</app-creo-btn>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Formulario de edición -->
+<div *ngIf="!saved" class="min-h-screen" style="background-color: #F8FAFC; font-family: Inter, system-ui, sans-serif;">
+  <header class="bg-white border-b border-slate-100 sticky top-0 z-10">
+    <div class="max-w-2xl mx-auto px-5 h-16 flex items-center justify-between">
+      <app-creo-wordmark size="sm"></app-creo-wordmark>
+      <button (click)="goBack()" class="flex items-center gap-1.5 text-sm transition-colors" style="color: #64748B;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 11L5 7l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+        {{ step === 0 ? 'Volver' : 'Paso anterior' }}
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-5 py-8 pb-28">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold tracking-tight mb-1" style="color: #111111;">Actualiza tu perfil</h1>
+      <p class="text-sm" style="color: #64748B;">
+        Mantén tu información actualizada para mejorar tu visibilidad ante empleadores
+      </p>
+    </div>
+
+    <div class="mb-8">
+      <app-creo-step-indicator [steps]="steps" [current]="step"></app-creo-step-indicator>
+    </div>
+
+    <form (submit)="handleNext($event)">
+      <!-- Paso 0: Datos personales -->
+      <app-creo-card *ngIf="step === 0" [padding]="false">
+        <div class="p-6 sm:p-8 flex flex-col gap-5">
+          <div class="flex items-center gap-3 pb-4 border-b" style="border-color: #F0ECD8;">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0"
+              style="background-color: #F2B705; color: #111111;">
+              {{ avatarInitials }}
+            </div>
+            <div>
+              <p class="text-sm font-bold" style="color: #111111;">{{ displayName }}</p>
+              <p class="text-xs mt-0.5" style="color: #64748B;">{{ primarySpecialty }} · {{ location || 'Ubicación' }}</p>
+            </div>
+            <div class="ml-auto">
+              <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border"
+                style="background-color: #FEF3C7; border-color: #F2B705; color: #111111;">
+                Perfil activo
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <app-creo-field label="Nombres" [value]="firstName" (valueChange)="firstName = $event"
+              placeholder="Ana María" [error]="errors['firstName']" [required]="true"></app-creo-field>
+            <app-creo-field label="Apellidos" [value]="lastName" (valueChange)="lastName = $event"
+              placeholder="Torres Quispe" [error]="errors['lastName']" [required]="true"></app-creo-field>
+
+            <app-creo-field label="Fecha de nacimiento" [value]="birthdate" (valueChange)="birthdate = $event"
+              placeholder="DD/MM/AAAA" [error]="errors['birthdate']" [required]="true"></app-creo-field>
+
+            <app-creo-field label="DNI" [value]="dni" (valueChange)="setDni($event)" placeholder="12345678"
+              [error]="errors['dni']" [required]="true"></app-creo-field>
+
+            <app-creo-field label="Correo electrónico" type="email" [value]="email" (valueChange)="email = $event"
+              placeholder="ana.torres@ejemplo.com" [error]="errors['email']"
+              hint="Usarás este correo para iniciar sesión" [required]="true"></app-creo-field>
+
+            <app-creo-field label="Teléfono" type="tel" [value]="phone" (valueChange)="phone = $event"
+              placeholder="+51 999 000 111" [error]="errors['phone']" [required]="true"></app-creo-field>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">
+                Género <span class="text-[11px] font-normal" style="color: #94A3B8;">(opcional)</span>
+              </label>
+              <select [value]="gender" (change)="gender = $any($event.target).value"
+                class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all cursor-pointer"
+                style="border-color: #E2E8F0; background-color: #FFFFFF; color: #111111;">
+                <option value="">Prefiero no indicar</option>
+                <option *ngFor="let g of genderOptions" [value]="g">{{ g }}</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-2">
+              <app-creo-field label="Ubicación" [value]="location" (valueChange)="location = $event"
+                placeholder="ej. Lima, Perú"></app-creo-field>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 sm:px-8 py-5 border-t rounded-b-2xl flex flex-col gap-3"
+          style="background-color: #F0ECD8; border-color: #E8E3CC;">
+          <app-creo-alert *ngIf="hasErrors()" type="error"
+            message="Completa todos los campos obligatorios"></app-creo-alert>
+          <app-creo-btn type="submit" [fullWidth]="true">
+            Continuar a formación
+            <svg icon-right width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 7h8M8 4l3 3-3 3" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </app-creo-btn>
+        </div>
+      </app-creo-card>
+
+      <!-- Paso 1: Formación y salario -->
+      <app-creo-card *ngIf="step === 1" [padding]="false">
+        <div class="p-6 sm:p-8 flex flex-col gap-5">
+          <div class="flex items-center gap-2 pb-3 border-b" style="border-color: #F0ECD8;">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+              style="background-color: #F2B705; color: #111111;">2</span>
+            <span class="text-sm font-semibold" style="color: #111111;">Formación profesional y expectativa
+              salarial</span>
+          </div>
+
+          <app-career-selector [careers]="careers" (add)="addCareer($event)"
+            (remove)="removeCareer($event)"></app-career-selector>
+
+          <!-- Salario -->
+          <div>
+            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">
+              Expectativa salarial mensual (soles)
+              <span class="text-[11px] font-normal ml-1" style="color: #94A3B8;">(opcional)</span>
+            </label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold select-none"
+                style="color: #9A948C;">S/</span>
+              <input type="number" min="0" [value]="salary" (input)="salary = $any($event.target).value"
+                placeholder="9000"
+                class="w-full h-11 pl-9 pr-4 rounded-xl border text-sm outline-none transition-all"
+                style="color: #111111; background-color: #FFFFFF; border-color: #E2E8F0;" />
+            </div>
+            <p class="text-[11px] mt-1" style="color: #94A3B8;">
+              Monto exacto mensual en soles. Este dato es privado y solo lo usan los reclutadores para filtros
+              internos.
+            </p>
+          </div>
+        </div>
+
+        <div class="px-6 sm:px-8 py-5 border-t rounded-b-2xl flex flex-col gap-3"
+          style="background-color: #F0ECD8; border-color: #E8E3CC;">
+          <app-creo-btn type="submit" [fullWidth]="true">
+            Continuar a habilidades
+            <svg icon-right width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 7h8M8 4l3 3-3 3" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </app-creo-btn>
+        </div>
+      </app-creo-card>
+
+      <!-- Paso 2: Habilidades -->
+      <app-creo-card *ngIf="step === 2" [padding]="false">
+        <div class="p-6 sm:p-8 flex flex-col gap-5">
+          <div class="flex items-center justify-between pb-3 border-b" style="border-color: #F0ECD8;">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                style="background-color: #F2B705; color: #111111;">3</span>
+              <span class="text-sm font-semibold" style="color: #111111;">Actualizar habilidades</span>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full border"
+              style="background-color: #FEF3C7; border-color: #F2B705; color: #111111;">
+              {{ skills.length }} / {{ maxSkills }} seleccionadas
+            </span>
+          </div>
+
+          <p class="text-sm leading-relaxed" style="color: #64748B;">
+            Solo puedes seleccionar habilidades del catálogo oficial. Los tags no válidos se rechazan automáticamente
+            sin afectar tu selección actual.
+          </p>
+
+          <app-creo-skill-picker [catalog]="catalog" [selected]="skills" (toggle)="toggleSkill($event)"
+            [error]="errors['skills']" [suggestedSections]="suggestedSections"
+            [maxSkills]="maxSkills"></app-creo-skill-picker>
+        </div>
+
+        <div class="px-6 sm:px-8 py-5 border-t rounded-b-2xl flex flex-col gap-3"
+          style="background-color: #F0ECD8; border-color: #E8E3CC;">
+          <app-creo-btn type="submit" [fullWidth]="true" [loading]="saving">
+            {{ saving ? 'Guardando cambios…' : 'Guardar cambios' }}
+            <svg *ngIf="!saving" icon-right width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7l3 3 6-6" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </app-creo-btn>
+        </div>
+      </app-creo-card>
+    </form>
+  </main>
+</div>

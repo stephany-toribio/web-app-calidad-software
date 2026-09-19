@@ -1,0 +1,147 @@
+<div class="min-h-screen" style="background-color: #F8FAFC; font-family: Inter, system-ui, sans-serif;">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+    <div class="max-w-xl mx-auto px-5 h-16 flex items-center justify-between">
+      <app-creo-wordmark size="sm"></app-creo-wordmark>
+      <button (click)="goToLanding()" class="flex items-center gap-1.5 text-sm transition-colors"
+        style="color: #64748B;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 11L5 7l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+        Volver
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-5 py-8 pb-28">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold tracking-tight mb-1" style="color: #111111;">Conecta con talento profesional</h1>
+      <p class="text-sm text-slate-500">Publica tus ofertas y accede a los mejores profesionales del Perú</p>
+    </div>
+
+    <div class="mb-8">
+      <app-creo-step-indicator [steps]="steps" [current]="0"></app-creo-step-indicator>
+    </div>
+
+    <form (submit)="handleSubmit($event)">
+      <app-creo-card [padding]="false">
+        <div class="p-6 sm:p-8 flex flex-col gap-5">
+          <div class="flex items-center gap-2 pb-3 border-b" style="border-color: #F0ECD8;">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+              style="background-color: #F2B705; color: #111111;">1</span>
+            <span class="text-sm font-semibold" style="color: #111111;">Datos de la empresa</span>
+          </div>
+
+          <app-creo-field label="Razón social" [value]="razSocial" (valueChange)="razSocial = $event"
+            placeholder="Mi Empresa S.A.C." [error]="errors['razSocial']" [required]="true"></app-creo-field>
+
+          <!-- RUC (manual, con verificación en vivo) -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium flex items-center gap-1" style="color: #111111;">
+              RUC
+              <span class="text-xs font-semibold" style="color: #F2B705;">*</span>
+              <span *ngIf="ruc.length > 0 && ruc.length < 11 && rucStatus === 'idle'"
+                class="ml-auto text-[11px] font-normal text-slate-400">
+                {{ rucDigitsRemaining }} dígito{{ rucDigitsRemaining !== 1 ? 's' : '' }} restante{{ rucDigitsRemaining
+                !== 1 ? 's' : '' }}
+              </span>
+            </label>
+            <div class="relative">
+              <input type="text" [value]="ruc" (input)="onRucInput($event)" placeholder="20100000000" maxlength="11"
+                class="w-full h-11 px-3.5 pr-10 rounded-xl border text-sm placeholder:text-slate-400 outline-none transition-all font-mono tracking-wider"
+                style="color: #111111;"
+                [style.border-color]="errors['ruc'] || rucStatus === 'taken' ? '#E5140D' : rucStatus === 'ok' ? '#F2B705' : '#E2E8F0'"
+                [style.background-color]="errors['ruc'] || rucStatus === 'taken' ? '#FEF2F2' : rucStatus === 'ok' ? '#FEF3C7' : '#FFFFFF'" />
+              <div *ngIf="rucStatus !== 'idle'" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                <span *ngIf="rucStatus === 'checking'" class="text-[10px] font-semibold animate-pulse"
+                  style="color: #94A3B8;">verificando…</span>
+                <svg *ngIf="rucStatus === 'ok'" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <circle cx="9" cy="9" r="8" fill="#F2B705" />
+                  <path d="M5.5 9l2.5 2.5L12.5 7" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+                <svg *ngIf="rucStatus === 'taken'" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <circle cx="9" cy="9" r="8" fill="#E5140D" />
+                  <path d="M6.5 11.5l5-5M11.5 11.5l-5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+              </div>
+            </div>
+            <p *ngIf="rucStatus === 'ok' && !errors['ruc']" class="text-xs font-medium flex items-center gap-1"
+              style="color: #111111;">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <circle cx="6" cy="6" r="5.5" fill="#F2B705" />
+                <path d="M3.5 6l2 2 3-3" stroke="#111111" stroke-width="1.3" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+              RUC verificado
+            </p>
+            <p *ngIf="errors['ruc']" class="text-xs flex items-center gap-1" style="color: #E5140D;">{{ errors['ruc'] }}
+            </p>
+          </div>
+
+          <app-creo-select label="Sector / Rubro" [value]="sector" (valueChange)="sector = $event" [options]="sectors"
+            placeholder="Selecciona el sector…" [error]="errors['sector']" [required]="true"></app-creo-select>
+
+          <div class="flex items-center gap-2 pt-1 pb-3 border-b" style="border-color: #F0ECD8;">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+              style="background-color: #F2B705; color: #111111;">2</span>
+            <span class="text-sm font-semibold" style="color: #111111;">Acceso y contacto</span>
+          </div>
+
+          <app-creo-field label="Nombre del responsable" [value]="contactName" (valueChange)="contactName = $event"
+            placeholder="Carlos Rodríguez López" [error]="errors['contactName']" [required]="true"></app-creo-field>
+          <app-creo-field label="Correo corporativo" type="email" [value]="email" (valueChange)="setEmail($event)"
+            placeholder="rrhh@miempresa.com" [error]="errors['email']"
+            hint="Usado para notificaciones y acceso a la plataforma" [required]="true"></app-creo-field>
+
+          <!-- Correo duplicado -->
+          <p *ngIf="errors['emailTaken']" class="text-xs flex items-center gap-1.5 p-3 rounded-xl border -mt-2"
+            style="color: #DC2626; background-color: #FEF2F2; border-color: #FCA5A5;">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" class="flex-shrink-0">
+              <circle cx="6.5" cy="6.5" r="6" stroke="#DC2626" stroke-width="1.2" />
+              <path d="M6.5 4v2.5M6.5 8.5h.01" stroke="#DC2626" stroke-width="1.2" stroke-linecap="round" />
+            </svg>
+            Este correo ya está registrado. Si ya tienes una cuenta,
+            <button type="button" (click)="goToLanding()" class="font-semibold underline" style="color: #DC2626;">
+              inicia sesión
+            </button>.
+          </p>
+
+          <app-creo-field label="Contraseña" type="password" [value]="password" (valueChange)="password = $event"
+            placeholder="Mínimo 8 caracteres" [error]="errors['password']" [required]="true"></app-creo-field>
+        </div>
+
+        <div class="px-6 sm:px-8 py-5 border-t rounded-b-2xl flex flex-col gap-3"
+          style="background-color: #F0ECD8; border-color: #E8E3CC;">
+          <app-creo-alert *ngIf="hasErrors()" type="error"
+            message="Completa todos los campos obligatorios"></app-creo-alert>
+          <app-creo-btn type="submit" [fullWidth]="true">
+            Crear cuenta de empresa
+            <svg icon-right width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7l3 3 6-6" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </app-creo-btn>
+          <p class="text-center text-xs text-slate-400">
+            ¿Ya tienes cuenta?
+            <button type="button" (click)="goToLanding()" class="font-semibold hover:underline"
+              style="color: #111111;">Inicia sesión</button>
+          </p>
+        </div>
+      </app-creo-card>
+    </form>
+
+    <div class="mt-5 flex items-start gap-3 px-1">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="flex-shrink-0 mt-0.5" style="color: #F2B705;">
+        <path d="M8 1.5L2 4v4c0 3.5 2.7 5.6 6 6.5 3.3-.9 6-3 6-6.5V4L8 1.5z" stroke="currentColor" stroke-width="1.3"
+          stroke-linejoin="round" />
+        <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"
+          stroke-linejoin="round" />
+      </svg>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Tus datos están protegidos. Solo empresas verificadas pueden publicar ofertas en Creo Empleos. El equipo CREO+
+        revisará tu registro en 24–48 horas.
+      </p>
+    </div>
+  </main>
+</div>
