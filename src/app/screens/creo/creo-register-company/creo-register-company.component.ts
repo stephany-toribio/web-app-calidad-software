@@ -27,6 +27,7 @@ type RucStatus = 'idle' | 'checking' | 'taken' | 'ok';
 export class CreoRegisterCompanyComponent implements OnDestroy {
   sectors = CREO_SECTORS;
   steps = ['Datos de empresa', 'Acceso y contacto'];
+  currentStep = 0;
 
   razSocial = '';
   ruc = '';
@@ -81,13 +82,29 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
     return 11 - this.ruc.length;
   }
 
-  validate(): Record<string, string> {
+  validateStep1(): Record<string, string> {
     const e: Record<string, string> = {};
     if (!this.razSocial.trim()) e['razSocial'] = 'La razón social es obligatoria';
     if (!this.ruc.trim()) e['ruc'] = 'El RUC es obligatorio';
     else if (this.ruc.length !== 11) e['ruc'] = 'El RUC debe tener 11 dígitos';
     else if (this.rucStatus === 'taken') e['ruc'] = 'Este RUC ya está registrado';
     if (!this.sector) e['sector'] = 'Selecciona el sector de tu empresa';
+    return e;
+  }
+
+  nextStep() {
+    this.errors = this.validateStep1();
+    if (Object.keys(this.errors).length === 0) {
+      this.currentStep = 1;
+    }
+  }
+
+  prevStep() {
+    this.currentStep = 0;
+  }
+
+  validate(): Record<string, string> {
+    const e = this.validateStep1();
     if (!this.email.trim()) e['email'] = 'El correo corporativo es obligatorio';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
     else if (TAKEN_EMAILS.includes(this.email.trim().toLowerCase())) e['emailTaken'] = 'duplicate';
