@@ -1,0 +1,14 @@
+<button type="button" [disabled]="disabled" (click)="onClick()" (mouseenter)="onMouseEnter($event)"
+    (mouseleave)="onMouseLeave($event)"
+    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-100 select-none whitespace-nowrap"
+    [class.cursor-pointer]="!disabled" [class.cursor-not-allowed]="disabled"
+    [style.background-color]="disabled ? '#F1F5F9' : (selected ? '#F2B705' : '#FFFFFF')"
+    [style.color]="disabled ? '#CBD5E1' : (selected ? '#111111' : '#64748B')"
+    [style.border-color]="disabled ? '#E2E8F0' : (selected ? '#F2B705' : '#E2E8F0')">
+    {{ label }}
+    <span *ngIf="selected && removable" (click)="onRemoveClick($event)" class="ml-0.5 opacity-60 hover:opacity-100">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2.5 7.5l5-5M7.5 7.5l-5-5" stroke="#111111" stroke-width="1.4" stroke-linecap="round" />
+        </svg>
+    </span>
+</button>

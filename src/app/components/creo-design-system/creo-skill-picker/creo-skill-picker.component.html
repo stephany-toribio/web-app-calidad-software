@@ -1,0 +1,85 @@
+<div class="flex flex-col gap-3" style="font-family: Inter, system-ui, sans-serif;">
+    <div class="relative">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4" />
+            <path d="M11 11l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+        </svg>
+        <input type="search" [value]="query" (input)="onQueryChange($event)" placeholder="Buscar habilidad…"
+            class="w-full h-10 pl-9 pr-4 rounded-xl border text-sm placeholder:text-slate-400 outline-none transition-all"
+            style="color: #111111; border-color: #E2E8F0; background-color: #FFFFFF;" />
+    </div>
+
+    <!-- Contador + alerta de máximo -->
+    <div *ngIf="maxSkills !== undefined" class="flex flex-col gap-1.5">
+        <span class="self-start text-xs font-semibold px-2.5 py-1 rounded-full border"
+            style="background-color: #FEF3C7; border-color: #F2B705; color: #111111;">
+            {{ selected.length }} / {{ maxSkills }} seleccionadas
+        </span>
+        <div *ngIf="atMax" class="flex items-start gap-2 px-3.5 py-2.5 rounded-xl border text-xs"
+            style="background-color: #FFFBEB; border-color: #F2B705; color: #92400E;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="flex-shrink-0 mt-0.5">
+                <circle cx="7" cy="7" r="6.5" stroke="#D97706" stroke-width="1.2" />
+                <path d="M7 4.5v3M7 9.5h.01" stroke="#D97706" stroke-width="1.2" stroke-linecap="round" />
+            </svg>
+            Alcanzaste el máximo de {{ maxSkills }} habilidades. Quita una para elegir otra.
+        </div>
+    </div>
+
+    <div class="min-h-[120px] max-h-72 overflow-y-auto rounded-xl border p-4 flex flex-col gap-4"
+        style="background-color: #F8FAFC;" [style.border-color]="error ? '#E5140D' : '#E2E8F0'">
+
+        <p *ngIf="filteredCatalog.length === 0" class="text-sm text-slate-400 text-center py-4">
+            Sin resultados para "{{ query }}"
+        </p>
+
+        <ng-container *ngIf="filteredCatalog.length > 0">
+            <div *ngFor="let section of suggestedSections">
+                <ng-container *ngIf="sectionSkills(section).length > 0">
+                    <p class="text-[11px] font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5"
+                        style="color: #B8860B;">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        {{ section.label }}
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <app-creo-chip *ngFor="let skill of sectionSkills(section)" [label]="skill"
+                            [selected]="isSelected(skill)" [disabled]="chipDisabled(skill)"
+                            (chipClick)="toggle.emit(skill)">
+                        </app-creo-chip>
+                    </div>
+                </ng-container>
+            </div>
+
+            <div *ngIf="suggestedSections.length > 0 && remainingCatalog.length > 0" class="border-t pt-4"
+                style="border-color: #E2E8F0;">
+                <p class="text-[11px] font-bold uppercase tracking-widest mb-2.5" style="color: #94A3B8;">
+                    Todas las habilidades
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <app-creo-chip *ngFor="let skill of remainingCatalog" [label]="skill" [selected]="isSelected(skill)"
+                        [disabled]="chipDisabled(skill)" (chipClick)="toggle.emit(skill)">
+                    </app-creo-chip>
+                </div>
+            </div>
+
+            <div *ngIf="!suggestedSections || suggestedSections.length === 0" class="flex flex-wrap gap-2">
+                <app-creo-chip *ngFor="let skill of filteredCatalog" [label]="skill" [selected]="isSelected(skill)"
+                    [disabled]="chipDisabled(skill)" (chipClick)="toggle.emit(skill)">
+                </app-creo-chip>
+            </div>
+        </ng-container>
+    </div>
+
+    <div *ngIf="selected.length > 0" class="rounded-xl border p-3.5 flex flex-wrap gap-2"
+        style="background-color: #FEF3C7; border-color: #F2B705;">
+        <app-creo-chip *ngFor="let s of selected" [label]="s" [selected]="true" [removable]="true"
+            (chipClick)="toggle.emit(s)" (remove)="toggle.emit(s)">
+        </app-creo-chip>
+    </div>
+
+    <p *ngIf="error" class="text-xs" style="color: #E5140D;">{{ error }}</p>
+</div>

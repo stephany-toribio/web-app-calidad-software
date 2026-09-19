@@ -1,0 +1,24 @@
+<div class="flex items-center justify-center" style="font-family: Inter, system-ui, sans-serif;">
+    <ng-container *ngFor="let label of steps; let i = index; let last = last">
+        <div class="flex items-center">
+            <div class="flex flex-col items-center gap-1">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all"
+                    [style.background-color]="isDone(i) ? '#F2B705' : isActive(i) ? '#FEF3C7' : '#F1F5F9'"
+                    [style.color]="isDone(i) || isActive(i) ? '#111111' : '#94A3B8'"
+                    [style.border]="isActive(i) ? '2px solid #F2B705' : '2px solid transparent'">
+                    <svg *ngIf="isDone(i); else numLabel" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 6l2.5 2.5 4.5-4.5" stroke="#111111" stroke-width="1.6" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    <ng-template #numLabel>{{ i + 1 }}</ng-template>
+                </div>
+                <span class="text-[10px] font-medium whitespace-nowrap"
+                    [style.color]="isActive(i) ? '#111111' : isDone(i) ? '#64748B' : '#94A3B8'">
+                    {{ label }}
+                </span>
+            </div>
+            <div *ngIf="!last" class="h-px w-12 sm:w-16 mt-[-14px] mx-1 transition-all"
+                [style.background-color]="isDone(i) ? '#F2B705' : '#E2E8F0'"></div>
+        </div>
+    </ng-container>
+</div>
