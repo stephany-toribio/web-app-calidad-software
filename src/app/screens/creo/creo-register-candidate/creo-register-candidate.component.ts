@@ -8,10 +8,14 @@ import { CreoCardComponent } from '../../../components/creo-design-system/creo-c
 import { CreoAlertComponent } from '../../../components/creo-design-system/creo-alert/creo-alert.component';
 import { CreoStepIndicatorComponent } from '../../../components/creo-design-system/creo-step-indicator/creo-step-indicator.component';
 import { CreoSkillPickerComponent } from '../../../components/creo-design-system/creo-skill-picker/creo-skill-picker.component';
-import { CareerSelectorComponent, CareerEntry, SECUNDARIA_VALUE } from './career-selector/career-selector.component';
-import { CREO_SKILLS, AREA_SKILLS, SkillSection } from '../../../data/creo-skills.data';
+import { StudyListComponent, StudyEntry } from './study-list/study-list.component';
+import { LanguageListComponent, LanguageEntry } from './language-list/language-list.component';
+import { ExperienceListComponent, ExperienceEntry } from './experience-list/experience-list.component';
+import { AREA_SKILLS, SkillSection } from '../../../data/creo-skills.data';
+import { SkillsService } from '../../../services/skills.service';
+import { FormsModule } from '@angular/forms';
 
-const STEPS = ['Cuenta y datos', 'Formación', 'Habilidades'];
+const STEPS = ['Cuenta y datos', 'Educación', 'Experiencia', 'Habilidades', 'Resumen'];
 const MAX_SKILLS = 15;
 const KNOWN_EMAILS = ['admin@creo.pe', 'valeria.rojas@ejemplo.com'];
 const GENDER_OPTIONS = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'];
@@ -20,53 +24,107 @@ const GENDER_OPTIONS = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'];
   selector: 'app-creo-register-candidate',
   standalone: true,
   imports: [
-    CommonModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent,
+    CommonModule, FormsModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent,
     CreoCardComponent, CreoAlertComponent, CreoStepIndicatorComponent,
-    CreoSkillPickerComponent, CareerSelectorComponent
+    CreoSkillPickerComponent, StudyListComponent, LanguageListComponent, ExperienceListComponent
   ],
   templateUrl: './creo-register-candidate.component.html',
   styleUrl: './creo-register-candidate.component.css'
 })
 export class CreoRegisterCandidateComponent {
   steps = STEPS;
-  catalog = CREO_SKILLS;
   genderOptions = GENDER_OPTIONS;
   maxSkills = MAX_SKILLS;
+
+  constructor(private router: Router, private skillsService: SkillsService) {}
+
+  private _cachedSkillsVersion = -1;
+  private _cachedHard: string[] = [];
+  private _cachedSoft: string[] = [];
+
+  get catalog() {
+    const version = this.skillsService.getVersion();
+    if (this._cachedSkillsVersion !== version) {
+      this._cachedSkillsVersion = version;
+      this._cachedHard = this.skillsService.getHardSkills(true).map(s => s.name);
+      this._cachedSoft = this.skillsService.getSoftSkills(true).map(s => s.name);
+    }
+    return this._cachedHard;
+  }
+
+  get softCatalog() {
+    // Trigger update if needed via catalog getter
+    this.catalog;
+    return this._cachedSoft;
+  }
 
   step = 0;
 
   // Paso 0 — Cuenta y datos personales
   firstName = '';
   lastName = '';
-  birthdate = '';
+  birthDay = '';
+  birthMonth = '';
+  birthYear = '';
   dni = '';
   gender = '';
   email = '';
   password = '';
   phone = '';
+  showPassword = false;
 
-  // Paso 1 — Formación
-  careers: CareerEntry[] = [];
+  dias = Array.from({length: 31}, (_, i) => (i + 1).toString());
+  mesesNac = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  anosNac = Array.from({length: 100}, (_, i) => (new Date().getFullYear() - i).toString());
 
-  // Paso 2 — Habilidades
+  // Paso 1 — Educación
+  carreras: StudyEntry[] = [];
+  educacionSuperior: StudyEntry[] = [];
+  idiomas: LanguageEntry[] = [];
+  salary = '';
+
+  // Paso 2 — Experiencia
+  hasExperience: boolean | null = null;
+  experiencias: ExperienceEntry[] = [];
+
+  // Paso 3 — Habilidades
   skills: string[] = [];
+  softSkills: string[] = [];
 
   errors: Record<string, string> = {};
 
-  constructor(private router: Router) { }
+
+  private _cachedAreasStr = '';
+  private _cachedSections: SkillSection[] = [];
 
   get selectedAreas(): string[] {
-    return [...new Set(this.careers.map(c => c.area).filter(a => a !== SECUNDARIA_VALUE))];
+    const allStudies = [...this.carreras, ...this.educacionSuperior];
+    return [...new Set(allStudies.map(c => c.areaEstudio).filter(a => !!a))];
   }
 
   get suggestedSections(): SkillSection[] {
-    return this.selectedAreas
-      .filter(a => AREA_SKILLS[a])
-      .map(a => ({ label: `Sugeridas para ${a}`, skills: AREA_SKILLS[a] }));
+    const areas = this.selectedAreas;
+    const areasStr = areas.join(',');
+    if (this._cachedAreasStr !== areasStr) {
+      this._cachedAreasStr = areasStr;
+      this._cachedSections = areas
+        .filter(a => AREA_SKILLS[a])
+        .map(a => ({ label: `Sugeridas para ${a}`, skills: AREA_SKILLS[a] }));
+    }
+    return this._cachedSections;
   }
+
+  get passLength() { return this.password.length >= 8; }
+  get passLetter() { return /[a-zA-Z]/.test(this.password); }
+  get passNumber() { return /\d/.test(this.password); }
+  get passSymbol() { return /[^a-zA-Z0-9]/.test(this.password); }
 
   setDni(v: string) {
     this.dni = v.replace(/\D/g, '').slice(0, 8);
+  }
+
+  setPhone(v: string) {
+    this.phone = v.replace(/\D/g, '').slice(0, 9);
   }
 
   setEmail(v: string) {
@@ -75,6 +133,10 @@ export class CreoRegisterCandidateComponent {
       const { emailTaken, ...rest } = this.errors;
       this.errors = rest;
     }
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
   }
 
   toggleSkill(s: string) {
@@ -86,31 +148,35 @@ export class CreoRegisterCandidateComponent {
     this.skills = [...this.skills, s];
   }
 
-  addCareer(c: CareerEntry) {
-    this.careers = [...this.careers, c];
-  }
-
-  removeCareer(c: CareerEntry) {
-    this.careers = this.careers.filter(x => x.area !== c.area || x.specialty !== c.specialty);
+  toggleSoftSkill(s: string) {
+    if (this.softSkills.includes(s)) {
+      this.softSkills = this.softSkills.filter(x => x !== s);
+      return;
+    }
+    if (this.softSkills.length >= MAX_SKILLS) return;
+    this.softSkills = [...this.softSkills, s];
   }
 
   validateStep0(): Record<string, string> {
     const e: Record<string, string> = {};
     if (!this.firstName.trim()) e['firstName'] = 'El nombre es obligatorio';
     if (!this.lastName.trim()) e['lastName'] = 'El apellido es obligatorio';
-    if (!this.birthdate.trim()) e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    if (!this.birthDay || !this.birthMonth || !this.birthYear) e['birthdate'] = 'La fecha de nacimiento es obligatoria';
 
     if (!this.dni.trim()) e['dni'] = 'El DNI es obligatorio';
-    else if (!/^\d{8}$/.test(this.dni)) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
+    else if (this.dni.length !== 8) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
 
     if (!this.email.trim()) e['email'] = 'El correo es obligatorio';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
     else if (KNOWN_EMAILS.includes(this.email.trim().toLowerCase())) e['emailTaken'] = 'duplicate';
 
     if (!this.password.trim()) e['password'] = 'La contraseña es obligatoria';
-    else if (this.password.length < 8) e['password'] = 'Mínimo 8 caracteres';
+    else if (!this.passLength || !this.passLetter || !this.passNumber || !this.passSymbol) {
+      e['password'] = 'La contraseña no cumple los requisitos';
+    }
 
     if (!this.phone.trim()) e['phone'] = 'El teléfono es obligatorio';
+    else if (this.phone.length !== 9) e['phone'] = 'El teléfono debe tener exactamente 9 dígitos';
 
     return e;
   }
@@ -130,7 +196,9 @@ export class CreoRegisterCandidateComponent {
 
     if (this.step === 1) {
       const errs: Record<string, string> = {};
-      if (this.careers.length === 0) errs['careers'] = 'Agrega al menos una opción de formación';
+      if (this.carreras.length === 0) errs['carreras'] = 'Agrega al menos una carrera';
+      if (this.idiomas.length === 0) errs['idiomas'] = 'Agrega al menos un idioma';
+      
       this.errors = errs;
       if (Object.keys(errs).length === 0) {
         this.errors = {};
@@ -140,11 +208,33 @@ export class CreoRegisterCandidateComponent {
       return;
     }
 
-    // step === 2
-    const errs: Record<string, string> = {};
-    if (this.skills.length === 0) errs['skills'] = 'Selecciona al menos una habilidad';
-    this.errors = errs;
-    if (Object.keys(errs).length === 0) {
+    if (this.step === 2) {
+      if (this.hasExperience === null) {
+        this.errors = { experiencia: 'Selecciona una opción sobre tu experiencia' };
+        return;
+      }
+      if (this.hasExperience === true && this.experiencias.length === 0) {
+        this.errors = { experiencia: 'Agrega al menos una experiencia laboral' };
+        return;
+      }
+      this.errors = {};
+      this.step = 3;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (this.step === 3) {
+      const errs: Record<string, string> = {};
+      if (this.skills.length === 0 && this.softSkills.length === 0) errs['skills'] = 'Selecciona al menos una habilidad (técnica o blanda)';
+      this.errors = errs;
+      if (Object.keys(errs).length === 0) {
+        this.step = 4;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    if (this.step === 4) {
       this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
     }
   }
@@ -157,8 +247,13 @@ export class CreoRegisterCandidateComponent {
     if (this.step === 0) {
       this.router.navigate(['/creo/landing']);
     } else {
-      this.step -= 1;
+      this.goToStep(this.step - 1);
     }
+  }
+
+  goToStep(step: number) {
+    this.step = step;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   hasErrors(): boolean {

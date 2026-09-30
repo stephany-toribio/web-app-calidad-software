@@ -16,8 +16,18 @@ export class CreoFieldComponent {
   @Input() error: string | undefined = undefined;
   @Input() hint: string | undefined = undefined;
   @Input() required: boolean = false;
+  @Input() maxLength?: number;
+  @Input() numbersOnly: boolean = false;
 
   @Output() valueChange = new EventEmitter<string>();
+
+  onKeyPress(e: KeyboardEvent) {
+    if (this.numbersOnly) {
+      if (!/[0-9]/.test(e.key)) {
+        e.preventDefault();
+      }
+    }
+  }
 
   onInputChange(e: Event) {
     const val = (e.target as HTMLInputElement).value;

@@ -1,6 +1,89 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Admin Audit Log</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Registro de auditoría del sistema - Creo Portal</p>
+<app-admin-shell activeScreen="admin-audit">
+  <!-- Page header -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold tracking-tight" style="color: #111111;">Auditoría</h1>
+    <p class="text-sm mt-1" style="color: #64748B;">
+      Bitácora de acciones administrativas · {{ filteredEntries.length }} registros
+    </p>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col xl:flex-row gap-4 mb-6">
+    <div class="flex bg-white border rounded-lg p-1 overflow-x-auto scrollbar-hide" style="border-color: #E2E8F0;">
+      <button (click)="filter = 'all'" class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="filter === 'all' ? '#111111' : 'transparent'" [style.color]="filter === 'all' ? '#FFFFFF' : '#64748B'">Todos</button>
+      <button (click)="filter = 'suspend'" class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="filter === 'suspend' ? '#111111' : 'transparent'" [style.color]="filter === 'suspend' ? '#FFFFFF' : '#64748B'">Suspensión</button>
+      <button (click)="filter = 'reactivate'" class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="filter === 'reactivate' ? '#111111' : 'transparent'" [style.color]="filter === 'reactivate' ? '#FFFFFF' : '#64748B'">Reactivación</button>
+      <button (click)="filter = 'skill'" class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="filter === 'skill' ? '#111111' : 'transparent'" [style.color]="filter === 'skill' ? '#FFFFFF' : '#64748B'">Catálogo</button>
+      <button (click)="filter = 'job'" class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="filter === 'job' ? '#111111' : 'transparent'" [style.color]="filter === 'job' ? '#FFFFFF' : '#64748B'">Vacantes</button>
+      <button (click)="filter = 'password'" class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="filter === 'password' ? '#111111' : 'transparent'" [style.color]="filter === 'password' ? '#FFFFFF' : '#64748B'">Contraseñas</button>
+      <button (click)="filter = 'config'" class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="filter === 'config' ? '#111111' : 'transparent'" [style.color]="filter === 'config' ? '#FFFFFF' : '#64748B'">Configuración</button>
+    </div>
+
+    <div class="flex items-center gap-3 xl:ml-auto">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium" style="color: #64748B;">Desde</span>
+        <input type="date" [(ngModel)]="dateFrom"
+               class="h-10 px-3 rounded-xl border text-sm outline-none"
+               style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111;" />
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium" style="color: #64748B;">Hasta</span>
+        <input type="date" [(ngModel)]="dateTo"
+               class="h-10 px-3 rounded-xl border text-sm outline-none"
+               style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111;" />
       </div>
     </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white border rounded-2xl overflow-hidden" style="border-color: #E2E8F0;">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse min-w-[900px]">
+        <thead>
+          <tr class="border-b" style="border-color: #F1F5F9; background-color: #F8FAFC;">
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8; width: 15%;">Usuario</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8; width: 18%;">Fecha / Hora</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center" style="color: #94A3B8; width: 12%;">Tipo</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8; width: 25%;">Valor Anterior</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8; width: 30%;">Valor Nuevo</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y" style="border-color: #F1F5F9;">
+          <tr *ngFor="let entry of filteredEntries; trackBy: trackById" class="hover:bg-slate-50 transition-colors">
+            <td class="px-6 py-4">
+              <p class="text-sm font-semibold" style="color: #111111;">{{ entry.actor }}</p>
+            </td>
+            <td class="px-6 py-4">
+              <p class="text-xs" style="color: #64748B;">{{ entry.datetime }}</p>
+              <p class="text-xs font-medium mt-0.5" style="color: #111111;">{{ entry.action }}</p>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <span class="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                    [style.background-color]="getActionStyle(entry.actionType).bg"
+                    [style.color]="getActionStyle(entry.actionType).text">
+                {{ getActionLabel(entry.actionType) }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="text-xs leading-snug"
+                    [style.color]="entry.before === '—' ? '#CBD5E1' : '#4B5563'"
+                    [style.font-style]="entry.before === '—' ? 'italic' : 'normal'">
+                {{ entry.before }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="text-xs leading-snug" style="color: #111111;">
+                {{ entry.after }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="filteredEntries.length === 0">
+            <td colspan="5" class="px-6 py-12 text-center text-slate-500 text-sm">
+              No se encontraron registros de auditoría.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</app-admin-shell>

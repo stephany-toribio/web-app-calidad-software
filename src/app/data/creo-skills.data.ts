@@ -42,13 +42,13 @@ export const CREO_SKILLS: string[] = [
     "Investigación cualitativa", "Mediación de conflictos", "Derecho civil",
     "Derecho laboral", "Oratoria", "Redacción legal", "Docencia", "Evaluación educativa",
     "Terapia cognitivo-conductual", "Trabajo social", "Análisis normativo",
-    "Ética profesional", "Gestión de conflictos", "Tutoría académica",
-    // Habilidades blandas
+    "Ética profesional", "Gestión de conflictos", "Tutoría académica"
+];
+
+export const SOFT_SKILLS: string[] = [
     "Liderazgo", "Comunicación efectiva", "Trabajo en equipo", "Resolución de problemas",
     "Pensamiento crítico", "Gestión del tiempo", "Adaptabilidad", "Creatividad",
-    "Empatía", "Toma de decisiones", "Proactividad",
-    // Idiomas
-    "Inglés (B2+)", "Portugués", "Francés", "Alemán",
+    "Empatía", "Toma de decisiones", "Proactividad", "Resiliencia", "Inteligencia emocional"
 ];
 
 // ─── Taxonomía de carreras por área ─────────────────────────────────────────────
@@ -62,6 +62,52 @@ export const CAREER_TAXONOMY: Record<string, string[]> = {
     "Ciencias Sociales y Educación": ["Psicología", "Educación", "Derecho", "Sociología"],
 };
 
+export const CATEGORY_MAP: Record<string, string> = {
+  "Atención al paciente": "Ciencias de la Salud",
+  "Laboratorio clínico": "Ciencias de la Salud",
+  "Primeros auxilios": "Ciencias de la Salud",
+  "Epidemiología": "Ciencias de la Salud",
+  "Nutrición clínica": "Ciencias de la Salud",
+  "Farmacología": "Ciencias de la Salud",
+  "Bioquímica": "Ciencias de la Salud",
+  "Investigación científica": "Investigación",
+  "Estadística": "Investigación",
+  "SPSS": "Investigación",
+  "Análisis de datos": "Investigación",
+  "Redacción académica": "Investigación",
+  "Revisión sistemática": "Investigación",
+  "Bioestadística": "Investigación",
+  "Python": "Tecnología",
+  "R": "Tecnología",
+  "Excel avanzado": "Tecnología",
+  "SQL": "Tecnología",
+  "Power BI": "Tecnología",
+  "MATLAB": "Tecnología",
+  "Contabilidad": "Negocios",
+  "Finanzas": "Negocios",
+  "Marketing": "Negocios",
+  "Administración": "Negocios",
+  "Ventas": "Negocios",
+  "Logística": "Negocios",
+  "Gestión de proyectos": "Negocios",
+  "Diseño gráfico": "Comunicación y Diseño",
+  "Edición de video": "Comunicación y Diseño",
+  "Fotografía": "Comunicación y Diseño",
+  "Community management": "Comunicación y Diseño",
+  "Redacción periodística": "Comunicación y Diseño",
+  "Inglés (B2+)": "Idiomas",
+  "Portugués": "Idiomas",
+  "Francés": "Idiomas",
+  "Alemán": "Idiomas",
+  "Docencia": "Educación",
+  "Tutoría académica": "Educación",
+  "Liderazgo": "Transversales",
+  "Trabajo en equipo": "Transversales",
+  "Comunicación efectiva": "Transversales",
+  "Resolución de problemas": "Transversales",
+  "Pensamiento crítico": "Transversales",
+};
+
 // ─── Habilidades sugeridas por área (para "Sugeridas para <Área>") ──────────────
 export const AREA_SKILLS: Record<string, string[]> = {
     "Tecnología": ["JavaScript", "TypeScript", "Python", "Java", "C#", "PHP", "React", "Angular", "Vue.js", "Node.js", "Next.js", "Express.js", "GraphQL", "REST APIs", "SQL", "PostgreSQL", "MySQL", "MongoDB", "Docker", "Kubernetes", "AWS", "Azure", "GCP", "Git", "Linux", "Scrum", "Agile"],
@@ -70,8 +116,7 @@ export const AREA_SKILLS: Record<string, string[]> = {
     "Investigación y Datos": ["Investigación científica", "Estadística", "SPSS", "Análisis de datos", "Redacción académica", "Revisión sistemática", "Bioestadística", "R", "Power BI", "Excel avanzado", "Machine Learning", "Visualización de datos", "Minería de datos", "Métodos cuantitativos", "Métodos cualitativos", "Muestreo estadístico"],
     "Negocios y Administración": ["Excel avanzado", "Power BI", "Marketing digital", "Contabilidad financiera", "Negociación", "Gestión de proyectos", "Planeamiento estratégico", "Recursos humanos", "Ventas", "Atención al cliente", "Comercio exterior", "Costos y presupuestos", "SAP", "Google Analytics", "Community management"],
     "Diseño y Comunicación": ["Figma", "Adobe Photoshop", "Adobe Illustrator", "Adobe Premiere", "After Effects", "UX Research", "Prototipado", "Diseño de interacción", "Branding", "Copywriting", "Fotografía", "Edición de video", "Diseño editorial", "Ilustración digital", "Diseño UI", "Wireframing"],
-    "Ciencias Sociales y Educación": ["Diseño curricular", "Psicología clínica", "Psicología organizacional", "Investigación cualitativa", "Mediación de conflictos", "Derecho civil", "Derecho laboral", "Oratoria", "Redacción legal", "Docencia", "Evaluación educativa", "Terapia cognitivo-conductual", "Trabajo social", "Análisis normativo", "Ética profesional", "Gestión de conflictos"],
-    "Habilidades blandas": ["Liderazgo", "Comunicación efectiva", "Trabajo en equipo", "Resolución de problemas", "Gestión del tiempo", "Pensamiento crítico", "Adaptabilidad", "Negociación", "Creatividad", "Empatía", "Toma de decisiones", "Proactividad"],
+    "Ciencias Sociales y Educación": ["Diseño curricular", "Psicología clínica", "Psicología organizacional", "Investigación cualitativa", "Mediación de conflictos", "Derecho civil", "Derecho laboral", "Oratoria", "Redacción legal", "Docencia", "Evaluación educativa", "Terapia cognitivo-conductual", "Trabajo social", "Análisis normativo", "Ética profesional", "Gestión de conflictos"]
 };
 
 export const CREO_SECTORS: string[] = [

@@ -1,5 +1,6 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CreoWordmarkComponent } from '../../../components/creo-design-system/creo-wordmark/creo-wordmark.component';
 import { CreoBtnComponent } from '../../../components/creo-design-system/creo-btn/creo-btn.component';
@@ -18,7 +19,7 @@ type RucStatus = 'idle' | 'checking' | 'taken' | 'ok';
   selector: 'app-creo-register-company',
   standalone: true,
   imports: [
-    CommonModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent,
+    CommonModule, FormsModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent,
     CreoSelectComponent, CreoCardComponent, CreoAlertComponent, CreoStepIndicatorComponent
   ],
   templateUrl: './creo-register-company.component.html',
@@ -26,7 +27,7 @@ type RucStatus = 'idle' | 'checking' | 'taken' | 'ok';
 })
 export class CreoRegisterCompanyComponent implements OnDestroy {
   sectors = CREO_SECTORS;
-  steps = ['Datos de empresa', 'Acceso y contacto'];
+  steps = ['Datos de empresa', 'Acceso y contacto', 'Resumen'];
   currentStep = 0;
 
   razSocial = '';
@@ -34,12 +35,29 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
   rucStatus: RucStatus = 'idle';
   rucTimer: ReturnType<typeof setTimeout> | null = null;
   sector = '';
+  website = '';
   email = '';
   password = '';
   contactName = '';
   errors: Record<string, string> = {};
+  showPassword = false;
 
   constructor(private router: Router) { }
+
+  get passLength() { return this.password.length >= 8; }
+  get passLetter() { return /[a-zA-Z]/.test(this.password); }
+  get passNumber() { return /\d/.test(this.password); }
+  get passSymbol() { return /[^a-zA-Z0-9]/.test(this.password); }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  onRucKeypress(event: KeyboardEvent) {
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
 
   ngOnDestroy() {
     if (this.rucTimer) clearTimeout(this.rucTimer);
@@ -89,18 +107,38 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
     else if (this.ruc.length !== 11) e['ruc'] = 'El RUC debe tener 11 dígitos';
     else if (this.rucStatus === 'taken') e['ruc'] = 'Este RUC ya está registrado';
     if (!this.sector) e['sector'] = 'Selecciona el sector de tu empresa';
+    if (this.website.trim() && !/^https?:\/\/[^\s$.?#].[^\s]*$/.test(this.website)) {
+      e['website'] = 'Ingresa una URL válida (ej. https://empresa.com)';
+    }
     return e;
   }
 
   nextStep() {
-    this.errors = this.validateStep1();
-    if (Object.keys(this.errors).length === 0) {
-      this.currentStep = 1;
+    if (this.currentStep === 0) {
+      this.errors = this.validateStep1();
+      if (Object.keys(this.errors).length === 0) {
+        this.currentStep = 1;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else if (this.currentStep === 1) {
+      this.errors = this.validate();
+      if (Object.keys(this.errors).length === 0) {
+        this.currentStep = 2;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   }
 
   prevStep() {
-    this.currentStep = 0;
+    if (this.currentStep > 0) {
+      this.currentStep -= 1;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  goToStep(step: number) {
+    this.currentStep = step;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   validate(): Record<string, string> {
@@ -109,15 +147,16 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
     else if (TAKEN_EMAILS.includes(this.email.trim().toLowerCase())) e['emailTaken'] = 'duplicate';
     if (!this.password.trim()) e['password'] = 'La contraseña es obligatoria';
-    else if (this.password.length < 8) e['password'] = 'Mínimo 8 caracteres';
+    else if (!this.passLength || !this.passLetter || !this.passNumber || !this.passSymbol) {
+      e['password'] = 'La contraseña no cumple los requisitos';
+    }
     if (!this.contactName.trim()) e['contactName'] = 'El nombre del contacto es obligatorio';
     return e;
   }
 
   handleSubmit(e: Event) {
     e.preventDefault();
-    this.errors = this.validate();
-    if (Object.keys(this.errors).length === 0) {
+    if (this.currentStep === 2) {
       this.router.navigate(['/creo/success/company'], { state: { name: this.razSocial } });
     }
   }

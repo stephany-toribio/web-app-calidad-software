@@ -7,6 +7,8 @@
         <input
           [type]="type"
           [value]="value"
+          [attr.maxlength]="maxLength ? maxLength : null"
+          (keypress)="onKeyPress($event)"
           (input)="onInputChange($event)"
           [placeholder]="placeholder"
           class="w-full h-11 px-3.5 rounded-xl border text-sm placeholder:text-slate-400 outline-none transition-all duration-150"
