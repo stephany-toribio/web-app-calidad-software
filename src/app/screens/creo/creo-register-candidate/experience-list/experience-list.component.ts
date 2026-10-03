@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+const MAX_DESCRIPCION_PALABRAS = 15;
+
 export interface ExperienceEntry {
   puesto: string;
   empresa: string;
@@ -43,6 +45,22 @@ export class ExperienceListComponent {
       fechaInicioMes: '', fechaInicioAno: '', fechaFinMes: '', fechaFinAno: '',
       alPresente: false, descripcion: ''
     };
+  }
+
+  get maxDescripcionPalabras(): number {
+    return MAX_DESCRIPCION_PALABRAS;
+  }
+
+  get descripcionWordCount(): number {
+    const text = this.currentExp.descripcion.trim();
+    return text.length ? text.split(/\s+/).length : 0;
+  }
+
+  onDescripcionChange(value: string) {
+    const words = value.trim().length ? value.trim().split(/\s+/) : [];
+    this.currentExp.descripcion = words.length > MAX_DESCRIPCION_PALABRAS
+      ? words.slice(0, MAX_DESCRIPCION_PALABRAS).join(' ')
+      : value;
   }
 
   openModal(index = -1) {
