@@ -25,7 +25,18 @@ export class CreoAdminSkillsComponent implements OnInit {
   statusFilter: 'all' | SkillStatus = 'all';
   
   categories = ["Todas", "Ciencias de la Salud", "Investigación", "Tecnología", "Negocios", "Comunicación y Diseño", "Idiomas", "Educación", "Transversales"];
-  
+
+  // Paleta que se asigna en orden a las categorías creadas por el admin
+  private customCategoryPalette: { bg: string; text: string }[] = [
+    { bg: "#E0E7FF", text: "#3730A3" },
+    { bg: "#FFE4E6", text: "#9F1239" },
+    { bg: "#D1FAE5", text: "#065F46" },
+    { bg: "#FEF9C3", text: "#854D0E" },
+    { bg: "#E0F2FE", text: "#0369A1" },
+    { bg: "#F3E8FF", text: "#6B21A8" },
+  ];
+  private customCategoryCount = 0;
+
   Math = Math;
 
   toasts: Toast[] = [];
@@ -39,6 +50,11 @@ export class CreoAdminSkillsComponent implements OnInit {
   newName = '';
   newCategory = 'General';
   newError = '';
+
+  // New category modal
+  showNewCategoryModal = false;
+  newCategoryName = '';
+  newCategoryError = '';
 
   // Edit skill modal
   editingSkill: Skill | null = null;
@@ -132,6 +148,34 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.newName = '';
     this.newCategory = 'General';
     this.newError = '';
+  }
+
+  openNewCategoryModal() {
+    this.showNewCategoryModal = true;
+    this.newCategoryName = '';
+    this.newCategoryError = '';
+  }
+
+  saveNewCategory() {
+    const name = this.newCategoryName.trim();
+    if (!name) {
+      this.newCategoryError = 'El nombre de la categoría es requerido';
+      return;
+    }
+    const exists = this.categories.some(c => c.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      this.newCategoryError = 'Ya existe una categoría con ese nombre';
+      return;
+    }
+
+    this.categories.push(name);
+    const colors = this.customCategoryPalette[this.customCategoryCount % this.customCategoryPalette.length];
+    this.customCategoryCount++;
+    this.categoryBg[name] = colors.bg;
+    this.categoryText[name] = colors.text;
+
+    this.showNewCategoryModal = false;
+    this.showToast(`Categoría '${name}' agregada correctamente.`);
   }
 
   saveNewSkill() {
