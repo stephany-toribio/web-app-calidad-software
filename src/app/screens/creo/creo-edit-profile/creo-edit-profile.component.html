@@ -236,10 +236,10 @@
               </span>
             </div>
             <p class="text-xs text-slate-500">
-              Tus habilidades acordes a tu educación aparecen primero.
+              {{ hasAreaFilter ? 'Mostrando solo habilidades técnicas acordes a tu área de estudio.' : 'Selecciona hasta 15 habilidades técnicas.' }}
             </p>
             <app-creo-skill-picker [catalog]="catalog" [selected]="skills" (toggle)="toggleSkill($event)"
-              [suggestedSections]="suggestedSections"
+              [suggestedSections]="[]"
               [maxSkills]="maxSkills"></app-creo-skill-picker>
           </div>
 

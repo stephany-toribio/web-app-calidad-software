@@ -10,7 +10,7 @@ import { CreoStepIndicatorComponent } from '../../../components/creo-design-syst
 import { CreoSkillPickerComponent } from '../../../components/creo-design-system/creo-skill-picker/creo-skill-picker.component';
 import { StudyListComponent, StudyEntry } from '../creo-register-candidate/study-list/study-list.component';
 import { LanguageListComponent, LanguageEntry } from '../creo-register-candidate/language-list/language-list.component';
-import { CREO_SKILLS, SOFT_SKILLS, AREA_SKILLS, SkillSection } from '../../../data/creo-skills.data';
+import { CREO_SKILLS, SOFT_SKILLS, AREA_SKILLS, AREA_ESTUDIO_TO_CATEGORIA } from '../../../data/creo-skills.data';
 import { FormsModule } from '@angular/forms';
 
 const STEPS = ['Datos personales', 'Educación y salario', 'Habilidades'];
@@ -52,10 +52,14 @@ const DEMO_PROFILE = {
 })
 export class CreoEditProfileComponent {
   steps = STEPS;
-  catalog = CREO_SKILLS;
   softCatalog = SOFT_SKILLS;
   genderOptions = GENDER_OPTIONS;
   maxSkills = MAX_SKILLS;
+
+  get catalog(): string[] {
+    const areaSet = this.areaFilteredSkillSet;
+    return areaSet ? CREO_SKILLS.filter(s => areaSet.has(s)) : CREO_SKILLS;
+  }
 
   step = 0;
 
@@ -70,9 +74,21 @@ export class CreoEditProfileComponent {
   gender = DEMO_PROFILE.gender;
   location = DEMO_PROFILE.location;
   salary = DEMO_PROFILE.salary;
-  carreras: StudyEntry[] = [...DEMO_PROFILE.carreras];
-  educacionSuperior: StudyEntry[] = [...DEMO_PROFILE.educacionSuperior];
+  private _carreras: StudyEntry[] = [...DEMO_PROFILE.carreras];
+  private _educacionSuperior: StudyEntry[] = [...DEMO_PROFILE.educacionSuperior];
   idiomas: LanguageEntry[] = [...DEMO_PROFILE.idiomas];
+
+  get carreras(): StudyEntry[] { return this._carreras; }
+  set carreras(v: StudyEntry[]) {
+    this._carreras = v;
+    this.pruneSkillsToArea();
+  }
+
+  get educacionSuperior(): StudyEntry[] { return this._educacionSuperior; }
+  set educacionSuperior(v: StudyEntry[]) {
+    this._educacionSuperior = v;
+    this.pruneSkillsToArea();
+  }
   skills: string[] = [...DEMO_PROFILE.skills];
   softSkills: string[] = [...DEMO_PROFILE.softSkills];
 
@@ -101,23 +117,43 @@ export class CreoEditProfileComponent {
   }
 
   private _cachedAreasStr = '';
-  private _cachedSections: SkillSection[] = [];
+  private _cachedCategorias: string[] = [];
+  private _cachedAreaSkillSet: Set<string> | null = null;
 
   get selectedAreas(): string[] {
     const allStudies = [...this.carreras, ...this.educacionSuperior];
     return [...new Set(allStudies.map(c => c.areaEstudio).filter(a => !!a))];
   }
 
-  get suggestedSections(): SkillSection[] {
+  /** Categorías de AREA_SKILLS derivadas de las áreas de estudio elegidas ("Otro" no mapea a ninguna). */
+  get selectedSkillCategories(): string[] {
     const areas = this.selectedAreas;
     const areasStr = areas.join(',');
     if (this._cachedAreasStr !== areasStr) {
       this._cachedAreasStr = areasStr;
-      this._cachedSections = areas
-        .filter(a => AREA_SKILLS[a])
-        .map(a => ({ label: `Sugeridas para ${a}`, skills: AREA_SKILLS[a] }));
+      this._cachedCategorias = [...new Set(areas.map(a => AREA_ESTUDIO_TO_CATEGORIA[a]).filter((c): c is string => !!c))];
+      this._cachedAreaSkillSet = this._cachedCategorias.length > 0
+        ? new Set(this._cachedCategorias.flatMap(c => AREA_SKILLS[c] ?? []))
+        : null;
     }
-    return this._cachedSections;
+    return this._cachedCategorias;
+  }
+
+  /** Conjunto de habilidades técnicas válidas según el área de estudio, o null si no hay un área reconocida. */
+  get areaFilteredSkillSet(): Set<string> | null {
+    this.selectedSkillCategories; // asegura que el cache esté actualizado
+    return this._cachedAreaSkillSet;
+  }
+
+  get hasAreaFilter(): boolean {
+    return this.areaFilteredSkillSet !== null;
+  }
+
+  private pruneSkillsToArea() {
+    const areaSet = this.areaFilteredSkillSet;
+    if (areaSet) {
+      this.skills = this.skills.filter(s => areaSet.has(s));
+    }
   }
 
   setDni(v: string) {

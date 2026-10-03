@@ -11,7 +11,7 @@ import { CreoSkillPickerComponent } from '../../../components/creo-design-system
 import { StudyListComponent, StudyEntry } from './study-list/study-list.component';
 import { LanguageListComponent, LanguageEntry } from './language-list/language-list.component';
 import { ExperienceListComponent, ExperienceEntry } from './experience-list/experience-list.component';
-import { AREA_SKILLS, SkillSection } from '../../../data/creo-skills.data';
+import { AREA_SKILLS, AREA_ESTUDIO_TO_CATEGORIA } from '../../../data/creo-skills.data';
 import { SkillsService } from '../../../services/skills.service';
 import { FormsModule } from '@angular/forms';
 
@@ -49,7 +49,8 @@ export class CreoRegisterCandidateComponent {
       this._cachedHard = this.skillsService.getHardSkills(true).map(s => s.name);
       this._cachedSoft = this.skillsService.getSoftSkills(true).map(s => s.name);
     }
-    return this._cachedHard;
+    const areaSet = this.areaFilteredSkillSet;
+    return areaSet ? this._cachedHard.filter(s => areaSet.has(s)) : this._cachedHard;
   }
 
   get softCatalog() {
@@ -78,10 +79,22 @@ export class CreoRegisterCandidateComponent {
   anosNac = Array.from({ length: 100 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   // Paso 1 — Educación
-  carreras: StudyEntry[] = [];
-  educacionSuperior: StudyEntry[] = [];
+  private _carreras: StudyEntry[] = [];
+  private _educacionSuperior: StudyEntry[] = [];
   idiomas: LanguageEntry[] = [];
   salary = '';
+
+  get carreras(): StudyEntry[] { return this._carreras; }
+  set carreras(v: StudyEntry[]) {
+    this._carreras = v;
+    this.pruneSkillsToArea();
+  }
+
+  get educacionSuperior(): StudyEntry[] { return this._educacionSuperior; }
+  set educacionSuperior(v: StudyEntry[]) {
+    this._educacionSuperior = v;
+    this.pruneSkillsToArea();
+  }
 
   // Paso 2 — Experiencia
   hasExperience: boolean | null = null;
@@ -95,23 +108,43 @@ export class CreoRegisterCandidateComponent {
 
 
   private _cachedAreasStr = '';
-  private _cachedSections: SkillSection[] = [];
+  private _cachedCategorias: string[] = [];
+  private _cachedAreaSkillSet: Set<string> | null = null;
 
   get selectedAreas(): string[] {
     const allStudies = [...this.carreras, ...this.educacionSuperior];
     return [...new Set(allStudies.map(c => c.areaEstudio).filter(a => !!a))];
   }
 
-  get suggestedSections(): SkillSection[] {
+  /** Categorías de AREA_SKILLS derivadas de las áreas de estudio elegidas ("Otro" no mapea a ninguna). */
+  get selectedSkillCategories(): string[] {
     const areas = this.selectedAreas;
     const areasStr = areas.join(',');
     if (this._cachedAreasStr !== areasStr) {
       this._cachedAreasStr = areasStr;
-      this._cachedSections = areas
-        .filter(a => AREA_SKILLS[a])
-        .map(a => ({ label: `Sugeridas para ${a}`, skills: AREA_SKILLS[a] }));
+      this._cachedCategorias = [...new Set(areas.map(a => AREA_ESTUDIO_TO_CATEGORIA[a]).filter((c): c is string => !!c))];
+      this._cachedAreaSkillSet = this._cachedCategorias.length > 0
+        ? new Set(this._cachedCategorias.flatMap(c => AREA_SKILLS[c] ?? []))
+        : null;
     }
-    return this._cachedSections;
+    return this._cachedCategorias;
+  }
+
+  /** Conjunto de habilidades técnicas válidas según el área de estudio, o null si no hay un área reconocida. */
+  get areaFilteredSkillSet(): Set<string> | null {
+    this.selectedSkillCategories; // asegura que el cache esté actualizado
+    return this._cachedAreaSkillSet;
+  }
+
+  get hasAreaFilter(): boolean {
+    return this.areaFilteredSkillSet !== null;
+  }
+
+  private pruneSkillsToArea() {
+    const areaSet = this.areaFilteredSkillSet;
+    if (areaSet) {
+      this.skills = this.skills.filter(s => areaSet.has(s));
+    }
   }
 
   get passLength() { return this.password.length >= 8; }
