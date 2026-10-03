@@ -23,7 +23,10 @@ const TIPOS_ESTUDIO = ['Universitario', 'Terciario', 'Posgrado', 'Master', 'Doct
 const AREAS_ESTUDIO = ['Ingeniería', 'Administración', 'Diseño', 'Salud', 'Educación', 'Tecnología', 'Otro'];
 const ESTADOS = ['Finalizado', 'En curso', 'Incompleto'];
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-const ANOS = Array.from({length: 50}, (_, i) => (new Date().getFullYear() - i).toString());
+const ANOS = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
+
+// Tipos de estudio para los que el campo Título/Carrera debe habilitarse
+const TIPOS_CON_TITULO = ['Universitario', 'Posgrado', 'Master', 'Doctorado'];
 
 @Component({
   selector: 'app-study-list',
@@ -39,7 +42,7 @@ export class StudyListComponent {
   @Output() studiesChange = new EventEmitter<StudyEntry[]>();
 
   showModal = false;
-  
+
   paises = PAISES;
   tiposEstudio = TIPOS_ESTUDIO;
   areasEstudio = AREAS_ESTUDIO;
@@ -50,6 +53,17 @@ export class StudyListComponent {
   editingIndex = -1;
   currentStudy: StudyEntry = this.getEmptyStudy();
   errors: Record<string, string> = {};
+
+  get tituloEnabled(): boolean {
+    return TIPOS_CON_TITULO.includes(this.currentStudy.tipoEstudio);
+  }
+
+  onTipoEstudioChange() {
+    if (!this.tituloEnabled) {
+      this.currentStudy.titulo = '';
+      delete this.errors['titulo'];
+    }
+  }
 
   getEmptyStudy(): StudyEntry {
     return {
@@ -83,13 +97,13 @@ export class StudyListComponent {
 
   saveStudy() {
     this.errors = {};
-    if (!this.currentStudy.titulo) this.errors['titulo'] = 'Requerido';
     if (!this.currentStudy.tipoEstudio) this.errors['tipoEstudio'] = 'Requerido';
+    if (this.tituloEnabled && !this.currentStudy.titulo) this.errors['titulo'] = 'Requerido';
     if (!this.currentStudy.areaEstudio) this.errors['areaEstudio'] = 'Requerido';
     if (!this.currentStudy.institucion) this.errors['institucion'] = 'Requerido';
     if (!this.currentStudy.estado) this.errors['estado'] = 'Requerido';
     if (!this.currentStudy.fechaInicioMes || !this.currentStudy.fechaInicioAno) this.errors['fechaInicio'] = 'Requerido';
-    
+
     if (!this.currentStudy.alPresente) {
       if (!this.currentStudy.fechaFinMes || !this.currentStudy.fechaFinAno) {
         this.errors['fechaFin'] = 'Requerido';
@@ -98,11 +112,15 @@ export class StudyListComponent {
         const fAno = parseInt(this.currentStudy.fechaFinAno);
         const iMes = this.meses.indexOf(this.currentStudy.fechaInicioMes);
         const fMes = this.meses.indexOf(this.currentStudy.fechaFinMes);
-        
+
         if (fAno < iAno || (fAno === iAno && fMes < iMes)) {
           this.errors['fechaFin'] = 'La fecha de fin no puede ser anterior al inicio';
         }
       }
+    }
+
+    if (!this.tituloEnabled) {
+      this.currentStudy.titulo = '';
     }
 
     if (Object.keys(this.errors).length === 0) {
@@ -110,7 +128,7 @@ export class StudyListComponent {
         this.currentStudy.fechaFinMes = '';
         this.currentStudy.fechaFinAno = '';
       }
-      
+
       const updated = [...this.studies];
       if (this.editingIndex === -1) {
         updated.push(this.currentStudy);

@@ -18,6 +18,7 @@ export class CreoFieldComponent {
   @Input() required: boolean = false;
   @Input() maxLength?: number;
   @Input() numbersOnly: boolean = false;
+  @Input() disabled: boolean = false;
 
   @Output() valueChange = new EventEmitter<string>();
 
