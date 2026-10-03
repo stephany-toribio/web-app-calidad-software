@@ -61,7 +61,7 @@
             <select [(ngModel)]="currentLang.idioma" class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
                     [ngStyle]="{'border-color': errors['idioma'] ? '#E5140D' : '#E2E8F0'}">
               <option value="">Elige una opción</option>
-              <option *ngFor="let i of idiomas" [value]="i">{{ i }}</option>
+              <option *ngFor="let i of availableIdiomas" [value]="i">{{ i }}</option>
             </select>
             <p *ngIf="errors['idioma']" class="text-xs text-red-500 mt-1">{{ errors['idioma'] }}</p>
           </div>

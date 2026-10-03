@@ -32,6 +32,16 @@ export class LanguageListComponent {
   currentLang: LanguageEntry = this.getEmptyLang();
   errors: Record<string, string> = {};
 
+  /** Idiomas que aún no se han agregado (más el que esté seleccionado actualmente, si se está editando). */
+  get availableIdiomas(): string[] {
+    const usados = new Set(
+      this.languages
+        .filter((_, i) => i !== this.editingIndex)
+        .map(l => l.idioma)
+    );
+    return this.idiomas.filter(i => !usados.has(i));
+  }
+
   getEmptyLang(): LanguageEntry {
     return { idioma: '', nivelEscrito: '', nivelOral: '' };
   }

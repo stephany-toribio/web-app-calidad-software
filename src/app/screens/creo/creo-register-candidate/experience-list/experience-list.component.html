@@ -146,9 +146,12 @@
         <!-- Descripción -->
         <div class="sm:col-span-2">
           <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Descripción de responsabilidades <span class="font-normal text-slate-400 ml-1">(opcional)</span></label>
-          <textarea [(ngModel)]="currentExp.descripcion" rows="4" placeholder="Describe brevemente tus logros y tareas principales..."
+          <textarea [ngModel]="currentExp.descripcion" (ngModelChange)="onDescripcionChange($event)" rows="4" placeholder="Describe brevemente tus logros y tareas principales..."
                     class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none text-[#111111] resize-none"
                     style="border-color: #E2E8F0;"></textarea>
+          <p class="text-xs mt-1" [style.color]="descripcionWordCount >= maxDescripcionPalabras ? '#E5140D' : '#94A3B8'">
+            {{ descripcionWordCount }} / {{ maxDescripcionPalabras }} palabras
+          </p>
         </div>
 
       </div>
