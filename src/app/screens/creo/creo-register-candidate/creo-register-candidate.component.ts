@@ -36,7 +36,7 @@ export class CreoRegisterCandidateComponent {
   genderOptions = GENDER_OPTIONS;
   maxSkills = MAX_SKILLS;
 
-  constructor(private router: Router, private skillsService: SkillsService) {}
+  constructor(private router: Router, private skillsService: SkillsService) { }
 
   private _cachedSkillsVersion = -1;
   private _cachedHard: string[] = [];
@@ -73,9 +73,9 @@ export class CreoRegisterCandidateComponent {
   phone = '';
   showPassword = false;
 
-  dias = Array.from({length: 31}, (_, i) => (i + 1).toString());
+  dias = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   mesesNac = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-  anosNac = Array.from({length: 100}, (_, i) => (new Date().getFullYear() - i).toString());
+  anosNac = Array.from({ length: 100 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   // Paso 1 — Educación
   carreras: StudyEntry[] = [];
@@ -198,7 +198,7 @@ export class CreoRegisterCandidateComponent {
       const errs: Record<string, string> = {};
       if (this.carreras.length === 0) errs['carreras'] = 'Agrega al menos una carrera';
       if (this.idiomas.length === 0) errs['idiomas'] = 'Agrega al menos un idioma';
-      
+
       this.errors = errs;
       if (Object.keys(errs).length === 0) {
         this.errors = {};

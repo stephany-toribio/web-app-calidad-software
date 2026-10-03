@@ -44,18 +44,21 @@
                 Fecha de nacimiento <span class="text-xs font-semibold" style="color: #F2B705;">*</span>
               </label>
               <div class="flex gap-2">
-                <select [(ngModel)]="birthDay" name="bday" class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
-                        [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
+                <select [(ngModel)]="birthDay" name="bday"
+                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                  [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
                   <option value="">Día</option>
                   <option *ngFor="let d of dias" [value]="d">{{ d }}</option>
                 </select>
-                <select [(ngModel)]="birthMonth" name="bmonth" class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
-                        [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
+                <select [(ngModel)]="birthMonth" name="bmonth"
+                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                  [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
                   <option value="">Mes</option>
                   <option *ngFor="let m of mesesNac" [value]="m">{{ m }}</option>
                 </select>
-                <select [(ngModel)]="birthYear" name="byear" class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
-                        [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
+                <select [(ngModel)]="birthYear" name="byear"
+                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                  [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
                   <option value="">Año</option>
                   <option *ngFor="let a of anosNac" [value]="a">{{ a }}</option>
                 </select>
@@ -75,8 +78,7 @@
               </label>
               <select [value]="gender" (change)="gender = $any($event.target).value" name="gen"
                 class="w-full h-11 px-3 rounded-xl border text-sm outline-none transition-all cursor-pointer bg-white"
-                style="border-color: #E2E8F0;"
-                [style.color]="gender ? '#111111' : '#94A3B8'">
+                style="border-color: #E2E8F0;" [style.color]="gender ? '#111111' : '#94A3B8'">
                 <option value="">Selecciona (opcional)</option>
                 <option *ngFor="let g of genderOptions" [value]="g">{{ g }}</option>
               </select>
@@ -87,7 +89,8 @@
               hint="Usarás este correo para iniciar sesión" [required]="true"></app-creo-field>
 
             <app-creo-field label="Teléfono" type="tel" [value]="phone" (valueChange)="setPhone($event)"
-              placeholder="999000111" [error]="errors['phone']" [required]="true" [numbersOnly]="true" [maxLength]="9"></app-creo-field>
+              placeholder="999000111" [error]="errors['phone']" [required]="true" [numbersOnly]="true"
+              [maxLength]="9"></app-creo-field>
 
             <!-- Correo duplicado -->
             <div *ngIf="errors['emailTaken']" class="sm:col-span-2 -mt-2">
@@ -111,33 +114,52 @@
               </label>
               <div class="relative">
                 <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="pwd"
-                       class="w-full h-11 pl-3.5 pr-10 rounded-xl border text-sm outline-none transition-all duration-150 text-[#111111]"
-                       [style.border-color]="errors['password'] ? '#E5140D' : '#E2E8F0'"
-                       placeholder="Ingresa tu contraseña" />
-                <button type="button" (click)="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                  <svg *ngIf="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
+                  class="w-full h-11 pl-3.5 pr-10 rounded-xl border text-sm outline-none transition-all duration-150 text-[#111111]"
+                  [style.border-color]="errors['password'] ? '#E5140D' : '#E2E8F0'"
+                  placeholder="Ingresa tu contraseña" />
+                <button type="button" (click)="togglePassword()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <svg *ngIf="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
                   </svg>
-                  <svg *ngIf="showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>
+                  <svg *ngIf="showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                    </path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
                   </svg>
                 </button>
               </div>
               <div *ngIf="password.length > 0" class="mt-2 text-xs flex flex-col gap-1">
                 <p class="flex items-center gap-1.5" [style.color]="passLength ? '#16a34a' : '#94a3b8'">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
                   Mínimo 8 caracteres
                 </p>
                 <p class="flex items-center gap-1.5" [style.color]="passLetter ? '#16a34a' : '#94a3b8'">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
                   Incluye letras
                 </p>
                 <p class="flex items-center gap-1.5" [style.color]="passNumber ? '#16a34a' : '#94a3b8'">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
                   Incluye números
                 </p>
                 <p class="flex items-center gap-1.5" [style.color]="passSymbol ? '#16a34a' : '#94a3b8'">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
                   Incluye al menos un símbolo especial
                 </p>
               </div>
@@ -178,8 +200,10 @@
 
           <app-study-list title="Carrera" [(studies)]="carreras" [maxStudies]="5"></app-study-list>
           <div *ngIf="errors['carreras']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['carreras'] }}</div>
-          
-          <app-study-list title="Educación Superior" [(studies)]="educacionSuperior" [maxStudies]="5" [disabled]="carreras.length === 0"></app-study-list>
+
+          <!-- Lo mantengo Educación Superior hasta que decidan si lo usamos o no -->
+          <!-- <app-study-list title="Educación Superior" [(studies)]="educacionSuperior" [maxStudies]="5"
+            [disabled]="carreras.length === 0"></app-study-list> -->
 
           <app-language-list [(languages)]="idiomas" [maxLanguages]="10"></app-language-list>
           <div *ngIf="errors['idiomas']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['idiomas'] }}</div>
@@ -217,14 +241,16 @@
           <p class="text-sm font-medium" style="color: #374151;">¿Tienes experiencia laboral?</p>
           <div class="flex gap-4">
             <button type="button" (click)="hasExperience = true"
-                    class="flex-1 py-4 px-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2"
-                    [ngStyle]="{'border-color': hasExperience === true ? '#F2B705' : '#E2E8F0', 'background-color': hasExperience === true ? '#FEF9C3' : '#FFFFFF'}">
-              <span class="text-sm font-bold" [ngStyle]="{'color': hasExperience === true ? '#111111' : '#64748B'}">Sí, tengo experiencia</span>
+              class="flex-1 py-4 px-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2"
+              [ngStyle]="{'border-color': hasExperience === true ? '#F2B705' : '#E2E8F0', 'background-color': hasExperience === true ? '#FEF9C3' : '#FFFFFF'}">
+              <span class="text-sm font-bold" [ngStyle]="{'color': hasExperience === true ? '#111111' : '#64748B'}">Sí,
+                tengo experiencia</span>
             </button>
             <button type="button" (click)="hasExperience = false"
-                    class="flex-1 py-4 px-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2"
-                    [ngStyle]="{'border-color': hasExperience === false ? '#F2B705' : '#E2E8F0', 'background-color': hasExperience === false ? '#FEF9C3' : '#FFFFFF'}">
-              <span class="text-sm font-bold" [ngStyle]="{'color': hasExperience === false ? '#111111' : '#64748B'}">Busco mi primer empleo</span>
+              class="flex-1 py-4 px-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2"
+              [ngStyle]="{'border-color': hasExperience === false ? '#F2B705' : '#E2E8F0', 'background-color': hasExperience === false ? '#FEF9C3' : '#FFFFFF'}">
+              <span class="text-sm font-bold"
+                [ngStyle]="{'color': hasExperience === false ? '#111111' : '#64748B'}">Busco mi primer empleo</span>
             </button>
           </div>
           <p *ngIf="errors['experiencia']" class="text-xs text-red-500 mt-1">{{ errors['experiencia'] }}</p>
@@ -263,11 +289,11 @@
           <div class="flex flex-col gap-2">
             <h4 class="text-sm font-bold" style="color: #111111;">Habilidades Técnicas</h4>
             <p class="text-xs text-slate-500">
-              {{ suggestedSections.length > 0 ? 'Tus habilidades acordes a tu educación aparecen primero.' : 'Selecciona hasta 15 habilidades técnicas.' }}
+              {{ suggestedSections.length > 0 ? 'Tus habilidades acordes a tu educación aparecen primero.' : 'Selecciona
+              hasta 15 habilidades técnicas.' }}
             </p>
             <app-creo-skill-picker [catalog]="catalog" [selected]="skills" (toggle)="toggleSkill($event)"
-              [suggestedSections]="suggestedSections"
-              [maxSkills]="maxSkills"></app-creo-skill-picker>
+              [suggestedSections]="suggestedSections" [maxSkills]="maxSkills"></app-creo-skill-picker>
           </div>
 
           <!-- Habilidades Blandas -->
@@ -275,10 +301,9 @@
             <h4 class="text-sm font-bold" style="color: #111111;">Habilidades Blandas</h4>
             <p class="text-xs text-slate-500">Selecciona hasta 15 habilidades interpersonales.</p>
             <app-creo-skill-picker [catalog]="softCatalog" [selected]="softSkills" (toggle)="toggleSoftSkill($event)"
-              [suggestedSections]="[]"
-              [maxSkills]="maxSkills"></app-creo-skill-picker>
+              [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
           </div>
-          
+
           <div *ngIf="errors['skills']" class="text-xs text-red-500 mt-1">{{ errors['skills'] }}</div>
         </div>
 
@@ -310,13 +335,16 @@
           </div>
 
           <p class="text-sm text-slate-500 leading-relaxed">
-            Revisa que toda tu información sea correcta antes de crear tu cuenta. Puedes volver a cualquier paso para editarla.
+            Revisa que toda tu información sea correcta antes de crear tu cuenta. Puedes volver a cualquier paso para
+            editarla.
           </p>
 
           <!-- Resumen de Datos -->
           <div class="border rounded-xl p-4 relative" style="border-color: #E2E8F0;">
-            <button type="button" (click)="goToStep(0)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" (click)="goToStep(0)"
+              class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
               </svg>
             </button>
@@ -332,8 +360,10 @@
 
           <!-- Resumen de Educación -->
           <div class="border rounded-xl p-4 relative" style="border-color: #E2E8F0;">
-            <button type="button" (click)="goToStep(1)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" (click)="goToStep(1)"
+              class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
               </svg>
             </button>
@@ -354,7 +384,8 @@
               <div *ngIf="idiomas.length > 0">
                 <p class="font-semibold text-xs text-slate-500 mb-1">IDIOMAS</p>
                 <ul class="list-disc list-inside">
-                  <li *ngFor="let c of idiomas">{{ c.idioma }} (Escrito: {{ c.nivelEscrito }}, Oral: {{ c.nivelOral }})</li>
+                  <li *ngFor="let c of idiomas">{{ c.idioma }} (Escrito: {{ c.nivelEscrito }}, Oral: {{ c.nivelOral }})
+                  </li>
                 </ul>
               </div>
             </div>
@@ -362,8 +393,10 @@
 
           <!-- Resumen de Experiencia -->
           <div class="border rounded-xl p-4 relative" style="border-color: #E2E8F0;">
-            <button type="button" (click)="goToStep(2)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" (click)="goToStep(2)"
+              class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
               </svg>
             </button>
@@ -378,8 +411,10 @@
 
           <!-- Resumen de Habilidades -->
           <div class="border rounded-xl p-4 relative" style="border-color: #E2E8F0;">
-            <button type="button" (click)="goToStep(3)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" (click)="goToStep(3)"
+              class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
               </svg>
             </button>
@@ -388,13 +423,15 @@
               <div *ngIf="skills.length > 0">
                 <p class="font-semibold text-xs text-slate-500 mb-1">TÉCNICAS</p>
                 <div class="flex flex-wrap gap-2">
-                  <span *ngFor="let s of skills" class="px-2 py-1 rounded-full border text-xs" style="background-color: #F8FAFC; border-color: #E2E8F0;">{{ s }}</span>
+                  <span *ngFor="let s of skills" class="px-2 py-1 rounded-full border text-xs"
+                    style="background-color: #F8FAFC; border-color: #E2E8F0;">{{ s }}</span>
                 </div>
               </div>
               <div *ngIf="softSkills.length > 0">
                 <p class="font-semibold text-xs text-slate-500 mb-1">BLANDAS</p>
                 <div class="flex flex-wrap gap-2">
-                  <span *ngFor="let s of softSkills" class="px-2 py-1 rounded-full border text-xs" style="background-color: #F8FAFC; border-color: #E2E8F0;">{{ s }}</span>
+                  <span *ngFor="let s of softSkills" class="px-2 py-1 rounded-full border text-xs"
+                    style="background-color: #F8FAFC; border-color: #E2E8F0;">{{ s }}</span>
                 </div>
               </div>
             </div>
