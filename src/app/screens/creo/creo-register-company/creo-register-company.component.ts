@@ -31,6 +31,7 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
   currentStep = 0;
 
   razSocial = '';
+  descripcion = '';
   ruc = '';
   rucStatus: RucStatus = 'idle';
   rucTimer: ReturnType<typeof setTimeout> | null = null;

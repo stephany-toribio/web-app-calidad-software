@@ -198,7 +198,7 @@
             Agrega tu nivel educativo y los idiomas que dominas.
           </p>
 
-          <app-study-list title="Carrera" [(studies)]="carreras" [maxStudies]="5"></app-study-list>
+          <app-study-list title="ESTUDIOS" [(studies)]="carreras" [maxStudies]="5"></app-study-list>
           <div *ngIf="errors['carreras']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['carreras'] }}</div>
 
           <!-- Lo mantengo Educación Superior hasta que decidan si lo usamos o no -->
@@ -289,7 +289,8 @@
           <div class="flex flex-col gap-2">
             <h4 class="text-sm font-bold" style="color: #111111;">Habilidades Técnicas</h4>
             <p class="text-xs text-slate-500">
-              {{ hasAreaFilter ? 'Mostrando solo habilidades técnicas acordes a tu área de estudio. Selecciona hasta 15.' : 'Selecciona hasta 15 habilidades técnicas.' }}
+              {{ hasAreaFilter ? 'Mostrando solo habilidades técnicas acordes a tu área de estudio. Selecciona hasta
+              15.' : 'Selecciona hasta 15 habilidades técnicas.' }}
             </p>
             <app-creo-skill-picker [catalog]="catalog" [selected]="skills" (toggle)="toggleSkill($event)"
               [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
