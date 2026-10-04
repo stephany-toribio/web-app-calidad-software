@@ -36,9 +36,9 @@
             <app-creo-field label="Razón social" [value]="razSocial" (valueChange)="razSocial = $event"
               placeholder="Mi Empresa S.A.C." [error]="errors['razSocial']" [required]="true"></app-creo-field>
 
-            <app-creo-field label="Descripción" [value]="descripcion" (valueChange)="descripcion = $event"
+            <app-creo-field label="Descripción" [value]="descripcion" (valueChange)="setDescripcion($event)"
               placeholder="Escribe una breve descripción de tu empresa" [error]="errors['descripcion']"
-              [required]="false"></app-creo-field>
+              [hint]="descripcionWordCount + ' / 250 palabras'" [required]="false"></app-creo-field>
 
             <!-- RUC (manual, con verificación en vivo) -->
             <div class="flex flex-col gap-1.5">

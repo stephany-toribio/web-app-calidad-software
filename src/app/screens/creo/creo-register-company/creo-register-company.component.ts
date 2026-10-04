@@ -32,6 +32,20 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
 
   razSocial = '';
   descripcion = '';
+
+  private readonly MAX_DESCRIPCION_PALABRAS = 250;
+
+  get descripcionWordCount(): number {
+    const text = this.descripcion.trim();
+    return text.length ? text.split(/\s+/).length : 0;
+  }
+
+  setDescripcion(v: string) {
+    const words = v.trim().length ? v.trim().split(/\s+/) : [];
+    this.descripcion = words.length > this.MAX_DESCRIPCION_PALABRAS
+      ? words.slice(0, this.MAX_DESCRIPCION_PALABRAS).join(' ')
+      : v;
+  }
   ruc = '';
   rucStatus: RucStatus = 'idle';
   rucTimer: ReturnType<typeof setTimeout> | null = null;
@@ -158,7 +172,7 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
   handleSubmit(e: Event) {
     e.preventDefault();
     if (this.currentStep === 2) {
-            const companyData = {
+      const companyData = {
         razSocial: this.razSocial,
         descripcion: this.descripcion,
         ruc: this.ruc,
