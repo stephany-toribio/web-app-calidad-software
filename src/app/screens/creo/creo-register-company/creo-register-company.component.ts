@@ -158,6 +158,16 @@ export class CreoRegisterCompanyComponent implements OnDestroy {
   handleSubmit(e: Event) {
     e.preventDefault();
     if (this.currentStep === 2) {
+            const companyData = {
+        razSocial: this.razSocial,
+        descripcion: this.descripcion,
+        ruc: this.ruc,
+        sector: this.sector,
+        website: this.website,
+        email: this.email,
+        contactName: this.contactName
+      };
+      localStorage.setItem('creo_company_profile', JSON.stringify(companyData));
       this.router.navigate(['/creo/success/company'], { state: { name: this.razSocial } });
     }
   }

@@ -23,12 +23,14 @@ export class AdminShellComponent {
   nav: NavItem[] = [
     { id: "admin-dashboard",  label: "Dashboard" },
     { id: "admin-accounts",   label: "Cuentas" },
-    { id: "admin-skills",     label: "Catálogo de Habilidades" },
+    { id: "admin-skills",     label: "Habilitar / Deshabilitar" },
     { id: "admin-moderation", label: "Moderación" },
     { id: "admin-audit",      label: "Auditoría" },
   ];
 
   constructor(private router: Router) {}
+
+    showProximamente = false;
 
   navigate(s: AdminScreen) {
     this.router.navigate(['/creo', s]);

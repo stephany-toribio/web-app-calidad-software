@@ -70,87 +70,112 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
         
         <!-- Puesto -->
-        <div class="sm:col-span-1">
-          <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Puesto / Cargo *</label>
-          <input type="text" [(ngModel)]="currentExp.puesto" placeholder="Ej. Analista Financiero"
-                 class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none text-[#111111]"
+        <div class="sm:col-span-1 relative">
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Puesto / Cargo <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+          <input type="text" [ngModel]="currentExp.puesto" (ngModelChange)="onPuestoChange($event)" 
+                 (focus)="showPuestos = true" (blur)="onPuestoBlur()"
+                 placeholder="Ej. Analista Financiero"
+                 class="w-full px-3 h-11 rounded-xl border text-sm outline-none text-[#111111]"
                  [ngStyle]="{'border-color': errors['puesto'] ? '#E5140D' : '#E2E8F0'}" />
+          <ul *ngIf="showPuestos && filteredPuestos.length > 0" 
+              class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
+            <li *ngFor="let p of filteredPuestos" (mousedown)="selectPuesto(p)"
+                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+              {{ p }}
+            </li>
+          </ul>
         </div>
 
         <!-- Empresa -->
-        <div class="sm:col-span-1">
-          <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Empresa *</label>
-          <input type="text" [(ngModel)]="currentExp.empresa" placeholder="Ej. Banco BCP"
-                 class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none text-[#111111]"
+        <div class="sm:col-span-1 relative">
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Empresa <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+          <input type="text" [ngModel]="currentExp.empresa" (ngModelChange)="onEmpresaChange($event)" 
+                 (focus)="showEmpresas = true" (blur)="onEmpresaBlur()"
+                 placeholder="Ej. Banco BCP"
+                 class="w-full px-3 h-11 rounded-xl border text-sm outline-none text-[#111111]"
                  [ngStyle]="{'border-color': errors['empresa'] ? '#E5140D' : '#E2E8F0'}" />
+          <ul *ngIf="showEmpresas && filteredEmpresas.length > 0" 
+              class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
+            <li *ngFor="let emp of filteredEmpresas" (mousedown)="selectEmpresa(emp)"
+                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+              {{ emp }}
+            </li>
+          </ul>
         </div>
 
         <!-- Nivel -->
         <div class="sm:col-span-1">
-          <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Nivel del puesto *</label>
-          <select [(ngModel)]="currentExp.nivel" class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Nivel del puesto <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+          <select [(ngModel)]="currentExp.nivel" [style.color]="currentExp.nivel ? '#111111' : '#94A3B8'"
+              class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                   [ngStyle]="{'border-color': errors['nivel'] ? '#E5140D' : '#E2E8F0'}">
-            <option value="">Elige una opción</option>
-            <option *ngFor="let n of niveles" [value]="n">{{ n }}</option>
+            <option value="" class="text-[#111111]">Elige una opción</option>
+            <option *ngFor="let n of niveles" [value]="n" class="text-[#111111]">{{ n }}</option>
           </select>
         </div>
 
         <!-- País -->
         <div class="sm:col-span-1">
-          <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">País *</label>
-          <select [(ngModel)]="currentExp.pais" class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">País <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+          <select [(ngModel)]="currentExp.pais" [style.color]="currentExp.pais ? '#111111' : '#94A3B8'"
+              class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                   [ngStyle]="{'border-color': errors['pais'] ? '#E5140D' : '#E2E8F0'}">
-            <option value="">Elige una opción</option>
-            <option *ngFor="let p of paises" [value]="p">{{ p }}</option>
+            <option value="" class="text-[#111111]">Elige una opción</option>
+            <option *ngFor="let p of paises" [value]="p" class="text-[#111111]">{{ p }}</option>
           </select>
         </div>
 
         <!-- Fecha de inicio -->
         <div class="sm:col-span-1">
-          <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Fecha de inicio *</label>
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Fecha de inicio <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
           <div class="flex gap-2">
-            <select [(ngModel)]="currentExp.fechaInicioMes" class="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+            <select [(ngModel)]="currentExp.fechaInicioMes" (ngModelChange)="validateDates()" [style.color]="currentExp.fechaInicioMes ? '#111111' : '#94A3B8'"
+              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                     [ngStyle]="{'border-color': errors['fechaInicio'] ? '#E5140D' : '#E2E8F0'}">
-              <option value="">Mes</option>
-              <option *ngFor="let m of meses" [value]="m">{{ m }}</option>
+              <option value="" class="text-[#111111]">Mes</option>
+              <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
             </select>
-            <select [(ngModel)]="currentExp.fechaInicioAno" class="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+            <select [(ngModel)]="currentExp.fechaInicioAno" (ngModelChange)="validateDates()" [style.color]="currentExp.fechaInicioAno ? '#111111' : '#94A3B8'"
+              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                     [ngStyle]="{'border-color': errors['fechaInicio'] ? '#E5140D' : '#E2E8F0'}">
-              <option value="">Año</option>
-              <option *ngFor="let a of anos" [value]="a">{{ a }}</option>
+              <option value="" class="text-[#111111]">Año</option>
+              <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>
             </select>
           </div>
         </div>
 
         <!-- Fecha de fin -->
         <div class="sm:col-span-1">
-          <label class="block text-xs font-semibold mb-1.5" style="color: #374151;" [class.opacity-50]="currentExp.alPresente">Fecha de finalización *</label>
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;" [class.opacity-50]="currentExp.alPresente">Fecha de finalización <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
           <div class="flex gap-2 mb-2">
-            <select [(ngModel)]="currentExp.fechaFinMes" [disabled]="currentExp.alPresente" class="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111] disabled:bg-slate-100 disabled:text-slate-400"
-                    [ngStyle]="{'border-color': errors['fechaFin'] ? '#E5140D' : '#E2E8F0'}">
-              <option value="">Mes</option>
-              <option *ngFor="let m of meses" [value]="m">{{ m }}</option>
+            <select [(ngModel)]="currentExp.fechaFinMes" (ngModelChange)="validateDates()" [disabled]="currentExp.alPresente" [style.color]="currentExp.fechaFinMes ? '#111111' : '#94A3B8'"
+              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100 disabled:text-slate-400"
+                    [ngStyle]="{'border-color': errors['fechaFin'] || errors['fechaFinError'] ? '#E5140D' : '#E2E8F0'}">
+              <option value="" class="text-[#111111]">Mes</option>
+              <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
             </select>
-            <select [(ngModel)]="currentExp.fechaFinAno" [disabled]="currentExp.alPresente" class="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111] disabled:bg-slate-100 disabled:text-slate-400"
-                    [ngStyle]="{'border-color': errors['fechaFin'] ? '#E5140D' : '#E2E8F0'}">
-              <option value="">Año</option>
-              <option *ngFor="let a of anos" [value]="a">{{ a }}</option>
+            <select [(ngModel)]="currentExp.fechaFinAno" (ngModelChange)="validateDates()" [disabled]="currentExp.alPresente" [style.color]="currentExp.fechaFinAno ? '#111111' : '#94A3B8'"
+              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100 disabled:text-slate-400"
+                    [ngStyle]="{'border-color': errors['fechaFin'] || errors['fechaFinError'] ? '#E5140D' : '#E2E8F0'}">
+              <option value="" class="text-[#111111]">Año</option>
+              <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>
             </select>
           </div>
+          <p *ngIf="errors['fechaFinError']" class="text-xs text-red-500 mt-1 mb-2">La fecha de fin no puede ser anterior al inicio</p>
           <label class="flex items-center gap-2 cursor-pointer w-max">
-            <input type="checkbox" [(ngModel)]="currentExp.alPresente" class="w-4 h-4 rounded border-slate-300 text-yellow-500 focus:ring-yellow-500" />
-            <span class="text-xs font-medium" style="color: #374151;">Trabajo aquí actualmente</span>
+            <input type="checkbox" [(ngModel)]="currentExp.alPresente" (ngModelChange)="validateDates()" class="w-4 h-4 rounded border-slate-300 text-yellow-500 focus:ring-yellow-500" />
+            <span class="text-xs font-medium" style="color: #111111;">Trabajo aquí actualmente</span>
           </label>
         </div>
 
         <!-- Descripción -->
         <div class="sm:col-span-2">
-          <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Descripción de responsabilidades <span class="font-normal text-slate-400 ml-1">(opcional)</span></label>
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Descripción de responsabilidades <span class="font-normal text-slate-400 ml-1">(opcional)</span></label>
           <textarea [ngModel]="currentExp.descripcion" (ngModelChange)="onDescripcionChange($event)" rows="4" placeholder="Describe brevemente tus logros y tareas principales..."
-                    class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none text-[#111111] resize-none"
+                    class="w-full px-3 py-3 rounded-xl border text-sm outline-none text-[#111111] resize-none"
                     style="border-color: #E2E8F0;"></textarea>
-          <p class="text-xs mt-1" [style.color]="descripcionWordCount >= maxDescripcionPalabras ? '#E5140D' : '#94A3B8'">
-            {{ descripcionWordCount }} / {{ maxDescripcionPalabras }} palabras
+          <p class="text-xs mt-1" [style.color]="descripcionCharCount >= maxDescripcionCaracteres ? '#E5140D' : '#94A3B8'">
+            {{ descripcionCharCount }} / {{ maxDescripcionCaracteres }} caracteres
           </p>
         </div>
 
@@ -159,10 +184,10 @@
 
     <!-- Footer -->
     <div class="px-6 py-4 border-t flex justify-end gap-3" style="border-color: #F0ECD8;">
-      <button type="button" (click)="closeModal()" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-slate-600 hover:bg-slate-100">
+      <button type="button" (click)="closeModal()" class="px-5 h-11 rounded-xl text-sm font-semibold transition-colors text-slate-600 hover:bg-slate-100">
         Cancelar
       </button>
-      <button type="button" (click)="save()" class="px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+      <button type="button" (click)="save()" class="px-6 h-11 rounded-xl text-sm font-semibold transition-colors"
               style="background-color: #F2B705; color: #111111;">
         Guardar
       </button>

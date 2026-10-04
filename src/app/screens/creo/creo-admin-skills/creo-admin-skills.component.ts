@@ -23,8 +23,19 @@ export class CreoAdminSkillsComponent implements OnInit {
   query = '';
   categoryFilter = 'Todas';
   statusFilter: 'all' | SkillStatus = 'all';
-  
-  categories = ["Todas", "Ciencias de la Salud", "Investigación", "Tecnología", "Negocios", "Comunicación y Diseño", "Idiomas", "Educación", "Transversales"];
+  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'puestos' = 'estudios';
+
+  get studyAreas() { return this.skillsService.getStudyAreas(); }
+
+  get countries() { return this.skillsService.getCountries(); }
+
+  get institutions() { return this.skillsService.getInstitutions(); }
+
+  get positions() { return this.skillsService.getPositions(); }
+
+  get activeCategories() {
+    return this.studyAreas.map(s => s.name);
+  }
 
   // Paleta que se asigna en orden a las categorías creadas por el admin
   private customCategoryPalette: { bg: string; text: string }[] = [
@@ -50,17 +61,27 @@ export class CreoAdminSkillsComponent implements OnInit {
   newName = '';
   newCategory = 'General';
   newError = '';
+  newIsSoft = false;
 
-  // New category modal
-  showNewCategoryModal = false;
-  newCategoryName = '';
-  newCategoryError = '';
+  showStudyModal = false;
+  editingStudy = { id: 0, name: '', active: true };
+  
+  showCountryModal = false;
+  editingCountry = { id: 0, name: '', active: true };
+  
+  showInstitutionModal = false;
+  editingInstitution = { id: 0, name: '', country: '', active: true };
+  
+  showPositionModal = false;
+  editingPosition = { id: 0, name: '', active: true };
+
 
   // Edit skill modal
   editingSkill: Skill | null = null;
   editName = '';
   editCategory = 'General';
   editError = '';
+  editIsSoft = false;
 
   categoryBg: Record<string, string> = {
     "Ciencias de la Salud": "#E0F2FE",
@@ -147,36 +168,11 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.showNewModal = true;
     this.newName = '';
     this.newCategory = 'General';
+    this.newIsSoft = false;
     this.newError = '';
   }
 
-  openNewCategoryModal() {
-    this.showNewCategoryModal = true;
-    this.newCategoryName = '';
-    this.newCategoryError = '';
-  }
 
-  saveNewCategory() {
-    const name = this.newCategoryName.trim();
-    if (!name) {
-      this.newCategoryError = 'El nombre de la categoría es requerido';
-      return;
-    }
-    const exists = this.categories.some(c => c.toLowerCase() === name.toLowerCase());
-    if (exists) {
-      this.newCategoryError = 'Ya existe una categoría con ese nombre';
-      return;
-    }
-
-    this.categories.push(name);
-    const colors = this.customCategoryPalette[this.customCategoryCount % this.customCategoryPalette.length];
-    this.customCategoryCount++;
-    this.categoryBg[name] = colors.bg;
-    this.categoryText[name] = colors.text;
-
-    this.showNewCategoryModal = false;
-    this.showToast(`Categoría '${name}' agregada correctamente.`);
-  }
 
   saveNewSkill() {
     if (!this.newName.trim()) {
@@ -185,7 +181,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     }
     
     try {
-      this.skillsService.addSkill(this.newName.trim(), this.newCategory, this.newCategory === 'Transversales');
+      this.skillsService.addSkill(this.newName.trim(), this.newIsSoft ? 'Transversales' : this.newCategory, this.newIsSoft);
       this.showNewModal = false;
       this.showToast(`Habilidad '${this.newName.trim()}' agregada correctamente.`);
     } catch (e: any) {
@@ -197,6 +193,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.editingSkill = skill;
     this.editName = skill.name;
     this.editCategory = skill.category;
+    this.editIsSoft = skill.isSoft;
     this.editError = '';
   }
 
@@ -207,7 +204,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     }
     if (this.editingSkill) {
       try {
-        this.skillsService.updateSkill(this.editingSkill.id, this.editName.trim(), this.editCategory, this.editCategory === 'Transversales');
+        this.skillsService.updateSkill(this.editingSkill.id, this.editName.trim(), this.editIsSoft ? 'Transversales' : this.editCategory, this.editIsSoft);
         this.showToast(`Habilidad modificada correctamente.`);
         this.editingSkill = null;
       } catch (e: any) {
@@ -225,4 +222,93 @@ export class CreoAdminSkillsComponent implements OnInit {
   onFilterChange() {
     this.currentPage = 1;
   }
+
+  openStudyModal(s?: any) {
+    if (s) this.editingStudy = { ...s };
+    else this.editingStudy = { id: 0, name: '', active: true };
+    this.showStudyModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+  closeStudyModal() { this.showStudyModal = false; document.body.style.overflow = 'auto'; }
+  saveStudy() {
+    if (this.editingStudy.id) {
+      const idx = this.studyAreas.findIndex(x => x.id === this.editingStudy.id);
+      if (idx >= 0) this.studyAreas[idx] = { ...this.editingStudy };
+    } else {
+      this.studyAreas.push({ ...this.editingStudy, id: Date.now() });
+    }
+    this.showToast('Área de estudio guardada', 'success');
+    this.closeStudyModal();
+  }
+  toggleStudyStatus(s: any) {
+    s.active = !s.active;
+    this.showToast(`Área ${s.active ? 'activada' : 'desactivada'}`, 'success');
+  }
+
+  openCountryModal(c?: any) {
+    if (c) this.editingCountry = { ...c };
+    else this.editingCountry = { id: 0, name: '', active: true };
+    this.showCountryModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+  closeCountryModal() { this.showCountryModal = false; document.body.style.overflow = 'auto'; }
+  saveCountry() {
+    if (this.editingCountry.id) {
+      const idx = this.countries.findIndex(x => x.id === this.editingCountry.id);
+      if (idx >= 0) this.countries[idx] = { ...this.editingCountry };
+    } else {
+      this.countries.push({ ...this.editingCountry, id: Date.now() });
+    }
+    this.showToast('País guardado', 'success');
+    this.closeCountryModal();
+  }
+  toggleCountryStatus(c: any) {
+    c.active = !c.active;
+    this.showToast(`País ${c.active ? 'activado' : 'desactivado'}`, 'success');
+  }
+
+  openInstitutionModal(i?: any) {
+    if (i) this.editingInstitution = { ...i };
+    else this.editingInstitution = { id: 0, name: '', country: '', active: true };
+    this.showInstitutionModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+  closeInstitutionModal() { this.showInstitutionModal = false; document.body.style.overflow = 'auto'; }
+  saveInstitution() {
+    if (this.editingInstitution.id) {
+      const idx = this.institutions.findIndex(x => x.id === this.editingInstitution.id);
+      if (idx >= 0) this.institutions[idx] = { ...this.editingInstitution };
+    } else {
+      this.institutions.push({ ...this.editingInstitution, id: Date.now() });
+    }
+    this.showToast('Institución guardada', 'success');
+    this.closeInstitutionModal();
+  }
+  toggleInstitutionStatus(i: any) {
+    i.active = !i.active;
+    this.showToast(`Institución ${i.active ? 'activada' : 'desactivada'}`, 'success');
+  }
+
+  openPositionModal(p?: any) {
+    if (p) this.editingPosition = { ...p };
+    else this.editingPosition = { id: 0, name: '', active: true };
+    this.showPositionModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+  closePositionModal() { this.showPositionModal = false; document.body.style.overflow = 'auto'; }
+  savePosition() {
+    if (this.editingPosition.id) {
+      const idx = this.positions.findIndex(x => x.id === this.editingPosition.id);
+      if (idx >= 0) this.positions[idx] = { ...this.editingPosition };
+    } else {
+      this.positions.push({ ...this.editingPosition, id: Date.now() });
+    }
+    this.showToast('Puesto guardado', 'success');
+    this.closePositionModal();
+  }
+  togglePositionStatus(p: any) {
+    p.active = !p.active;
+    this.showToast(`Puesto ${p.active ? 'activado' : 'desactivado'}`, 'success');
+  }
+
 }

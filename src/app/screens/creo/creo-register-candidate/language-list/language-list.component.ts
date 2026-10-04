@@ -32,7 +32,36 @@ export class LanguageListComponent {
   currentLang: LanguageEntry = this.getEmptyLang();
   errors: Record<string, string> = {};
 
-  /** Idiomas que aún no se han agregado (más el que esté seleccionado actualmente, si se está editando). */
+  showIdiomas = false;
+
+  get filteredIdiomas(): string[] {
+    const val = (this.currentLang.idioma || '').toLowerCase();
+    const usados = new Set(
+      this.languages
+        .filter((_, i) => i !== this.editingIndex)
+        .map(l => l.idioma.toLowerCase())
+    );
+    const sugeridos = this.idiomas.filter(i => !usados.has(i.toLowerCase()) && i !== 'Otro');
+    return sugeridos.filter(i => i.toLowerCase().includes(val));
+  }
+
+  onIdiomaChange(val: string) {
+    this.currentLang.idioma = val;
+    this.showIdiomas = true;
+  }
+
+  selectIdioma(idioma: string) {
+    this.currentLang.idioma = idioma;
+    this.showIdiomas = false;
+  }
+
+  onIdiomaBlur() {
+    setTimeout(() => {
+      this.showIdiomas = false;
+    }, 200);
+  }
+
+  /** Idiomas que aún no se han agregado (más el que está seleccionado actualmente, si se está editando). */
   get availableIdiomas(): string[] {
     const usados = new Set(
       this.languages
@@ -70,7 +99,7 @@ export class LanguageListComponent {
 
   saveLanguage() {
     this.errors = {};
-    if (!this.currentLang.idioma) this.errors['idioma'] = 'Requerido';
+    if (!this.currentLang.idioma.trim()) this.errors['idioma'] = 'Requerido';
     if (!this.currentLang.nivelEscrito) this.errors['nivelEscrito'] = 'Requerido';
     if (!this.currentLang.nivelOral) this.errors['nivelOral'] = 'Requerido';
 

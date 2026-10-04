@@ -19,8 +19,11 @@ export class CreoFieldComponent {
   @Input() maxLength?: number;
   @Input() numbersOnly: boolean = false;
   @Input() disabled: boolean = false;
+  @Input() listId?: string;
 
   @Output() valueChange = new EventEmitter<string>();
+  @Output() fieldFocus = new EventEmitter<void>();
+  @Output() fieldBlur = new EventEmitter<void>();
 
   onKeyPress(e: KeyboardEvent) {
     if (this.numbersOnly) {
@@ -39,11 +42,13 @@ export class CreoFieldComponent {
     const el = e.currentTarget as HTMLInputElement;
     el.style.borderColor = this.error ? '#E5140D' : '#F2B705';
     el.style.boxShadow = this.error ? '0 0 0 3px rgba(229,20,13,0.12)' : '0 0 0 3px rgba(242,183,5,0.18)';
+    this.fieldFocus.emit();
   }
 
   onBlur(e: FocusEvent) {
     const el = e.currentTarget as HTMLInputElement;
     el.style.borderColor = this.error ? '#E5140D' : '#E2E8F0';
     el.style.boxShadow = 'none';
+    this.fieldBlur.emit();
   }
 }

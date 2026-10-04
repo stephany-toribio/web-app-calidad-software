@@ -56,20 +56,27 @@
         
         <div class="flex flex-col gap-4">
           <!-- Idioma -->
-          <div>
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Idioma *</label>
-            <select [(ngModel)]="currentLang.idioma" class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
-                    [ngStyle]="{'border-color': errors['idioma'] ? '#E5140D' : '#E2E8F0'}">
-              <option value="">Elige una opción</option>
-              <option *ngFor="let i of availableIdiomas" [value]="i">{{ i }}</option>
-            </select>
+          <div class="relative">
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Idioma <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <input type="text" [ngModel]="currentLang.idioma" (ngModelChange)="onIdiomaChange($event)"
+                   (focus)="showIdiomas = true" (blur)="onIdiomaBlur()"
+                   placeholder="Ej. Inglés"
+                   class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                   [ngStyle]="{'border-color': errors['idioma'] ? '#E5140D' : '#E2E8F0'}" />
+            <ul *ngIf="showIdiomas && filteredIdiomas.length > 0" 
+                class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
+              <li *ngFor="let i of filteredIdiomas" (mousedown)="selectIdioma(i)"
+                  class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+                {{ i }}
+              </li>
+            </ul>
             <p *ngIf="errors['idioma']" class="text-xs text-red-500 mt-1">{{ errors['idioma'] }}</p>
           </div>
           
           <!-- Nivel escrito -->
           <div>
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Nivel escrito *</label>
-            <select [(ngModel)]="currentLang.nivelEscrito" class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Nivel escrito <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <select [(ngModel)]="currentLang.nivelEscrito" class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white text-[#111111]"
                     [ngStyle]="{'border-color': errors['nivelEscrito'] ? '#E5140D' : '#E2E8F0'}">
               <option value="">Elige una opción</option>
               <option *ngFor="let n of niveles" [value]="n">{{ n }}</option>
@@ -79,8 +86,8 @@
 
           <!-- Nivel oral -->
           <div>
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Nivel oral *</label>
-            <select [(ngModel)]="currentLang.nivelOral" class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Nivel oral <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <select [(ngModel)]="currentLang.nivelOral" class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white text-[#111111]"
                     [ngStyle]="{'border-color': errors['nivelOral'] ? '#E5140D' : '#E2E8F0'}">
               <option value="">Elige una opción</option>
               <option *ngFor="let n of niveles" [value]="n">{{ n }}</option>

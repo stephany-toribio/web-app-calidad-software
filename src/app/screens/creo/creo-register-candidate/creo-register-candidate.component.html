@@ -44,23 +44,26 @@
                 Fecha de nacimiento <span class="text-xs font-semibold" style="color: #F2B705;">*</span>
               </label>
               <div class="flex gap-2">
-                <select [(ngModel)]="birthDay" name="bday"
-                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                <select [(ngModel)]="birthDay" (ngModelChange)="validateAge()" name="bday"
+                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white"
+                  [style.color]="birthDay ? '#111111' : '#94A3B8'"
                   [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
-                  <option value="">Día</option>
-                  <option *ngFor="let d of dias" [value]="d">{{ d }}</option>
+                  <option value="" class="text-[#111111]">Día</option>
+                  <option *ngFor="let d of dias" [value]="d" class="text-[#111111]">{{ d }}</option>
                 </select>
-                <select [(ngModel)]="birthMonth" name="bmonth"
-                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                <select [(ngModel)]="birthMonth" (ngModelChange)="validateAge()" name="bmonth"
+                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white"
+                  [style.color]="birthMonth ? '#111111' : '#94A3B8'"
                   [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
-                  <option value="">Mes</option>
-                  <option *ngFor="let m of mesesNac" [value]="m">{{ m }}</option>
+                  <option value="" class="text-[#111111]">Mes</option>
+                  <option *ngFor="let m of mesesNac" [value]="m" class="text-[#111111]">{{ m }}</option>
                 </select>
-                <select [(ngModel)]="birthYear" name="byear"
-                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                <select [(ngModel)]="birthYear" (ngModelChange)="validateAge()" name="byear"
+                  class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white"
+                  [style.color]="birthYear ? '#111111' : '#94A3B8'"
                   [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
-                  <option value="">Año</option>
-                  <option *ngFor="let a of anosNac" [value]="a">{{ a }}</option>
+                  <option value="" class="text-[#111111]">Año</option>
+                  <option *ngFor="let a of anosNac" [value]="a" class="text-[#111111]">{{ a }}</option>
                 </select>
               </div>
               <p *ngIf="errors['birthdate']" class="text-xs text-red-500 mt-1">{{ errors['birthdate'] }}</p>
@@ -70,6 +73,17 @@
             <div class="sm:col-span-1">
               <app-creo-field label="DNI" [value]="dni" (valueChange)="setDni($event)" placeholder="12345678"
                 [error]="errors['dni']" [required]="true" [numbersOnly]="true" [maxLength]="8"></app-creo-field>
+
+              <div *ngIf="errors['dniTaken']" class="mt-2">
+                <p class="text-xs flex items-center gap-1.5 p-3 rounded-xl border"
+                  style="color: #DC2626; background-color: #FEF2F2; border-color: #FCA5A5;">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" class="flex-shrink-0">
+                    <circle cx="6.5" cy="6.5" r="6" stroke="#DC2626" stroke-width="1.2" />
+                    <path d="M6.5 4v3.5M6.5 9h.01" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" />
+                  </svg>
+                  El DNI ya está registrado.
+                </p>
+              </div>
             </div>
 
             <div class="sm:col-span-2">
@@ -78,9 +92,10 @@
               </label>
               <select [value]="gender" (change)="gender = $any($event.target).value" name="gen"
                 class="w-full h-11 px-3 rounded-xl border text-sm outline-none transition-all cursor-pointer bg-white"
-                style="border-color: #E2E8F0;" [style.color]="gender ? '#111111' : '#94A3B8'">
-                <option value="">Selecciona (opcional)</option>
-                <option *ngFor="let g of genderOptions" [value]="g">{{ g }}</option>
+                [style.color]="gender ? '#111111' : '#94A3B8'"
+                style="border-color: #E2E8F0;">
+                <option value="" class="text-[#111111]">Selecciona (opcional)</option>
+                <option *ngFor="let g of genderOptions" [value]="g" class="text-[#111111]">{{ g }}</option>
               </select>
             </div>
 
@@ -91,6 +106,18 @@
             <app-creo-field label="Teléfono" type="tel" [value]="phone" (valueChange)="setPhone($event)"
               placeholder="999000111" [error]="errors['phone']" [required]="true" [numbersOnly]="true"
               [maxLength]="9"></app-creo-field>
+
+            <!-- Teléfono duplicado -->
+            <div *ngIf="errors['phoneTaken']" class="sm:col-span-2 -mt-2">
+              <p class="text-xs flex items-center gap-1.5 p-3 rounded-xl border"
+                style="color: #DC2626; background-color: #FEF2F2; border-color: #FCA5A5;">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" class="flex-shrink-0">
+                  <circle cx="6.5" cy="6.5" r="6" stroke="#DC2626" stroke-width="1.2" />
+                  <path d="M6.5 4v2.5M6.5 8.5h.01" stroke="#DC2626" stroke-width="1.2" stroke-linecap="round" />
+                </svg>
+                Este teléfono ya está registrado en otra cuenta.
+              </p>
+            </div>
 
             <!-- Correo duplicado -->
             <div *ngIf="errors['emailTaken']" class="sm:col-span-2 -mt-2">

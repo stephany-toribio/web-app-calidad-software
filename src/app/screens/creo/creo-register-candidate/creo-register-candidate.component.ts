@@ -11,13 +11,15 @@ import { CreoSkillPickerComponent } from '../../../components/creo-design-system
 import { StudyListComponent, StudyEntry } from './study-list/study-list.component';
 import { LanguageListComponent, LanguageEntry } from './language-list/language-list.component';
 import { ExperienceListComponent, ExperienceEntry } from './experience-list/experience-list.component';
-import { AREA_SKILLS, AREA_ESTUDIO_TO_CATEGORIA } from '../../../data/creo-skills.data';
+import { AREA_SKILLS } from '../../../data/creo-skills.data';
 import { SkillsService } from '../../../services/skills.service';
 import { FormsModule } from '@angular/forms';
 
 const STEPS = ['Cuenta y datos', 'Educación', 'Experiencia', 'Habilidades', 'Resumen'];
 const MAX_SKILLS = 15;
 const KNOWN_EMAILS = ['admin@creo.pe', 'valeria.rojas@ejemplo.com'];
+const KNOWN_PHONES = ['999000111', '987654321'];
+const KNOWN_DNIS = ['73123456', '71234567'];
 const GENDER_OPTIONS = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'];
 
 @Component({
@@ -40,17 +42,22 @@ export class CreoRegisterCandidateComponent {
 
   private _cachedSkillsVersion = -1;
   private _cachedHard: string[] = [];
+  private _cachedHardFull: any[] = [];
   private _cachedSoft: string[] = [];
 
   get catalog() {
     const version = this.skillsService.getVersion();
     if (this._cachedSkillsVersion !== version) {
       this._cachedSkillsVersion = version;
-      this._cachedHard = this.skillsService.getHardSkills(true).map(s => s.name);
+      this._cachedHardFull = this.skillsService.getHardSkills(true);
+      this._cachedHard = this._cachedHardFull.map(s => s.name);
       this._cachedSoft = this.skillsService.getSoftSkills(true).map(s => s.name);
     }
-    const areaSet = this.areaFilteredSkillSet;
-    return areaSet ? this._cachedHard.filter(s => areaSet.has(s)) : this._cachedHard;
+    const categories = this.selectedSkillCategories;
+    if (categories.length > 0) {
+      return this._cachedHardFull.filter(s => categories.includes(s.category)).map(s => s.name);
+    }
+    return this._cachedHard;
   }
 
   get softCatalog() {
@@ -109,7 +116,7 @@ export class CreoRegisterCandidateComponent {
 
   private _cachedAreasStr = '';
   private _cachedCategorias: string[] = [];
-  private _cachedAreaSkillSet: Set<string> | null = null;
+  
 
   get selectedAreas(): string[] {
     const allStudies = [...this.carreras, ...this.educacionSuperior];
@@ -118,32 +125,17 @@ export class CreoRegisterCandidateComponent {
 
   /** Categorías de AREA_SKILLS derivadas de las áreas de estudio elegidas ("Otro" no mapea a ninguna). */
   get selectedSkillCategories(): string[] {
-    const areas = this.selectedAreas;
-    const areasStr = areas.join(',');
-    if (this._cachedAreasStr !== areasStr) {
-      this._cachedAreasStr = areasStr;
-      this._cachedCategorias = [...new Set(areas.map(a => AREA_ESTUDIO_TO_CATEGORIA[a]).filter((c): c is string => !!c))];
-      this._cachedAreaSkillSet = this._cachedCategorias.length > 0
-        ? new Set(this._cachedCategorias.flatMap(c => AREA_SKILLS[c] ?? []))
-        : null;
-    }
-    return this._cachedCategorias;
-  }
-
-  /** Conjunto de habilidades técnicas válidas según el área de estudio, o null si no hay un área reconocida. */
-  get areaFilteredSkillSet(): Set<string> | null {
-    this.selectedSkillCategories; // asegura que el cache esté actualizado
-    return this._cachedAreaSkillSet;
+    return this.selectedAreas;
   }
 
   get hasAreaFilter(): boolean {
-    return this.areaFilteredSkillSet !== null;
+    return this.selectedSkillCategories.length > 0;
   }
 
   private pruneSkillsToArea() {
-    const areaSet = this.areaFilteredSkillSet;
-    if (areaSet) {
-      this.skills = this.skills.filter(s => areaSet.has(s));
+    if (this.hasAreaFilter) {
+      const allowedSkills = new Set(this.catalog);
+      this.skills = this.skills.filter(s => allowedSkills.has(s));
     }
   }
 
@@ -154,17 +146,28 @@ export class CreoRegisterCandidateComponent {
 
   setDni(v: string) {
     this.dni = v.replace(/\D/g, '').slice(0, 8);
+    if (KNOWN_DNIS.includes(this.dni)) {
+      this.errors['dniTaken'] = 'duplicate';
+    } else {
+      delete this.errors['dniTaken'];
+    }
   }
 
   setPhone(v: string) {
     this.phone = v.replace(/\D/g, '').slice(0, 9);
+    if (KNOWN_PHONES.includes(this.phone)) {
+      this.errors['phoneTaken'] = 'duplicate';
+    } else {
+      delete this.errors['phoneTaken'];
+    }
   }
 
   setEmail(v: string) {
     this.email = v;
-    if (this.errors['emailTaken']) {
-      const { emailTaken, ...rest } = this.errors;
-      this.errors = rest;
+    if (KNOWN_EMAILS.includes(this.email.trim().toLowerCase())) {
+      this.errors['emailTaken'] = 'duplicate';
+    } else {
+      delete this.errors['emailTaken'];
     }
   }
 
@@ -190,14 +193,53 @@ export class CreoRegisterCandidateComponent {
     this.softSkills = [...this.softSkills, s];
   }
 
+  validateAge() {
+    if (this.birthDay && this.birthMonth && this.birthYear) {
+      const bd = parseInt(this.birthDay);
+      const bm = this.mesesNac.indexOf(this.birthMonth);
+      const by = parseInt(this.birthYear);
+      
+      const today = new Date();
+      let age = today.getFullYear() - by;
+      if (today.getMonth() < bm || (today.getMonth() === bm && today.getDate() < bd)) {
+        age--;
+      }
+      
+      if (age < 17) {
+        this.errors['birthdate'] = 'Debes tener al menos 17 años para registrarte';
+      } else {
+        if (this.errors['birthdate'] === 'Debes tener al menos 17 años para registrarte') {
+          delete this.errors['birthdate'];
+        }
+      }
+    }
+  }
+
   validateStep0(): Record<string, string> {
     const e: Record<string, string> = {};
     if (!this.firstName.trim()) e['firstName'] = 'El nombre es obligatorio';
     if (!this.lastName.trim()) e['lastName'] = 'El apellido es obligatorio';
-    if (!this.birthDay || !this.birthMonth || !this.birthYear) e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    if (!this.birthDay || !this.birthMonth || !this.birthYear) {
+      e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    } else {
+      const bd = parseInt(this.birthDay);
+      const bm = this.mesesNac.indexOf(this.birthMonth);
+      const by = parseInt(this.birthYear);
+      
+      const today = new Date();
+      let age = today.getFullYear() - by;
+      if (today.getMonth() < bm || (today.getMonth() === bm && today.getDate() < bd)) {
+        age--;
+      }
+      
+      if (age < 17) {
+        e['birthdate'] = 'Debes tener al menos 17 años para registrarte';
+      }
+    }
 
     if (!this.dni.trim()) e['dni'] = 'El DNI es obligatorio';
     else if (this.dni.length !== 8) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
+    else if (KNOWN_DNIS.includes(this.dni.trim())) e['dniTaken'] = 'duplicate';
 
     if (!this.email.trim()) e['email'] = 'El correo es obligatorio';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
@@ -210,6 +252,7 @@ export class CreoRegisterCandidateComponent {
 
     if (!this.phone.trim()) e['phone'] = 'El teléfono es obligatorio';
     else if (this.phone.length !== 9) e['phone'] = 'El teléfono debe tener exactamente 9 dígitos';
+    else if (KNOWN_PHONES.includes(this.phone)) e['phoneTaken'] = 'duplicate';
 
     return e;
   }
@@ -268,6 +311,24 @@ export class CreoRegisterCandidateComponent {
     }
 
     if (this.step === 4) {
+            const birthDateString = (this.birthDay && this.birthMonth && this.birthYear) 
+        ? `${this.birthYear}-${String(this.mesesNac.indexOf(this.birthMonth) + 1).padStart(2, '0')}-${String(this.birthDay).padStart(2, '0')}`
+        : '';
+        
+      const userData = {
+        firstName: this.firstName,
+        lastName: this.lastName,
+        email: this.email,
+        phone: this.phone,
+        dni: this.dni,
+        birthDate: birthDateString,
+        hardSkills: this.skills,
+        softSkills: this.softSkills,
+        experience: this.experiencias,
+        education: [...this._carreras, ...this._educacionSuperior],
+        languages: this.idiomas
+      };
+      localStorage.setItem('creo_user_profile', JSON.stringify(userData));
       this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
     }
   }

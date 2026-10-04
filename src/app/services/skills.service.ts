@@ -19,6 +19,47 @@ export class SkillsService {
   private skills: Skill[] = [];
   private _version = 0;
 
+  studyAreas = [
+    { id: 1, name: 'Tecnología', active: true },
+    { id: 2, name: 'Ingeniería', active: true },
+    { id: 3, name: 'Negocios', active: true },
+    { id: 4, name: 'Negocios y Administración', active: true },
+    { id: 5, name: 'Ciencias de la Salud', active: true },
+    { id: 6, name: 'Investigación', active: true },
+    { id: 7, name: 'Diseño y Comunicación', active: true },
+    { id: 8, name: 'Comunicación y Diseño', active: true },
+    { id: 9, name: 'Ciencias Sociales y Educación', active: true },
+    { id: 10, name: 'Educación', active: true },
+    { id: 11, name: 'Idiomas', active: true }
+  ];
+
+  countries = [
+    { id: 1, name: 'Perú', active: true },
+    { id: 2, name: 'Chile', active: true },
+    { id: 3, name: 'Colombia', active: true },
+    { id: 4, name: 'México', active: true },
+    { id: 5, name: 'España', active: true }
+  ];
+
+  institutions = [
+    { id: 1, name: 'Universidad Nacional de Ingeniería (UNI)', country: 'Perú', active: true },
+    { id: 2, name: 'Pontificia Universidad Católica del Perú (PUCP)', country: 'Perú', active: true },
+    { id: 3, name: 'Universidad de Lima', country: 'Perú', active: true }
+  ];
+
+  positions = [
+    { id: 1, name: 'Desarrollador Frontend', active: true },
+    { id: 2, name: 'Desarrollador Backend', active: true },
+    { id: 3, name: 'Diseñador UX/UI', active: true },
+    { id: 4, name: 'Gerente de Proyectos', active: true }
+  ];
+
+  getStudyAreas() { return this.studyAreas; }
+  getCountries() { return this.countries; }
+  getInstitutions() { return this.institutions; }
+  getPositions() { return this.positions; }
+
+
   constructor() {
     this.initSkills();
   }

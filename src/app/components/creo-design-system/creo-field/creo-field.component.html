@@ -9,6 +9,7 @@
           [value]="value"
           [attr.maxlength]="maxLength ? maxLength : null"
           [disabled]="disabled"
+    [attr.list]="listId"
           (keypress)="onKeyPress($event)"
           (input)="onInputChange($event)"
           [placeholder]="placeholder"

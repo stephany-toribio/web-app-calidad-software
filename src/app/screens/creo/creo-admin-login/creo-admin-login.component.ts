@@ -60,7 +60,7 @@ export class CreoAdminLoginComponent {
         }
         return;
       }
-      this.router.navigate(['/creo/admin-dashboard']);
+      this.router.navigate(['/creo/admin-skills']);
     }
   }
 

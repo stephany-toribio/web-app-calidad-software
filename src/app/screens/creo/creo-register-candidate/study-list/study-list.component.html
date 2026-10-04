@@ -75,82 +75,104 @@
 
           <!-- Tipo de estudio -->
           <div class="sm:col-span-1">
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Tipo de estudio *</label>
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Tipo de estudio <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <select [(ngModel)]="currentStudy.tipoEstudio" (ngModelChange)="onTipoEstudioChange()"
-              class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+              [style.color]="currentStudy.tipoEstudio ? '#111111' : '#94A3B8'"
+              class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
               [ngStyle]="{'border-color': errors['tipoEstudio'] ? '#E5140D' : '#E2E8F0'}">
-              <option value="">Elige una opción</option>
-              <option *ngFor="let t of tiposEstudio" [value]="t">{{ t }}</option>
+              <option value="" class="text-[#111111]">Elige una opción</option>
+              <option *ngFor="let t of tiposEstudio" [value]="t" class="text-[#111111]">{{ t }}</option>
             </select>
             <p *ngIf="errors['tipoEstudio']" class="text-xs text-red-500 mt-1">{{ errors['tipoEstudio'] }}</p>
           </div>
 
           <!-- Título / Carrera -->
-          <div class="sm:col-span-1">
-            <app-creo-field [label]="tituloEnabled ? 'Título / Carrera *' : 'Título / Carrera'" [value]="currentStudy.titulo"
-              (valueChange)="currentStudy.titulo = $event" placeholder="Ingresa tu título o carrera"
+          <div class="sm:col-span-1 relative">
+            <app-creo-field [label]="'Título / Carrera'" [required]="tituloEnabled" [value]="currentStudy.titulo"
+              (valueChange)="onCarreraChange($event)" (fieldFocus)="showCarreras = true" (fieldBlur)="onCarreraBlur()" placeholder="Ingresa tu título o carrera"
               [disabled]="!tituloEnabled"
               [error]="errors['titulo']"></app-creo-field>
-            <p *ngIf="!tituloEnabled" class="text-xs text-slate-400 mt-1">No aplica para el tipo de estudio seleccionado.</p>
+            <p *ngIf="!tituloEnabled" class="text-xs text-slate-400 mt-1">No aplica para el tipo de estudio 
+seleccionado.</p>
+            <ul *ngIf="showCarreras && filteredCarreras.length > 0" 
+                class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
+              <li *ngFor="let c of filteredCarreras" (mousedown)="selectCarrera(c)"
+                  class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+                {{ c }}
+              </li>
+            </ul>
           </div>
 
           <!-- País -->
           <div class="sm:col-span-1">
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">País *</label>
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">País <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <select [(ngModel)]="currentStudy.pais"
-              class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+              [style.color]="currentStudy.pais ? '#111111' : '#94A3B8'"
+              class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
               [ngStyle]="{'border-color': errors['pais'] ? '#E5140D' : '#E2E8F0'}">
-              <option *ngFor="let p of paises" [value]="p">{{ p }}</option>
+              <option value="" class="text-[#111111]">Elige una opción</option>
+              <option *ngFor="let p of paises" [value]="p" class="text-[#111111]">{{ p }}</option>
             </select>
             <p *ngIf="errors['pais']" class="text-xs text-red-500 mt-1">{{ errors['pais'] }}</p>
           </div>
 
           <!-- Área de estudio -->
           <div class="sm:col-span-1">
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Área de estudio *</label>
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Área de estudio <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <select [(ngModel)]="currentStudy.areaEstudio"
-              class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+              [style.color]="currentStudy.areaEstudio ? '#111111' : '#94A3B8'"
+              class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
               [ngStyle]="{'border-color': errors['areaEstudio'] ? '#E5140D' : '#E2E8F0'}">
-              <option value="">Elige una opción</option>
-              <option *ngFor="let a of areasEstudio" [value]="a">{{ a }}</option>
+              <option value="" class="text-[#111111]">Elige una opción</option>
+              <option *ngFor="let a of areasEstudio" [value]="a" class="text-[#111111]">{{ a }}</option>
             </select>
             <p *ngIf="errors['areaEstudio']" class="text-xs text-red-500 mt-1">{{ errors['areaEstudio'] }}</p>
           </div>
 
           <!-- Institución -->
-          <div class="sm:col-span-1">
-            <app-creo-field label="Institución *" [value]="currentStudy.institucion"
-              (valueChange)="currentStudy.institucion = $event" placeholder="Ingresa la institución"
+          <div class="sm:col-span-1 relative">
+            <app-creo-field label="Institución" [required]="true" [value]="currentStudy.institucion"
+              (valueChange)="onInstitucionChange($event)" (fieldFocus)="showInstituciones = true" (fieldBlur)="onInstitucionBlur()" placeholder="Ingresa la institución"
               [error]="errors['institucion']"></app-creo-field>
+            <ul *ngIf="showInstituciones && filteredInstituciones.length > 0" 
+                class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
+              <li *ngFor="let inst of filteredInstituciones" (mousedown)="selectInstitucion(inst)"
+                  class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+                {{ inst }}
+              </li>
+            </ul>
           </div>
 
           <!-- Estado -->
           <div class="sm:col-span-1">
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Estado *</label>
-            <select [(ngModel)]="currentStudy.estado"
-              class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Estado <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <select [(ngModel)]="currentStudy.estado" (ngModelChange)="onEstadoChange()"
+              [style.color]="currentStudy.estado ? '#111111' : '#94A3B8'"
+              class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
               [ngStyle]="{'border-color': errors['estado'] ? '#E5140D' : '#E2E8F0'}">
-              <option value="">Elige una opción</option>
-              <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+              <option value="" class="text-[#111111]">Elige una opción</option>
+              <option *ngFor="let e of estados" [value]="e" class="text-[#111111]">{{ e }}</option>
             </select>
             <p *ngIf="errors['estado']" class="text-xs text-red-500 mt-1">{{ errors['estado'] }}</p>
           </div>
 
           <!-- Fecha de inicio -->
           <div class="sm:col-span-1">
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">Fecha de inicio *</label>
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Fecha de inicio <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <div class="flex gap-2">
-              <select [(ngModel)]="currentStudy.fechaInicioMes"
-                class="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+              <select [(ngModel)]="currentStudy.fechaInicioMes" (ngModelChange)="validateDates()"
+                [style.color]="currentStudy.fechaInicioMes ? '#111111' : '#94A3B8'"
+              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                 [ngStyle]="{'border-color': errors['fechaInicio'] ? '#E5140D' : '#E2E8F0'}">
-                <option value="">Mes</option>
-                <option *ngFor="let m of meses" [value]="m">{{ m }}</option>
+                <option value="" class="text-[#111111]">Mes</option>
+                <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
               </select>
-              <select [(ngModel)]="currentStudy.fechaInicioAno"
-                class="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+              <select [(ngModel)]="currentStudy.fechaInicioAno" (ngModelChange)="validateDates()"
+                [style.color]="currentStudy.fechaInicioAno ? '#111111' : '#94A3B8'"
+              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                 [ngStyle]="{'border-color': errors['fechaInicio'] ? '#E5140D' : '#E2E8F0'}">
-                <option value="">Año</option>
-                <option *ngFor="let a of anos" [value]="a">{{ a }}</option>
+                <option value="" class="text-[#111111]">Año</option>
+                <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>
               </select>
             </div>
             <p *ngIf="errors['fechaInicio']" class="text-xs text-red-500 mt-1">{{ errors['fechaInicio'] }}</p>
@@ -158,25 +180,27 @@
 
           <!-- Fecha de finalización -->
           <div class="sm:col-span-1">
-            <label class="block text-xs font-semibold mb-1.5" style="color: #374151;"
-              [class.opacity-50]="currentStudy.alPresente">Fecha de finalización *</label>
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;"
+              [class.opacity-50]="currentStudy.alPresente">Fecha de finalización <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <div class="flex gap-2 mb-2">
-              <select [(ngModel)]="currentStudy.fechaFinMes" [disabled]="currentStudy.alPresente"
-                class="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111] disabled:bg-slate-100"
+              <select [(ngModel)]="currentStudy.fechaFinMes" (ngModelChange)="validateDates()" [disabled]="currentStudy.alPresente"
+                [style.color]="currentStudy.fechaFinMes ? '#111111' : '#94A3B8'"
+              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100"
                 [ngStyle]="{'border-color': errors['fechaFin'] ? '#E5140D' : '#E2E8F0'}">
-                <option value="">Mes</option>
-                <option *ngFor="let m of meses" [value]="m">{{ m }}</option>
+                <option value="" class="text-[#111111]">Mes</option>
+                <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
               </select>
-              <select [(ngModel)]="currentStudy.fechaFinAno" [disabled]="currentStudy.alPresente"
-                class="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111] disabled:bg-slate-100"
+              <select [(ngModel)]="currentStudy.fechaFinAno" (ngModelChange)="validateDates()" [disabled]="currentStudy.alPresente"
+                [style.color]="currentStudy.fechaFinAno ? '#111111' : '#94A3B8'"
+              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100"
                 [ngStyle]="{'border-color': errors['fechaFin'] ? '#E5140D' : '#E2E8F0'}">
-                <option value="">Año</option>
-                <option *ngFor="let a of anos" [value]="a">{{ a }}</option>
+                <option value="" class="text-[#111111]">Año</option>
+                <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>
               </select>
             </div>
             <p *ngIf="errors['fechaFin']" class="text-xs text-red-500 mt-1">{{ errors['fechaFin'] }}</p>
             <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="currentStudy.alPresente"
+              <input type="checkbox" [(ngModel)]="currentStudy.alPresente" (ngModelChange)="validateDates()"
                 class="rounded text-yellow-500 focus:ring-yellow-500">
               Al presente
             </label>

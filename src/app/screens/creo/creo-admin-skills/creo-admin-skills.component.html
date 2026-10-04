@@ -18,311 +18,456 @@
         </svg>
       </span>
       <p class="text-sm font-medium flex-1" style="color: #111111;">{{ t.message }}</p>
-      <button (click)="dismissToast(t.id)" class="text-slate-400 hover:text-slate-600 flex-shrink-0">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M2 10l8-8M10 10L2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+      <button (click)="dismissToast(t.id)" class="text-slate-400 hover:text-slate-600 transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
     </div>
   </div>
 
   <!-- Page header -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight" style="color: #111111;">Catálogo de Habilidades</h1>
-      <p class="text-sm mt-1" style="color: #64748B;">Gestión del catálogo maestro de habilidades</p>
-    </div>
-    <div class="flex items-center gap-3">
-      <button (click)="openNewCategoryModal()"
-        class="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 border hover:bg-slate-50 transition-colors"
-        style="border-color: #E2E8F0; color: #111111; background-color: #FFFFFF;">
-        Nueva categoría
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
-      <button (click)="openNewModal()"
-        class="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 hover:opacity-90 transition-opacity"
-        style="background-color: #F2B705; color: #111111;">
-        Nueva habilidad
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
-    </div>
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold tracking-tight" style="color: #111111;">Categorías</h1>
+    <p class="text-sm mt-1" style="color: #64748B;">Gestión de habilitación y deshabilitación</p>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <div class="rounded-2xl border p-5 flex flex-col justify-center"
-      style="background-color: #FFFFFF; border-color: #E2E8F0;">
-      <div class="text-2xl font-bold" style="color: #111111;">{{ skills.length }}</div>
-      <div class="text-xs font-medium" style="color: #94A3B8;">Total habilidades</div>
-    </div>
-    <div class="rounded-2xl border p-5 flex flex-col justify-center"
-      style="background-color: #FFFFFF; border-color: #E2E8F0;">
-      <div class="text-2xl font-bold" style="color: #111111;">{{ activeCount }}</div>
-      <div class="text-xs font-medium" style="color: #94A3B8;">Activas</div>
-    </div>
-    <div class="rounded-2xl border p-5 flex flex-col justify-center"
-      style="background-color: #FFFFFF; border-color: #E2E8F0;">
-      <div class="text-2xl font-bold" style="color: #111111;">{{ inactiveCount }}</div>
-      <div class="text-xs font-medium" style="color: #94A3B8;">Inactivas</div>
-    </div>
-    <div class="rounded-2xl border p-5 flex flex-col justify-center"
-      style="background-color: #FFFFFF; border-color: #E2E8F0;">
-      <div class="text-2xl font-bold" style="color: #111111;">{{ filteredSkills.length }}</div>
-      <div class="text-xs font-medium" style="color: #94A3B8;">Mostrando</div>
-    </div>
-  </div>
+  <div class="flex flex-col md:flex-row gap-8">
+    <!-- Sidebar -->
+    <aside class="w-full md:w-56 shrink-0">
+      <nav class="flex flex-col gap-1">
+        <button (click)="activeTab = 'estudios'" 
+                class="px-4 py-2.5 text-sm font-medium rounded-xl text-left transition-colors"
+                [style.background-color]="activeTab === 'estudios' ? '#FFFFFF' : 'transparent'"
+                [style.color]="activeTab === 'estudios' ? '#111111' : '#64748B'"
+                [style.border]="activeTab === 'estudios' ? '1px solid #E2E8F0' : '1px solid transparent'">
+          Áreas de Estudio
+        </button>
+        <button (click)="activeTab = 'habilidades'" 
+                class="px-4 py-2.5 text-sm font-medium rounded-xl text-left transition-colors"
+                [style.background-color]="activeTab === 'habilidades' ? '#FFFFFF' : 'transparent'"
+                [style.color]="activeTab === 'habilidades' ? '#111111' : '#64748B'"
+                [style.border]="activeTab === 'habilidades' ? '1px solid #E2E8F0' : '1px solid transparent'">
+          Habilidades
+        </button>
+        <button (click)="activeTab = 'paises'" 
+                class="px-4 py-2.5 text-sm font-medium rounded-xl text-left transition-colors"
+                [style.background-color]="activeTab === 'paises' ? '#FFFFFF' : 'transparent'"
+                [style.color]="activeTab === 'paises' ? '#111111' : '#64748B'"
+                [style.border]="activeTab === 'paises' ? '1px solid #E2E8F0' : '1px solid transparent'">
+          Países
+        </button>
+        <button (click)="activeTab = 'instituciones'" 
+                class="px-4 py-2.5 text-sm font-medium rounded-xl text-left transition-colors"
+                [style.background-color]="activeTab === 'instituciones' ? '#FFFFFF' : 'transparent'"
+                [style.color]="activeTab === 'instituciones' ? '#111111' : '#64748B'"
+                [style.border]="activeTab === 'instituciones' ? '1px solid #E2E8F0' : '1px solid transparent'">
+          Instituciones
+        </button>
+        <button (click)="activeTab = 'puestos'" 
+                class="px-4 py-2.5 text-sm font-medium rounded-xl text-left transition-colors"
+                [style.background-color]="activeTab === 'puestos' ? '#FFFFFF' : 'transparent'"
+                [style.color]="activeTab === 'puestos' ? '#111111' : '#64748B'"
+                [style.border]="activeTab === 'puestos' ? '1px solid #E2E8F0' : '1px solid transparent'">
+          Puestos
+        </button>
+      </nav>
+    </aside>
 
-  <!-- Filters -->
-  <div class="flex flex-col lg:flex-row gap-4 mb-6">
-    <div class="relative flex-1 max-w-md">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
-        <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-      </svg>
-      <input type="search" [(ngModel)]="query" (ngModelChange)="onFilterChange()" placeholder="Buscar habilidad..."
-        class="w-full h-10 pl-10 pr-4 rounded-xl border text-sm outline-none transition-all"
-        style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111;" />
-    </div>
+    <!-- Main Content -->
+    <div class="flex-1 min-w-0">
 
-    <div class="flex flex-col sm:flex-row gap-4 lg:ml-auto">
-      <div class="relative">
-        <select [(ngModel)]="categoryFilter" (ngModelChange)="onFilterChange()"
-          class="h-10 pl-4 pr-10 rounded-xl border text-sm outline-none appearance-none"
-          style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111; min-width: 180px;">
-          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
-        </select>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round"
-          class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </div>
-
-      <div class="flex bg-white border rounded-lg p-1" style="border-color: #E2E8F0;">
-        <button (click)="statusFilter = 'all'; onFilterChange()"
-          class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
-          [style.background-color]="statusFilter === 'all' ? '#111111' : 'transparent'"
-          [style.color]="statusFilter === 'all' ? '#FFFFFF' : '#64748B'">Todos</button>
-        <button (click)="statusFilter = 'active'; onFilterChange()"
-          class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
-          [style.background-color]="statusFilter === 'active' ? '#111111' : 'transparent'"
-          [style.color]="statusFilter === 'active' ? '#FFFFFF' : '#64748B'">Activas</button>
-        <button (click)="statusFilter = 'inactive'; onFilterChange()"
-          class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
-          [style.background-color]="statusFilter === 'inactive' ? '#111111' : 'transparent'"
-          [style.color]="statusFilter === 'inactive' ? '#FFFFFF' : '#64748B'">Inactivas</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Table -->
-  <div class="bg-white border rounded-2xl overflow-hidden mb-6" style="border-color: #E2E8F0;">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse min-w-[700px]">
-        <thead>
-          <tr class="border-b" style="border-color: #F1F5F9; background-color: #F8FAFC;">
-            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8; width: 45%;">
-              Habilidad</th>
-            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8; width: 30%;">
-              Categoría</th>
-            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right"
-              style="color: #94A3B8; width: 25%;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y" style="border-color: #F1F5F9;">
-          <tr *ngFor="let skill of pagedSkills; let i = index; trackBy: trackById"
-            class="hover:bg-slate-50 transition-colors" [style.opacity]="skill.status === 'inactive' ? '0.6' : '1'">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <span class="text-xs font-mono" style="color: #CBD5E1;">{{ ((currentPage - 1) * pageSize + i +
-                  1).toString().padStart(2, '0') }}</span>
-                <span class="text-sm font-semibold" style="color: #111111;">{{ skill.name }}</span>
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                [style.background-color]="categoryBg[skill.category]" [style.color]="categoryText[skill.category]">
-                {{ skill.category }}
-              </span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <div class="flex items-center justify-end gap-3">
-                <span class="text-[10px] font-bold uppercase tracking-wide"
-                  [style.color]="skill.status === 'active' ? '#15803D' : '#94A3B8'">
-                  {{ skill.status === 'active' ? 'Activa' : 'Inactiva' }}
-                </span>
-                <button (click)="openEditModal(skill)" class="text-slate-400 hover:text-slate-600 transition-colors"
-                  title="Editar">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                  </svg>
-                </button>
-                <button (click)="toggleStatus(skill)"
-                  class="px-3 py-1.5 text-[11px] font-medium rounded-lg border transition-colors"
-                  [style.border-color]="skill.status === 'active' ? '#E2E8F0' : '#86EFAC'"
-                  [style.color]="skill.status === 'active' ? '#64748B' : '#16A34A'"
-                  [class.hover:bg-green-50]="skill.status === 'inactive'"
-                  [class.hover:bg-slate-50]="skill.status === 'active'">
-                  {{ skill.status === 'active' ? 'Desactivar' : 'Activar' }}
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="filteredSkills.length === 0">
-            <td colspan="3" class="px-6 py-12 text-center text-slate-500 text-sm">
-              No se encontraron habilidades que coincidan.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Pagination -->
-  <div *ngIf="totalPages > 1" class="flex items-center justify-between">
-    <p class="text-sm text-slate-500">
-      Mostrando <span class="font-medium text-[#111111]">{{ (currentPage - 1) * pageSize + 1 }}</span> a <span
-        class="font-medium text-[#111111]">{{ Math.min(currentPage * pageSize, filteredSkills.length) }}</span> de <span
-        class="font-medium text-[#111111]">{{ filteredSkills.length }}</span>
-    </p>
-    <div class="flex items-center gap-1">
-      <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
-        class="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors"
-        [style.color]="currentPage === 1 ? '#CBD5E1' : '#111111'"
-        [style.border-color]="currentPage === 1 ? '#F1F5F9' : '#E2E8F0'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <button *ngFor="let p of [].constructor(totalPages); let idx = index" (click)="goToPage(idx + 1)"
-        class="w-8 h-8 rounded-lg text-sm font-medium flex items-center justify-center transition-colors"
-        [style.background-color]="currentPage === idx + 1 ? '#111111' : 'transparent'"
-        [style.color]="currentPage === idx + 1 ? '#FFFFFF' : '#64748B'">
-        {{ idx + 1 }}
-      </button>
-      <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages"
-        class="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors"
-        [style.color]="currentPage === totalPages ? '#CBD5E1' : '#111111'"
-        [style.border-color]="currentPage === totalPages ? '#F1F5F9' : '#E2E8F0'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- New Skill Modal -->
-  <div *ngIf="showNewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col gap-5">
-      <div>
-        <h3 class="text-lg font-bold text-[#111111]">Nueva habilidad</h3>
-        <p class="text-sm text-slate-500 mt-1">Agrega una nueva habilidad al catálogo maestro.</p>
-      </div>
-      <div class="flex flex-col gap-4">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-[#111111]">Nombre <span class="text-[#F2B705]">*</span></label>
-<input type="text" [(ngModel)]="newName" class="w-full h-11 px-3 rounded-xl border text-sm outline-none text-[#111111]"
-            [style.border-color]="newError ? \'#E5140D\' : \'#E2E8F0\'" placeholder="Ej. React Native" />
-          <p *ngIf="newError" class="text-xs text-red-500">{{ newError }}</p>
+      <!-- HABILIDADES -->
+      <div *ngIf="activeTab === 'habilidades'">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-xl font-bold" style="color: #111111;">Habilidades</h2>
+          </div>
+          <div class="flex items-center gap-3">
+            
+            <button (click)="openNewModal()" class="px-4 py-2 rounded-xl text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90 transition-opacity">Nueva habilidad</button>
+          </div>
         </div>
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-[#111111]">Categoría <span class="text-[#F2B705]">*</span></label>
-          <div class="relative">
-            <select [(ngModel)]="newCategory"
-class="w-full h-11 pl-3 pr-10 rounded-xl border border-[#E2E8F0] text-sm outline-none appearance-none bg-white text-[#111111]">
-              <option *ngFor="let cat of categories.slice(1)" [value]="cat" class="text-[#111111]">{{ cat }}</option>
-              <option value="General" class="text-[#111111]">General</option>
-            </select>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+        
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="rounded-2xl border p-5 flex flex-col justify-center" style="background-color: #FFFFFF; border-color: #E2E8F0;">
+            <div class="text-2xl font-bold" style="color: #111111;">{{ skills.length }}</div>
+            <div class="text-xs font-medium" style="color: #94A3B8;">Total habilidades</div>
+          </div>
+          <div class="rounded-2xl border p-5 flex flex-col justify-center" style="background-color: #FFFFFF; border-color: #E2E8F0;">
+            <div class="text-2xl font-bold" style="color: #111111;">{{ activeCount }}</div>
+            <div class="text-xs font-medium" style="color: #94A3B8;">Activas</div>
+          </div>
+          <div class="rounded-2xl border p-5 flex flex-col justify-center" style="background-color: #FFFFFF; border-color: #E2E8F0;">
+            <div class="text-2xl font-bold" style="color: #111111;">{{ studyAreas.length }}</div>
+            <div class="text-xs font-medium" style="color: #94A3B8;">Áreas de estudio</div>
+          </div>
+          <div class="rounded-2xl border p-5 flex flex-col justify-center" style="background-color: #FFFFFF; border-color: #E2E8F0;">
+            <div class="text-2xl font-bold text-green-600">+12</div>
+            <div class="text-xs font-medium" style="color: #94A3B8;">Agregadas este mes</div>
+          </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-4 mb-6">
+          <div class="relative flex-1 max-w-md">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <input type="search" [(ngModel)]="query" (ngModelChange)="onFilterChange()" placeholder="Buscar habilidad..." class="w-full h-10 pl-10 pr-4 rounded-xl border text-sm outline-none transition-all" style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111;" />
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4 lg:ml-auto">
+            <div class="relative">
+              <select [(ngModel)]="categoryFilter" (ngModelChange)="onFilterChange()" class="h-10 pl-4 pr-10 rounded-xl border text-sm outline-none appearance-none" style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111; min-width: 180px;">
+                <option *ngFor="let cat of activeCategories" [value]="cat">{{ cat }}</option>
+              </select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><polyline points="6 9 12 15 18 9" /></svg>
+            </div>
+            <div class="flex bg-white border rounded-lg p-1" style="border-color: #E2E8F0;">
+              <button (click)="statusFilter = 'all'; onFilterChange()" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="statusFilter === 'all' ? '#111111' : 'transparent'" [style.color]="statusFilter === 'all' ? '#FFFFFF' : '#64748B'">Todos</button>
+              <button (click)="statusFilter = 'active'; onFilterChange()" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="statusFilter === 'active' ? '#111111' : 'transparent'" [style.color]="statusFilter === 'active' ? '#FFFFFF' : '#64748B'">Activas</button>
+              <button (click)="statusFilter = 'inactive'; onFilterChange()" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="statusFilter === 'inactive' ? '#111111' : 'transparent'" [style.color]="statusFilter === 'inactive' ? '#FFFFFF' : '#64748B'">Inactivas</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-white border rounded-2xl overflow-hidden mb-6" style="border-color: #E2E8F0;">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[700px]">
+              <thead class="bg-slate-50 border-b" style="border-color: #E2E8F0;">
+                <tr>
+                  <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Habilidad</th>
+                  <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Área de Estudio</th>
+                  <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
+                  <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr *ngFor="let skill of filteredSkills" class="hover:bg-slate-50 transition-colors">
+                  <td class="px-5 py-4 text-sm font-medium" style="color: #111111;">{{ skill.name }}</td>
+                  <td class="px-5 py-4 text-sm" style="color: #64748B;">{{ skill.category }}</td>
+                  <td class="px-5 py-4">
+                    <span class="px-2.5 py-1 text-[11px] font-bold rounded-full" [style.background-color]="skill.status === 'active' ? '#DCFCE7' : '#FEE2E2'" [style.color]="skill.status === 'active' ? '#15803D' : '#B91C1C'">
+                      {{ skill.status === 'active' ? 'Activa' : 'Inactiva' }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button (click)="openEditModal(skill)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-[#0A66C2] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                      <button (click)="toggleStatus(skill)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors" [ngClass]="skill.status === 'active' ? 'text-red-500 hover:text-red-600' : 'text-green-600 hover:text-green-700'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path *ngIf="skill.status === 'active'" d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line *ngIf="skill.status === 'active'" x1="12" y1="2" x2="12" y2="12"/><path *ngIf="skill.status !== 'active'" d="M12 2v10"/><path *ngIf="skill.status !== 'active'" d="M18.36 6.64A9 9 0 0 1 21 13a9 9 0 1 1-18 0c0-2.5 1-4.75 2.64-6.36"/></svg></button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="filteredSkills.length === 0">
+                  <td colspan="4" class="px-5 py-12 text-center">
+                    <p class="text-sm font-medium" style="color: #64748B;">No se encontraron habilidades que coincidan con los filtros.</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-      <div class="flex items-center gap-3 mt-2">
-        <button (click)="showNewModal = false"
-          class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancelar</button>
-        <button (click)="saveNewSkill()"
-          class="flex-1 py-2.5 rounded-xl bg-[#111111] text-[#F2B705] text-sm font-semibold hover:bg-black">Guardar</button>
+
+      <!-- ESTUDIOS -->
+      <div *ngIf="activeTab === 'estudios'">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold" style="color: #111111;">Áreas de Estudio</h2>
+          <button (click)="openStudyModal()" class="px-4 py-2 rounded-xl text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90 transition-opacity">Nueva área</button>
+        </div>
+        <div class="bg-white border rounded-2xl overflow-hidden mb-6" style="border-color: #E2E8F0;">
+          <table class="w-full text-left border-collapse min-w-[500px]">
+            <thead class="bg-slate-50 border-b" style="border-color: #E2E8F0;">
+              <tr>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Área</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngFor="let s of studyAreas" class="hover:bg-slate-50 transition-colors">
+                <td class="px-5 py-4 text-sm font-medium" style="color: #111111;">{{ s.name }}</td>
+                <td class="px-5 py-4">
+                  <span class="px-2.5 py-1 text-[11px] font-bold rounded-full" [style.background-color]="s.active ? '#DCFCE7' : '#FEE2E2'" [style.color]="s.active ? '#15803D' : '#B91C1C'">
+                    {{ s.active ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button (click)="openStudyModal(s)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-[#0A66C2] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button (click)="toggleStudyStatus(s)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors" [ngClass]="s.active ? 'text-red-500 hover:text-red-600' : 'text-green-600 hover:text-green-700'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path *ngIf="s.active" d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line *ngIf="s.active" x1="12" y1="2" x2="12" y2="12"/><path *ngIf="!s.active" d="M12 2v10"/><path *ngIf="!s.active" d="M18.36 6.64A9 9 0 0 1 21 13a9 9 0 1 1-18 0c0-2.5 1-4.75 2.64-6.36"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <!-- PAISES -->
+      <div *ngIf="activeTab === 'paises'">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold" style="color: #111111;">Países</h2>
+          <button (click)="openCountryModal()" class="px-4 py-2 rounded-xl text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90 transition-opacity">Nuevo país</button>
+        </div>
+        <div class="bg-white border rounded-2xl overflow-hidden mb-6" style="border-color: #E2E8F0;">
+          <table class="w-full text-left border-collapse min-w-[500px]">
+            <thead class="bg-slate-50 border-b" style="border-color: #E2E8F0;">
+              <tr>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">País</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngFor="let c of countries" class="hover:bg-slate-50 transition-colors">
+                <td class="px-5 py-4 text-sm font-medium" style="color: #111111;">{{ c.name }}</td>
+                <td class="px-5 py-4">
+                  <span class="px-2.5 py-1 text-[11px] font-bold rounded-full" [style.background-color]="c.active ? '#DCFCE7' : '#FEE2E2'" [style.color]="c.active ? '#15803D' : '#B91C1C'">
+                    {{ c.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button (click)="openCountryModal(c)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-[#0A66C2] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button (click)="toggleCountryStatus(c)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors" [ngClass]="c.active ? 'text-red-500 hover:text-red-600' : 'text-green-600 hover:text-green-700'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path *ngIf="c.active" d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line *ngIf="c.active" x1="12" y1="2" x2="12" y2="12"/><path *ngIf="!c.active" d="M12 2v10"/><path *ngIf="!c.active" d="M18.36 6.64A9 9 0 0 1 21 13a9 9 0 1 1-18 0c0-2.5 1-4.75 2.64-6.36"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INSTITUCIONES -->
+      <div *ngIf="activeTab === 'instituciones'">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold" style="color: #111111;">Instituciones Académicas</h2>
+          <button (click)="openInstitutionModal()" class="px-4 py-2 rounded-xl text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90 transition-opacity">Nueva institución</button>
+        </div>
+        <div class="bg-white border rounded-2xl overflow-hidden mb-6" style="border-color: #E2E8F0;">
+          <table class="w-full text-left border-collapse min-w-[500px]">
+            <thead class="bg-slate-50 border-b" style="border-color: #E2E8F0;">
+              <tr>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Institución</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">País</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngFor="let i of institutions" class="hover:bg-slate-50 transition-colors">
+                <td class="px-5 py-4 text-sm font-medium" style="color: #111111;">{{ i.name }}</td>
+                <td class="px-5 py-4 text-sm" style="color: #64748B;">{{ i.country }}</td>
+                <td class="px-5 py-4">
+                  <span class="px-2.5 py-1 text-[11px] font-bold rounded-full" [style.background-color]="i.active ? '#DCFCE7' : '#FEE2E2'" [style.color]="i.active ? '#15803D' : '#B91C1C'">
+                    {{ i.active ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button (click)="openInstitutionModal(i)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-[#0A66C2] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button (click)="toggleInstitutionStatus(i)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors" [ngClass]="i.active ? 'text-red-500 hover:text-red-600' : 'text-green-600 hover:text-green-700'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path *ngIf="i.active" d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line *ngIf="i.active" x1="12" y1="2" x2="12" y2="12"/><path *ngIf="!i.active" d="M12 2v10"/><path *ngIf="!i.active" d="M18.36 6.64A9 9 0 0 1 21 13a9 9 0 1 1-18 0c0-2.5 1-4.75 2.64-6.36"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PUESTOS -->
+      <div *ngIf="activeTab === 'puestos'">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold" style="color: #111111;">Puestos de Trabajo</h2>
+          <button (click)="openPositionModal()" class="px-4 py-2 rounded-xl text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90 transition-opacity">Nuevo puesto</button>
+        </div>
+        <div class="bg-white border rounded-2xl overflow-hidden mb-6" style="border-color: #E2E8F0;">
+          <table class="w-full text-left border-collapse min-w-[500px]">
+            <thead class="bg-slate-50 border-b" style="border-color: #E2E8F0;">
+              <tr>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Puesto</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngFor="let p of positions" class="hover:bg-slate-50 transition-colors">
+                <td class="px-5 py-4 text-sm font-medium" style="color: #111111;">{{ p.name }}</td>
+                <td class="px-5 py-4">
+                  <span class="px-2.5 py-1 text-[11px] font-bold rounded-full" [style.background-color]="p.active ? '#DCFCE7' : '#FEE2E2'" [style.color]="p.active ? '#15803D' : '#B91C1C'">
+                    {{ p.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button (click)="openPositionModal(p)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-[#0A66C2] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button (click)="togglePositionStatus(p)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors" [ngClass]="p.active ? 'text-red-500 hover:text-red-600' : 'text-green-600 hover:text-green-700'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path *ngIf="p.active" d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line *ngIf="p.active" x1="12" y1="2" x2="12" y2="12"/><path *ngIf="!p.active" d="M12 2v10"/><path *ngIf="!p.active" d="M18.36 6.64A9 9 0 0 1 21 13a9 9 0 1 1-18 0c0-2.5 1-4.75 2.64-6.36"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- New Category Modal -->
-  <div *ngIf="showNewCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col gap-5">
-      <div>
-        <h3 class="text-lg font-bold text-[#111111]">Nueva categoría</h3>
-        <p class="text-sm text-slate-500 mt-1">Agrega una nueva categoría al catálogo maestro.</p>
+  <!-- Modals -->
+  <!-- New/Edit Skill Modal -->
+  <div *ngIf="showNewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="background-color: rgba(17, 17, 17, 0.6);">
+    <div class="absolute inset-0" (click)="showNewModal = false"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-[500px] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up">
+      <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: #E2E8F0;">
+        <h2 class="text-xl font-bold" style="color: #111111;">Nueva habilidad</h2>
+        <button (click)="showNewModal = false" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
-      <div class="flex flex-col gap-4">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-[#111111]">Nombre de la categoría <span
-              class="text-[#F2B705]">*</span></label>
-          <input type="text" [(ngModel)]="newCategoryName" (keyup.enter)="saveNewCategory()"
-class="w-full h-11 px-3 rounded-xl border text-sm outline-none text-[#111111]"
-            [style.border-color]="newCategoryError ? \'#E5140D\' : \'#E2E8F0\'" placeholder="Ej. Inteligencia Artificial" />
-          <p *ngIf="newCategoryError" class="text-xs text-red-500">{{ newCategoryError }}</p>
+      <div class="p-6 flex flex-col gap-5">
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Nombre de la habilidad <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="newName" placeholder="Ej: React, Python, Liderazgo..." class="w-full h-11 px-3 rounded-xl border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111;" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-3" style="color: #111111;">Tipo de habilidad <span class="text-red-500">*</span></label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 cursor-pointer group">
+              <input type="radio" name="skillType" [value]="false" [(ngModel)]="newIsSoft" class="w-4 h-4 text-black focus:ring-black border-slate-300">
+              <span class="text-sm font-medium text-slate-700 group-hover:text-black">Técnica</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer group">
+              <input type="radio" name="skillType" [value]="true" [(ngModel)]="newIsSoft" class="w-4 h-4 text-black focus:ring-black border-slate-300">
+              <span class="text-sm font-medium text-slate-700 group-hover:text-black">Blanda</span>
+            </label>
+          </div>
+        </div>
+        <div *ngIf="!newIsSoft">
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Área de estudio <span class="text-red-500">*</span></label>
+          <select [(ngModel)]="newCategory" class="w-full h-11 px-3 rounded-xl border text-sm outline-none appearance-none" style="border-color: #94A3B8; color: #111111;">
+            <option value="" disabled selected>Selecciona un área de estudio...</option>
+            <option *ngFor="let cat of activeCategories" [value]="cat">{{ cat }}</option>
+          </select>
+          <p class="text-[11px] mt-1 text-slate-500">¿A qué área académica pertenece esta habilidad técnica?</p>
         </div>
       </div>
-      <div class="flex items-center gap-3 mt-2">
-        <button (click)="showNewCategoryModal = false"
-          class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancelar</button>
-        <button (click)="saveNewCategory()"
-          class="flex-1 py-2.5 rounded-xl bg-[#111111] text-[#F2B705] text-sm font-semibold hover:bg-black">Crear
-          categoría</button>
+      <div class="flex gap-3 px-6 py-5 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
+        <button (click)="showNewModal = false" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancelar</button>
+        <button (click)="saveNewSkill()" class="flex-1 py-2.5 rounded-xl bg-[#111111] text-[#F2B705] text-sm font-semibold hover:bg-black" [disabled]="!newName.trim()">Guardar</button>
       </div>
     </div>
   </div>
 
   <!-- Edit Skill Modal -->
-  <div *ngIf="editingSkill" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col gap-5">
-      <div>
-        <h3 class="text-lg font-bold text-[#111111]">Editar habilidad</h3>
+  <div *ngIf="editingSkill" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="background-color: rgba(17, 17, 17, 0.6);">
+    <div class="absolute inset-0" (click)="editingSkill = null"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-[500px] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up">
+      <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: #E2E8F0;">
+        <h2 class="text-xl font-bold" style="color: #111111;">Editar habilidad</h2>
+        <button (click)="editingSkill = null" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
-      <div class="flex flex-col gap-4">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-[#111111]">Nombre <span class="text-[#F2B705]">*</span></label>
-<input type="text" [(ngModel)]="editName" class="w-full h-11 px-3 rounded-xl border text-sm outline-none text-[#111111]"
-            [style.border-color]="editError ? \'#E5140D\' : \'#E2E8F0\'" />
-          <p *ngIf="editError" class="text-xs text-red-500">{{ editError }}</p>
+      <div class="p-6 flex flex-col gap-5">
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Nombre de la habilidad</label>
+          <input type="text" [(ngModel)]="editingSkill.name" class="w-full h-11 px-3 rounded-xl border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111;" />
         </div>
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-[#111111]">Categoría <span class="text-[#F2B705]">*</span></label>
-          <div class="relative">
-            <select [(ngModel)]="editCategory"
-class="w-full h-11 pl-3 pr-10 rounded-xl border border-[#E2E8F0] text-sm outline-none appearance-none bg-white text-[#111111]">
-              <option *ngFor="let cat of categories.slice(1)" [value]="cat" class="text-[#111111]">{{ cat }}</option>
-              <option value="General" class="text-[#111111]">General</option>
-            </select>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </div>
+        <div *ngIf="editingSkill.category !== 'Blanda'">
+          <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Área de estudio</label>
+          <select [(ngModel)]="editingSkill.category" class="w-full h-11 px-3 rounded-xl border text-sm outline-none appearance-none" style="border-color: #94A3B8; color: #111111;">
+            <option *ngFor="let cat of activeCategories" [value]="cat">{{ cat }}</option>
+          </select>
         </div>
       </div>
-      <div class="flex items-center gap-3 mt-2">
-        <button (click)="editingSkill = null"
-          class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancelar</button>
-        <button (click)="saveEditSkill()"
-          class="flex-1 py-2.5 rounded-xl bg-[#111111] text-[#F2B705] text-sm font-semibold hover:bg-black">Guardar</button>
+      <div class="flex gap-3 px-6 py-5 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
+        <button (click)="editingSkill = null" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancelar</button>
+        <button (click)="saveEditSkill()" class="flex-1 py-2.5 rounded-xl bg-[#111111] text-[#F2B705] text-sm font-semibold hover:bg-black">Guardar</button>
       </div>
     </div>
   </div>
+
+  <!-- Study Modal -->
+  <div *ngIf="showStudyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="background-color: rgba(17, 17, 17, 0.6);">
+    <div class="absolute inset-0" (click)="closeStudyModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-[500px] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up">
+      <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: #E2E8F0;">
+        <h2 class="text-xl font-bold text-[#111111]">{{ editingStudy.id ? 'Editar Área' : 'Nueva Área' }}</h2>
+        <button (click)="closeStudyModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="p-6">
+        <label class="block text-sm font-medium mb-1.5 text-[#111111]">Nombre del Área de Estudio <span class="text-red-500">*</span></label>
+        <input type="text" [(ngModel)]="editingStudy.name" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 border-slate-300 focus:ring-[#111111] text-[#111111]" />
+      </div>
+      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
+        <button (click)="saveStudy()" class="px-6 py-2 rounded-full text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Country Modal -->
+  <div *ngIf="showCountryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="background-color: rgba(17, 17, 17, 0.6);">
+    <div class="absolute inset-0" (click)="closeCountryModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-[500px] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up">
+      <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: #E2E8F0;">
+        <h2 class="text-xl font-bold text-[#111111]">{{ editingCountry.id ? 'Editar País' : 'Nuevo País' }}</h2>
+        <button (click)="closeCountryModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="p-6">
+        <label class="block text-sm font-medium mb-1.5 text-[#111111]">Nombre del País <span class="text-red-500">*</span></label>
+        <input type="text" [(ngModel)]="editingCountry.name" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 border-slate-300 focus:ring-[#111111] text-[#111111]" />
+      </div>
+      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
+        <button (click)="saveCountry()" class="px-6 py-2 rounded-full text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Institution Modal -->
+  <div *ngIf="showInstitutionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="background-color: rgba(17, 17, 17, 0.6);">
+    <div class="absolute inset-0" (click)="closeInstitutionModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-[500px] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up">
+      <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: #E2E8F0;">
+        <h2 class="text-xl font-bold text-[#111111]">{{ editingInstitution.id ? 'Editar Institución' : 'Nueva Institución' }}</h2>
+        <button (click)="closeInstitutionModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="p-6 flex flex-col gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1.5 text-[#111111]">Nombre de la Institución <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="editingInstitution.name" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 border-slate-300 focus:ring-[#111111] text-[#111111]" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5 text-[#111111]">País <span class="text-red-500">*</span></label>
+          <select [(ngModel)]="editingInstitution.country" class="w-full h-11 px-3 rounded-lg border text-sm outline-none appearance-none focus:ring-1 border-slate-300 focus:ring-[#111111] text-[#111111]">
+            <option value="" disabled selected>Selecciona un país...</option>
+            <option *ngFor="let c of countries" [value]="c.name">{{ c.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
+        <button (click)="saveInstitution()" class="px-6 py-2 rounded-full text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Position Modal -->
+  <div *ngIf="showPositionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="background-color: rgba(17, 17, 17, 0.6);">
+    <div class="absolute inset-0" (click)="closePositionModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-[500px] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up">
+      <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: #E2E8F0;">
+        <h2 class="text-xl font-bold text-[#111111]">{{ editingPosition.id ? 'Editar Puesto' : 'Nuevo Puesto' }}</h2>
+        <button (click)="closePositionModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="p-6">
+        <label class="block text-sm font-medium mb-1.5 text-[#111111]">Nombre del Puesto <span class="text-red-500">*</span></label>
+        <input type="text" [(ngModel)]="editingPosition.name" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 border-slate-300 focus:ring-[#111111] text-[#111111]" />
+      </div>
+      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
+        <button (click)="savePosition()" class="px-6 py-2 rounded-full text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90">Guardar</button>
+      </div>
+    </div>
+  </div>
+
 </app-admin-shell>
