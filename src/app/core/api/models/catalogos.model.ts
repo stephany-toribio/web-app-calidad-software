@@ -1,0 +1,40 @@
+// Respuestas de los catálogos del backend (GET /paises, /tipos-estudio, /carreras, etc.)
+
+export interface ItemCatalogo {
+    id: number;
+    nombre: string;
+}
+
+/** GET /tipos-estudio — requiere_carrera: true => el estudio lleva institución y carrera */
+export interface TipoEstudio extends ItemCatalogo {
+    requiere_carrera: boolean;
+}
+
+/** GET /areas-estudio */
+export interface AreaEstudio extends ItemCatalogo {
+    activo: boolean;
+}
+
+/** GET /instituciones?pais_id= */
+export interface Institucion extends ItemCatalogo {
+    pais_id: number;
+}
+
+/** GET /organizaciones?pais_id= */
+export interface Organizacion extends ItemCatalogo {
+    pais_id: number;
+}
+
+/** GET /carreras?tipo_estudio_id=&area_estudio_id=&pais_id= */
+export interface Carrera extends ItemCatalogo {
+    tipo_estudio_id: number;
+    area_estudio_id: number;
+    pais_id: number;
+}
+
+/** GET /habilidades?areas[]= — las blandas no tienen área */
+export interface Habilidad extends ItemCatalogo {
+    tipo_habilidad: 'tecnica' | 'blanda';
+    activo: boolean;
+    area_estudio: { id: number; nombre: string; activo: boolean } | null;
+}
