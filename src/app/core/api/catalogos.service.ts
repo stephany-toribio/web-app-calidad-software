@@ -26,12 +26,13 @@ export class CatalogosService {
     puestos(): Observable<ItemCatalogo[]> { return this.puestos$; }
 
     // Catálogos que dependen de lo elegido en el formulario
-    instituciones(paisId: number): Observable<Institucion[]> {
-        return this.lista<Institucion>('instituciones', new HttpParams().set('pais_id', paisId));
+    instituciones(paisId?: number): Observable<Institucion[]> {
+        return this.lista<Institucion>('instituciones', paisId ? new HttpParams().set('pais_id', paisId) : undefined);
     }
 
-    organizaciones(paisId: number): Observable<Organizacion[]> {
-        return this.lista<Organizacion>('organizaciones', new HttpParams().set('pais_id', paisId));
+
+    organizaciones(paisId?: number): Observable<Organizacion[]> {
+        return this.lista<Organizacion>('organizaciones', paisId ? new HttpParams().set('pais_id', paisId) : undefined);
     }
 
     carreras(tipoEstudioId: number, areaEstudioId: number, paisId: number): Observable<Carrera[]> {

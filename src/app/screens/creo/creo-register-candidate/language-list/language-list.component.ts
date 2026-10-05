@@ -1,7 +1,10 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CreoBtnComponent } from '../../../../components/creo-design-system/creo-btn/creo-btn.component';
+import { CatalogosService } from '../../../../core/api/catalogos.service';
+import { ItemCatalogo } from '../../../../core/api/models/catalogos.model';
+import { aId } from '../../../../core/api/mappers/registro-candidato.mapper';
 
 export interface LanguageEntry {
   idioma: string;
@@ -9,7 +12,6 @@ export interface LanguageEntry {
   nivelOral: string;
 }
 
-const IDIOMAS = ['Inglés', 'Español', 'Portugués', 'Francés', 'Alemán', 'Italiano', 'Otro'];
 const NIVELES = ['Básico', 'Intermedio', 'Avanzado', 'Nativo'];
 
 @Component({
@@ -18,14 +20,17 @@ const NIVELES = ['Básico', 'Intermedio', 'Avanzado', 'Nativo'];
   imports: [CommonModule, FormsModule, CreoBtnComponent],
   templateUrl: './language-list.component.html',
 })
-export class LanguageListComponent {
+export class LanguageListComponent implements OnInit {
+  private catalogos = inject(CatalogosService);
+
   @Input() languages: LanguageEntry[] = [];
   @Input() maxLanguages: number = 10;
   @Output() languagesChange = new EventEmitter<LanguageEntry[]>();
 
   showModal = false;
-  
-  idiomas = IDIOMAS;
+
+  idiomas: string[] = [];
+  private catalogoIdiomas: ItemCatalogo[] = [];
   niveles = NIVELES;
 
   editingIndex = -1;
@@ -34,6 +39,13 @@ export class LanguageListComponent {
 
   showIdiomas = false;
 
+  ngOnInit() {
+    this.catalogos.idiomas().subscribe(lista => {
+      this.catalogoIdiomas = lista;
+      this.idiomas = lista.map(i => i.nombre);
+    });
+  }
+
   get filteredIdiomas(): string[] {
     const val = (this.currentLang.idioma || '').toLowerCase();
     const usados = new Set(
@@ -41,8 +53,9 @@ export class LanguageListComponent {
         .filter((_, i) => i !== this.editingIndex)
         .map(l => l.idioma.toLowerCase())
     );
-    const sugeridos = this.idiomas.filter(i => !usados.has(i.toLowerCase()) && i !== 'Otro');
-    return sugeridos.filter(i => i.toLowerCase().includes(val));
+    return this.idiomas
+      .filter(i => !usados.has(i.toLowerCase()))
+      .filter(i => i.toLowerCase().includes(val));
   }
 
   onIdiomaChange(val: string) {
@@ -100,6 +113,8 @@ export class LanguageListComponent {
   saveLanguage() {
     this.errors = {};
     if (!this.currentLang.idioma.trim()) this.errors['idioma'] = 'Requerido';
+    // Solo idiomas del catálogo: el backend necesita su id
+    else if (aId(this.catalogoIdiomas, this.currentLang.idioma) === null) this.errors['idioma'] = 'Elige un idioma de la lista';
     if (!this.currentLang.nivelEscrito) this.errors['nivelEscrito'] = 'Requerido';
     if (!this.currentLang.nivelOral) this.errors['nivelOral'] = 'Requerido';
 
