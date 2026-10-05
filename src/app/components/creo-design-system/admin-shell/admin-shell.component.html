@@ -1,0 +1,55 @@
+<div class="min-h-screen" style="background-color: #F8FAFC; font-family: Inter, system-ui, sans-serif;">
+  <!-- Top bar -->
+  <header class="bg-white border-b sticky top-0 z-20" style="border-color: #E2E8F0;">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <app-creo-wordmark size="sm"></app-creo-wordmark>
+        <div class="hidden sm:flex items-center gap-1.5 h-5">
+          <div class="w-px h-full" style="background-color: #E2E8F0;"></div>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                style="background-color: #111111; color: #F2B705;">
+            Administrador
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs hidden sm:flex items-center h-full" style="color: #64748B;">admin&#64;creo.pe</span>
+        <button (click)="logout()"
+                class="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors group"
+                style="color: #64748B; border-color: #E2E8F0;">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M7.5 9L4.5 6l3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Salir
+        </button>
+      </div>
+    </div>
+
+    <!-- Nav tabs -->
+    <nav class="max-w-6xl mx-auto px-5 sm:px-8 flex gap-0 overflow-x-auto" style="scrollbar-width: none;">
+      <button *ngFor="let item of nav"
+              (click)="navigate(item.id)"
+              class="flex-shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap hover:text-[#111111]"
+              [style.border-bottom-color]="activeScreen === item.id ? '#F2B705' : 'transparent'"
+              [style.color]="activeScreen === item.id ? '#111111' : '#64748B'"
+              style="background-color: transparent;">
+        {{ item.label }}
+      </button>
+    </nav>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-5 sm:px-8 py-8 pb-24">
+    <ng-content></ng-content>
+  </main>
+  <div *ngIf="showProximamente" class="fixed bottom-6 right-6 bg-slate-800 text-white px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 z-50">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F2B705" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <div class="flex flex-col">
+      <span class="text-sm font-bold">Módulo en construcción</span>
+      <span class="text-xs text-slate-300">Próximamente disponible en esta demo.</span>
+    </div>
+  </div>
+</div>
