@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/guards/admin.guard';
+import { companyGuard } from './core/guards/company.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'creo/landing', pathMatch: 'full' },
@@ -12,19 +14,31 @@ export const routes: Routes = [
       },
       {
         path: 'admin-accounts',
-        loadComponent: () => import('./screens/creo/admin-accounts/admin-accounts.component').then(m => m.AdminAccountsComponent)
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./screens/creo/admin-accounts/admin-accounts.component')
+            .then(m => m.AdminAccountsComponent)
       },
       {
         path: 'admin-audit',
-        loadComponent: () => import('./screens/creo/admin-audit/admin-audit.component').then(m => m.AdminAuditComponent)
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./screens/creo/admin-audit/admin-audit.component')
+            .then(m => m.AdminAuditComponent)
       },
       {
         path: 'admin-dashboard',
-        loadComponent: () => import('./screens/creo/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./screens/creo/admin-dashboard/admin-dashboard.component')
+            .then(m => m.AdminDashboardComponent)
       },
       {
         path: 'admin-moderation',
-        loadComponent: () => import('./screens/creo/admin-moderation/admin-moderation.component').then(m => m.AdminModerationComponent)
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./screens/creo/admin-moderation/admin-moderation.component')
+            .then(m => m.AdminModerationComponent)
       },
       {
         path: 'candidate-applications',
@@ -52,22 +66,27 @@ export const routes: Routes = [
       },
       {
         path: 'company-analytics',
+        canActivate: [companyGuard],
         loadComponent: () => import('./screens/creo/company-analytics/company-analytics.component').then(m => m.CompanyAnalyticsComponent)
       },
       {
         path: 'company-create-job',
+        canActivate: [companyGuard],
         loadComponent: () => import('./screens/creo/company-create-job/company-create-job.component').then(m => m.CompanyCreateJobComponent)
       },
       {
         path: 'company-home',
+        canActivate: [companyGuard],
         loadComponent: () => import('./screens/creo/company-home/company-home.component').then(m => m.CompanyHomeComponent)
       },
       {
         path: 'company-jobs',
+        canActivate: [companyGuard],
         loadComponent: () => import('./screens/creo/company-jobs/company-jobs.component').then(m => m.CompanyJobsComponent)
       },
       {
         path: 'company-kanban',
+        canActivate: [companyGuard],
         loadComponent: () => import('./screens/creo/company-kanban/company-kanban.component').then(m => m.CompanyKanbanComponent)
       },
       {
@@ -80,7 +99,10 @@ export const routes: Routes = [
       },
       {
         path: 'admin-skills',
-        loadComponent: () => import('./screens/creo/creo-admin-skills/creo-admin-skills.component').then(m => m.CreoAdminSkillsComponent)
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./screens/creo/creo-admin-skills/creo-admin-skills.component')
+            .then(m => m.CreoAdminSkillsComponent)
       },
       {
         path: 'edit-profile',

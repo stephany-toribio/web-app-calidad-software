@@ -14,6 +14,7 @@ import { CreoStepIndicatorComponent } from '../../../components/creo-design-syst
 
 import { CREO_SECTORS } from '../../../data/creo-skills.data';
 import { EmpresasService } from '../../../core/api/empresas.service';
+import { AuthService } from '../../../core/api/auth.service';
 import { RegistroEmpresaPayload } from '../../../core/api/models/registro-empresa.model';
 
 type RucStatus = 'idle' | 'checking' | 'taken' | 'ok';
@@ -64,7 +65,8 @@ export class CreoRegisterCompanyComponent {
 
   constructor(
     private router: Router,
-    private empresasService: EmpresasService
+    private empresasService: EmpresasService,
+    private authService: AuthService
   ) {}
 
   /*
@@ -388,7 +390,7 @@ export class CreoRegisterCompanyComponent {
   private iniciarSesionDespuesDelRegistro(
     payload: RegistroEmpresaPayload
   ): void {
-    this.empresasService.login({
+    this.authService.login({
       correo: payload.correo,
       password: payload.password
     }).subscribe({
