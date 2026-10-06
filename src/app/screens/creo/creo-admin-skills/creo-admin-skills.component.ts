@@ -64,6 +64,10 @@ export class CreoAdminSkillsComponent implements OnInit {
     return ['Todas', ...this.studyAreas.map(s => s.name)];
   }
 
+  get activeStudyAreas() {
+    return this.studyAreas.filter(area => area.active);
+  }
+
   Math = Math;
 
   toasts: Toast[] = [];
@@ -90,6 +94,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   // Modales de administración
   showStudyModal = false;
   editingStudy: StudyAreaViewModel = { id: 0, name: '', active: true };
+  studyError = '';
   
   showCountryModal = false;
   editingCountry = { id: 0, name: '', active: true };
@@ -218,7 +223,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   openNewModal() {
     this.showNewModal = true;
     this.newName = '';
-    this.newCategoryAreaId = this.studyAreas.length > 0 ? this.studyAreas[0].id : null;
+    this.newCategoryAreaId = null;
     this.newCategoryName = '';
     this.newIsSoft = false;
     this.newError = '';
@@ -227,6 +232,11 @@ export class CreoAdminSkillsComponent implements OnInit {
   saveNewSkill() {
     if (!this.newName.trim()) {
       this.newError = 'El nombre de la habilidad es requerido';
+      return;
+    }
+
+    if (this.newName.trim().length > 100) {
+      this.newError = 'El nombre no puede superar los 100 caracteres';
       return;
     }
 
@@ -249,7 +259,12 @@ export class CreoAdminSkillsComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         const errMap = erroresDesdeApi(err);
-        this.newError = errMap['api'] || errMap['nombre'] || 'No se pudo crear la habilidad.';
+
+        this.newError =
+          errMap['api'] ||
+          errMap['nombre'] ||
+          errMap['firstName'] ||
+          'No se pudo crear la habilidad.';
       }
     });
   }
@@ -258,7 +273,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.editingSkill = skill;
     this.editName = skill.name;
     this.editIsSoft = skill.isSoft;
-    this.editCategoryAreaId = skill.areaId ?? (this.studyAreas.length > 0 ? this.studyAreas[0].id : null);
+    this.editCategoryAreaId = skill.areaId ?? null;
     this.editError = '';
   }
 
@@ -267,28 +282,57 @@ export class CreoAdminSkillsComponent implements OnInit {
       this.editError = 'El nombre no puede estar vacío';
       return;
     }
-    if (this.editingSkill) {
-      const payload = {
-        nombre: this.editName.trim(),
-        tipo_habilidad: (this.editIsSoft ? 'blanda' : 'tecnica') as 'tecnica' | 'blanda',
-        area_estudio_id: this.editIsSoft ? null : Number(this.editCategoryAreaId)
-      };
 
-      this.adminService.editarHabilidad(this.editingSkill.id, payload).subscribe({
-        next: (habilidadEditada) => {
-          const idx = this.skills.findIndex(s => s.id === this.editingSkill!.id);
-          if (idx !== -1) {
-            this.skills[idx] = this.mapearAHabilidadViewModel(habilidadEditada);
-          }
-          this.showToast(`Habilidad modificada correctamente.`);
-          this.editingSkill = null;
-        },
-        error: (err: HttpErrorResponse) => {
-          const errMap = erroresDesdeApi(err);
-          this.editError = errMap['api'] || errMap['nombre'] || 'No se pudo editar la habilidad.';
-        }
-      });
+    if (this.editName.trim().length > 100) {
+      this.editError = 'El nombre no puede superar los 100 caracteres';
+      return;
     }
+
+    if (!this.editingSkill) {
+      return;
+    }
+
+    if (!this.editingSkill.isSoft && !this.editCategoryAreaId) {
+      this.editError = 'Debes seleccionar un área de estudio';
+      return;
+    }
+
+    const payload = {
+      nombre: this.editName.trim(),
+      ...(this.editingSkill.isSoft
+        ? {}
+        : { area_estudio_id: Number(this.editCategoryAreaId) })
+    };
+
+    this.adminService.editarHabilidad(
+      this.editingSkill.id,
+      payload
+    ).subscribe({
+      next: (habilidadEditada) => {
+        const idx = this.skills.findIndex(
+          s => s.id === this.editingSkill!.id
+        );
+
+        if (idx !== -1) {
+          this.skills[idx] =
+            this.mapearAHabilidadViewModel(habilidadEditada);
+        }
+
+        this.showToast('Habilidad modificada correctamente.');
+        this.editingSkill = null;
+      },
+
+      error: (err: HttpErrorResponse) => {
+        const errMap = erroresDesdeApi(err);
+
+        this.editError =
+          errMap['api'] ||
+          errMap['nombre'] ||
+          errMap['firstName'] ||
+          errMap['area_estudio_id'] ||
+          'No se pudo editar la habilidad.';
+      }
+    });
   }
 
   goToPage(p: number) {
@@ -304,8 +348,17 @@ export class CreoAdminSkillsComponent implements OnInit {
   // --- Áreas de estudio ---
 
   openStudyModal(s?: StudyAreaViewModel) {
-    if (s) this.editingStudy = { ...s };
-    else this.editingStudy = { id: 0, name: '', active: true };
+    if (s) {
+      this.editingStudy = { ...s };
+    } else {
+      this.editingStudy = {
+        id: 0,
+        name: '',
+        active: true
+      };
+    }
+
+    this.studyError = '';
     this.showStudyModal = true;
     document.body.style.overflow = 'hidden';
   }
@@ -316,36 +369,95 @@ export class CreoAdminSkillsComponent implements OnInit {
   }
 
   saveStudy() {
-    if (!this.editingStudy.name.trim()) return;
+    this.studyError = '';
+
+    const nombre = this.editingStudy.name.trim();
+
+    if (!nombre) {
+      this.studyError =
+        'El nombre del área de estudio es requerido.';
+      return;
+    }
+
+    if (nombre.length > 100) {
+      this.studyError =
+        'El nombre del área de estudio no puede superar los 100 caracteres.';
+      return;
+    }
 
     if (this.editingStudy.id) {
-      this.adminService.editarArea(this.editingStudy.id, this.editingStudy.name.trim()).subscribe({
-        next: (areaEditada) => {
-          const idx = this.studyAreas.findIndex(x => x.id === areaEditada.id);
-          if (idx !== -1) {
-            this.studyAreas[idx] = { id: areaEditada.id, name: areaEditada.nombre, active: areaEditada.activo, original: areaEditada };
+      this.adminService
+        .editarArea(this.editingStudy.id, nombre)
+        .subscribe({
+          next: (areaEditada) => {
+            const idx = this.studyAreas.findIndex(
+              area => area.id === areaEditada.id
+            );
+
+            if (idx !== -1) {
+              this.studyAreas[idx] = {
+                id: areaEditada.id,
+                name: areaEditada.nombre,
+                active: areaEditada.activo,
+                original: areaEditada
+              };
+            }
+
+            this.studyError = '';
+
+            this.showToast(
+              'Área de estudio actualizada',
+              'success'
+            );
+
+            this.closeStudyModal();
+          },
+
+          error: (err: HttpErrorResponse) => {
+            const errMap = erroresDesdeApi(err);
+
+            this.studyError =
+              errMap['api'] ||
+              errMap['nombre'] ||
+              errMap['firstName'] ||
+              'No se pudo actualizar el área de estudio.';
           }
-          this.showToast('Área de estudio actualizada', 'success');
-          this.closeStudyModal();
-        },
-        error: (err: HttpErrorResponse) => {
-          const errMap = erroresDesdeApi(err);
-          this.showToast(errMap['api'] || errMap['nombre'] || 'Error al actualizar el área', 'error');
-        }
-      });
-    } else {
-      this.adminService.crearArea(this.editingStudy.name.trim()).subscribe({
-        next: (nuevaArea) => {
-          this.studyAreas.push({ id: nuevaArea.id, name: nuevaArea.nombre, active: nuevaArea.activo, original: nuevaArea });
-          this.showToast('Área de estudio creada', 'success');
-          this.closeStudyModal();
-        },
-        error: (err: HttpErrorResponse) => {
-          const errMap = erroresDesdeApi(err);
-          this.showToast(errMap['api'] || errMap['nombre'] || 'Error al crear el área', 'error');
-        }
-      });
+        });
+
+      return;
     }
+
+    this.adminService
+      .crearArea(nombre)
+      .subscribe({
+        next: (nuevaArea) => {
+          this.studyAreas.push({
+            id: nuevaArea.id,
+            name: nuevaArea.nombre,
+            active: nuevaArea.activo,
+            original: nuevaArea
+          });
+
+          this.studyError = '';
+
+          this.showToast(
+            'Área de estudio creada',
+            'success'
+          );
+
+          this.closeStudyModal();
+        },
+
+        error: (err: HttpErrorResponse) => {
+          const errMap = erroresDesdeApi(err);
+
+          this.studyError =
+            errMap['api'] ||
+            errMap['nombre'] ||
+            errMap['firstName'] ||
+            'No se pudo crear el área de estudio.';
+        }
+      });
   }
 
   toggleStudyStatus(s: StudyAreaViewModel) {

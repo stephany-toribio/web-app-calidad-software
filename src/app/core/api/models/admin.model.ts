@@ -70,7 +70,6 @@ export interface CrearHabilidadPayload {
 
 export interface EditarHabilidadPayload {
   nombre?: string;
-  tipo_habilidad?: 'tecnica' | 'blanda';
   area_estudio_id?: number | null;
 }
 
