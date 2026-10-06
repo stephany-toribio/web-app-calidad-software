@@ -345,12 +345,13 @@
         </div>
         <div *ngIf="!newIsSoft">
           <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Área de estudio <span class="text-red-500">*</span></label>
-          <select [(ngModel)]="newCategory" class="w-full h-11 px-3 rounded-xl border text-sm outline-none appearance-none" style="border-color: #94A3B8; color: #111111;">
-            <option value="" disabled selected>Selecciona un área de estudio...</option>
-            <option *ngFor="let cat of activeCategories" [value]="cat">{{ cat }}</option>
+          <select [(ngModel)]="newCategoryAreaId" class="w-full h-11 px-3 rounded-xl border text-sm outline-none appearance-none" style="border-color: #94A3B8; color: #111111;">
+            <option [ngValue]="null" disabled selected>Selecciona un área de estudio...</option>
+            <option *ngFor="let area of studyAreas" [ngValue]="area.id">{{ area.name }}</option>
           </select>
           <p class="text-[11px] mt-1 text-slate-500">¿A qué área académica pertenece esta habilidad técnica?</p>
         </div>
+        <p *ngIf="newError" class="text-xs text-red-500 mt-1">{{ newError }}</p>
       </div>
       <div class="flex gap-3 px-6 py-5 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
         <button (click)="showNewModal = false" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancelar</button>
@@ -372,14 +373,15 @@
       <div class="p-6 flex flex-col gap-5">
         <div>
           <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Nombre de la habilidad</label>
-          <input type="text" [(ngModel)]="editingSkill.name" class="w-full h-11 px-3 rounded-xl border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111;" />
+          <input type="text" [(ngModel)]="editName" class="w-full h-11 px-3 rounded-xl border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111;" />
         </div>
-        <div *ngIf="editingSkill.category !== 'Blanda'">
+        <div *ngIf="!editIsSoft">
           <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Área de estudio</label>
-          <select [(ngModel)]="editingSkill.category" class="w-full h-11 px-3 rounded-xl border text-sm outline-none appearance-none" style="border-color: #94A3B8; color: #111111;">
-            <option *ngFor="let cat of activeCategories" [value]="cat">{{ cat }}</option>
+          <select [(ngModel)]="editCategoryAreaId" class="w-full h-11 px-3 rounded-xl border text-sm outline-none appearance-none" style="border-color: #94A3B8; color: #111111;">
+            <option *ngFor="let area of studyAreas" [ngValue]="area.id">{{ area.name }}</option>
           </select>
         </div>
+        <p *ngIf="editError" class="text-xs text-red-500 mt-1">{{ editError }}</p>
       </div>
       <div class="flex gap-3 px-6 py-5 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
         <button (click)="editingSkill = null" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancelar</button>

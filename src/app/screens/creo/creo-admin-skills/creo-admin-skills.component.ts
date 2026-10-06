@@ -1,15 +1,36 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
-import { SkillsService, Skill } from '../../../services/skills.service';
+import { SkillsService } from '../../../services/skills.service';
+import { AdminService } from '../../../core/api/admin.service';
+import { AreaEstudio, Habilidad } from '../../../core/api/models/admin.model';
+import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
 
-type SkillStatus = "active" | "inactive";
+export type SkillStatus = 'active' | 'inactive';
+
+export interface SkillItemViewModel {
+  id: number;
+  name: string;
+  category: string;
+  status: SkillStatus;
+  isSoft: boolean;
+  areaId?: number | null;
+  original: Habilidad;
+}
+
+export interface StudyAreaViewModel {
+  id: number;
+  name: string;
+  active: boolean;
+  original?: AreaEstudio;
+}
 
 interface Toast {
   id: number;
   message: string;
-  type: "success" | "error";
+  type: 'success' | 'error';
 }
 
 @Component({
@@ -20,33 +41,28 @@ interface Toast {
   styleUrl: './creo-admin-skills.component.css'
 })
 export class CreoAdminSkillsComponent implements OnInit {
+  private adminService = inject(AdminService);
+  private skillsService = inject(SkillsService);
+
   query = '';
   categoryFilter = 'Todas';
   statusFilter: 'all' | SkillStatus = 'all';
   activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'puestos' = 'estudios';
 
-  get studyAreas() { return this.skillsService.getStudyAreas(); }
+  loadingHabilidades = false;
+  loadingAreas = false;
 
+  skills: SkillItemViewModel[] = [];
+  studyAreas: StudyAreaViewModel[] = [];
+
+  // Mocks para pestañas secundarias sin endpoint admin aún (Países, Instituciones, Puestos)
   get countries() { return this.skillsService.getCountries(); }
-
   get institutions() { return this.skillsService.getInstitutions(); }
-
   get positions() { return this.skillsService.getPositions(); }
 
   get activeCategories() {
-    return this.studyAreas.map(s => s.name);
+    return ['Todas', ...this.studyAreas.map(s => s.name)];
   }
-
-  // Paleta que se asigna en orden a las categorías creadas por el admin
-  private customCategoryPalette: { bg: string; text: string }[] = [
-    { bg: "#E0E7FF", text: "#3730A3" },
-    { bg: "#FFE4E6", text: "#9F1239" },
-    { bg: "#D1FAE5", text: "#065F46" },
-    { bg: "#FEF9C3", text: "#854D0E" },
-    { bg: "#E0F2FE", text: "#0369A1" },
-    { bg: "#F3E8FF", text: "#6B21A8" },
-  ];
-  private customCategoryCount = 0;
 
   Math = Math;
 
@@ -59,12 +75,21 @@ export class CreoAdminSkillsComponent implements OnInit {
   // New skill modal
   showNewModal = false;
   newName = '';
-  newCategory = 'General';
+  newCategoryAreaId: number | null = null;
+  newCategoryName = '';
   newError = '';
   newIsSoft = false;
 
+  // Edit skill modal
+  editingSkill: SkillItemViewModel | null = null;
+  editName = '';
+  editCategoryAreaId: number | null = null;
+  editError = '';
+  editIsSoft = false;
+
+  // Modales de administración
   showStudyModal = false;
-  editingStudy = { id: 0, name: '', active: true };
+  editingStudy: StudyAreaViewModel = { id: 0, name: '', active: true };
   
   showCountryModal = false;
   editingCountry = { id: 0, name: '', active: true };
@@ -75,49 +100,60 @@ export class CreoAdminSkillsComponent implements OnInit {
   showPositionModal = false;
   editingPosition = { id: 0, name: '', active: true };
 
-
-  // Edit skill modal
-  editingSkill: Skill | null = null;
-  editName = '';
-  editCategory = 'General';
-  editError = '';
-  editIsSoft = false;
-
-  categoryBg: Record<string, string> = {
-    "Ciencias de la Salud": "#E0F2FE",
-    "Investigación": "#EDE9FE",
-    "Tecnología": "#DCFCE7",
-    "Negocios": "#FEF3C7",
-    "Comunicación y Diseño": "#FCE7F3",
-    "Idiomas": "#F0FDF4",
-    "Educación": "#FFF7ED",
-    "Transversales": "#F1F5F9",
-    "General": "#F8FAFC",
-  };
-  
-  categoryText: Record<string, string> = {
-    "Ciencias de la Salud": "#0369A1",
-    "Investigación": "#6D28D9",
-    "Tecnología": "#15803D",
-    "Negocios": "#B45309",
-    "Comunicación y Diseño": "#9D174D",
-    "Idiomas": "#166534",
-    "Educación": "#C2410C",
-    "Transversales": "#475569",
-    "General": "#64748B",
-  };
-
-  constructor(private skillsService: SkillsService) {}
-
   ngOnInit() {
+    this.cargarAreas();
+    this.cargarHabilidades();
   }
 
-  get skills() {
-    return this.skillsService.getSkills();
+  cargarAreas() {
+    this.loadingAreas = true;
+    this.adminService.listarAreas().subscribe({
+      next: (areas) => {
+        this.loadingAreas = false;
+        this.studyAreas = areas.map(a => ({
+          id: a.id,
+          name: a.nombre,
+          active: a.activo,
+          original: a
+        }));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingAreas = false;
+        const errMap = erroresDesdeApi(err);
+        this.showToast(errMap['api'] || 'No se pudieron cargar las áreas de estudio.', 'error');
+      }
+    });
   }
 
-  trackById(index: number, skill: Skill) {
-    return skill.id;
+  cargarHabilidades() {
+    this.loadingHabilidades = true;
+    this.adminService.listarHabilidades().subscribe({
+      next: (habs) => {
+        this.loadingHabilidades = false;
+        this.skills = habs.map(h => this.mapearAHabilidadViewModel(h));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingHabilidades = false;
+        const errMap = erroresDesdeApi(err);
+        this.showToast(errMap['api'] || 'No se pudieron cargar las habilidades.', 'error');
+      }
+    });
+  }
+
+  private mapearAHabilidadViewModel(h: Habilidad): SkillItemViewModel {
+    return {
+      id: h.id,
+      name: h.nombre,
+      category: h.area_estudio?.nombre ?? (h.tipo_habilidad === 'blanda' ? 'Blanda' : 'General'),
+      status: h.activo ? 'active' : 'inactive',
+      isSoft: h.tipo_habilidad === 'blanda',
+      areaId: h.area_estudio?.id ?? null,
+      original: h
+    };
+  }
+
+  trackById(index: number, item: any) {
+    return item.id;
   }
 
   get filteredSkills() {
@@ -131,7 +167,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   }
 
   get totalPages() {
-    return Math.ceil(this.filteredSkills.length / this.pageSize);
+    return Math.ceil(this.filteredSkills.length / this.pageSize) || 1;
   }
 
   get pagedSkills() {
@@ -146,7 +182,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     return this.skills.filter(s => s.status === 'inactive').length;
   }
 
-  showToast(msg: string, type: "success" | "error" = "success") {
+  showToast(msg: string, type: 'success' | 'error' = 'success') {
     const id = ++this.toastId;
     this.toasts.push({ id, message: msg, type });
     setTimeout(() => {
@@ -158,42 +194,71 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.toasts = this.toasts.filter(t => t.id !== id);
   }
 
-  toggleStatus(skill: Skill) {
-    this.skillsService.toggleStatus(skill.id);
-    const newStatus = skill.status === 'active' ? 'inactiva' : 'activa';
-    this.showToast(`Habilidad '${skill.name}' ahora está ${newStatus}.`);
+  toggleStatus(skill: SkillItemViewModel) {
+    const accion$ = skill.status === 'active' 
+      ? this.adminService.desactivarHabilidad(skill.id)
+      : this.adminService.reactivarHabilidad(skill.id);
+
+    accion$.subscribe({
+      next: (habilidadActualizada) => {
+        const idx = this.skills.findIndex(s => s.id === skill.id);
+        if (idx !== -1) {
+          this.skills[idx] = this.mapearAHabilidadViewModel(habilidadActualizada);
+        }
+        const nuevoEstadoStr = habilidadActualizada.activo ? 'activa' : 'inactiva';
+        this.showToast(`Habilidad '${habilidadActualizada.nombre}' ahora está ${nuevoEstadoStr}.`);
+      },
+      error: (err: HttpErrorResponse) => {
+        const errMap = erroresDesdeApi(err);
+        this.showToast(errMap['api'] || 'No se pudo cambiar el estado de la habilidad.', 'error');
+      }
+    });
   }
 
   openNewModal() {
     this.showNewModal = true;
     this.newName = '';
-    this.newCategory = 'General';
+    this.newCategoryAreaId = this.studyAreas.length > 0 ? this.studyAreas[0].id : null;
+    this.newCategoryName = '';
     this.newIsSoft = false;
     this.newError = '';
   }
-
-
 
   saveNewSkill() {
     if (!this.newName.trim()) {
       this.newError = 'El nombre de la habilidad es requerido';
       return;
     }
-    
-    try {
-      this.skillsService.addSkill(this.newName.trim(), this.newIsSoft ? 'Transversales' : this.newCategory, this.newIsSoft);
-      this.showNewModal = false;
-      this.showToast(`Habilidad '${this.newName.trim()}' agregada correctamente.`);
-    } catch (e: any) {
-      this.newError = e.message;
+
+    if (!this.newIsSoft && !this.newCategoryAreaId) {
+      this.newError = 'Debes seleccionar un área de estudio para la habilidad técnica';
+      return;
     }
+
+    const payload = {
+      nombre: this.newName.trim(),
+      tipo_habilidad: (this.newIsSoft ? 'blanda' : 'tecnica') as 'tecnica' | 'blanda',
+      area_estudio_id: this.newIsSoft ? null : Number(this.newCategoryAreaId)
+    };
+
+    this.adminService.crearHabilidad(payload).subscribe({
+      next: (nuevaHabilidad) => {
+        this.skills.unshift(this.mapearAHabilidadViewModel(nuevaHabilidad));
+        this.showNewModal = false;
+        this.showToast(`Habilidad '${nuevaHabilidad.nombre}' agregada correctamente.`);
+      },
+      error: (err: HttpErrorResponse) => {
+        const errMap = erroresDesdeApi(err);
+        this.newError = errMap['api'] || errMap['nombre'] || 'No se pudo crear la habilidad.';
+      }
+    });
   }
 
-  openEditModal(skill: Skill) {
+  openEditModal(skill: SkillItemViewModel) {
     this.editingSkill = skill;
     this.editName = skill.name;
-    this.editCategory = skill.category;
     this.editIsSoft = skill.isSoft;
+    this.editCategoryAreaId = skill.areaId ?? (this.studyAreas.length > 0 ? this.studyAreas[0].id : null);
     this.editError = '';
   }
 
@@ -203,13 +268,26 @@ export class CreoAdminSkillsComponent implements OnInit {
       return;
     }
     if (this.editingSkill) {
-      try {
-        this.skillsService.updateSkill(this.editingSkill.id, this.editName.trim(), this.editIsSoft ? 'Transversales' : this.editCategory, this.editIsSoft);
-        this.showToast(`Habilidad modificada correctamente.`);
-        this.editingSkill = null;
-      } catch (e: any) {
-        this.editError = e.message;
-      }
+      const payload = {
+        nombre: this.editName.trim(),
+        tipo_habilidad: (this.editIsSoft ? 'blanda' : 'tecnica') as 'tecnica' | 'blanda',
+        area_estudio_id: this.editIsSoft ? null : Number(this.editCategoryAreaId)
+      };
+
+      this.adminService.editarHabilidad(this.editingSkill.id, payload).subscribe({
+        next: (habilidadEditada) => {
+          const idx = this.skills.findIndex(s => s.id === this.editingSkill!.id);
+          if (idx !== -1) {
+            this.skills[idx] = this.mapearAHabilidadViewModel(habilidadEditada);
+          }
+          this.showToast(`Habilidad modificada correctamente.`);
+          this.editingSkill = null;
+        },
+        error: (err: HttpErrorResponse) => {
+          const errMap = erroresDesdeApi(err);
+          this.editError = errMap['api'] || errMap['nombre'] || 'No se pudo editar la habilidad.';
+        }
+      });
     }
   }
 
@@ -223,27 +301,71 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.currentPage = 1;
   }
 
-  openStudyModal(s?: any) {
+  // --- Áreas de estudio ---
+
+  openStudyModal(s?: StudyAreaViewModel) {
     if (s) this.editingStudy = { ...s };
     else this.editingStudy = { id: 0, name: '', active: true };
     this.showStudyModal = true;
     document.body.style.overflow = 'hidden';
   }
-  closeStudyModal() { this.showStudyModal = false; document.body.style.overflow = 'auto'; }
+
+  closeStudyModal() {
+    this.showStudyModal = false;
+    document.body.style.overflow = 'auto';
+  }
+
   saveStudy() {
+    if (!this.editingStudy.name.trim()) return;
+
     if (this.editingStudy.id) {
-      const idx = this.studyAreas.findIndex(x => x.id === this.editingStudy.id);
-      if (idx >= 0) this.studyAreas[idx] = { ...this.editingStudy };
+      this.adminService.editarArea(this.editingStudy.id, this.editingStudy.name.trim()).subscribe({
+        next: (areaEditada) => {
+          const idx = this.studyAreas.findIndex(x => x.id === areaEditada.id);
+          if (idx !== -1) {
+            this.studyAreas[idx] = { id: areaEditada.id, name: areaEditada.nombre, active: areaEditada.activo, original: areaEditada };
+          }
+          this.showToast('Área de estudio actualizada', 'success');
+          this.closeStudyModal();
+        },
+        error: (err: HttpErrorResponse) => {
+          const errMap = erroresDesdeApi(err);
+          this.showToast(errMap['api'] || errMap['nombre'] || 'Error al actualizar el área', 'error');
+        }
+      });
     } else {
-      this.studyAreas.push({ ...this.editingStudy, id: Date.now() });
+      this.adminService.crearArea(this.editingStudy.name.trim()).subscribe({
+        next: (nuevaArea) => {
+          this.studyAreas.push({ id: nuevaArea.id, name: nuevaArea.nombre, active: nuevaArea.activo, original: nuevaArea });
+          this.showToast('Área de estudio creada', 'success');
+          this.closeStudyModal();
+        },
+        error: (err: HttpErrorResponse) => {
+          const errMap = erroresDesdeApi(err);
+          this.showToast(errMap['api'] || errMap['nombre'] || 'Error al crear el área', 'error');
+        }
+      });
     }
-    this.showToast('Área de estudio guardada', 'success');
-    this.closeStudyModal();
   }
-  toggleStudyStatus(s: any) {
-    s.active = !s.active;
-    this.showToast(`Área ${s.active ? 'activada' : 'desactivada'}`, 'success');
+
+  toggleStudyStatus(s: StudyAreaViewModel) {
+    const accion$ = s.active 
+      ? this.adminService.desactivarArea(s.id)
+      : this.adminService.reactivarArea(s.id);
+
+    accion$.subscribe({
+      next: (areaActualizada) => {
+        s.active = areaActualizada.activo;
+        this.showToast(`Área ${areaActualizada.activo ? 'activada' : 'desactivada'}`, 'success');
+      },
+      error: (err: HttpErrorResponse) => {
+        const errMap = erroresDesdeApi(err);
+        this.showToast(errMap['api'] || 'No se pudo cambiar el estado del área', 'error');
+      }
+    });
   }
+
+  // --- Países, Instituciones, Puestos (Local / Mocks) ---
 
   openCountryModal(c?: any) {
     if (c) this.editingCountry = { ...c };
@@ -310,5 +432,4 @@ export class CreoAdminSkillsComponent implements OnInit {
     p.active = !p.active;
     this.showToast(`Puesto ${p.active ? 'activado' : 'desactivado'}`, 'success');
   }
-
 }
