@@ -191,9 +191,9 @@ export class CreoRegisterCandidateComponent implements OnInit {
   // ---------------------------------------------------------------- Datos personales (paso 0)
 
   get passLength() { return this.password.length >= 8; }
-  get passLetter() { return /[a-zA-Z]/.test(this.password); }
-  get passNumber() { return /\d/.test(this.password); }
-  get passSymbol() { return /[^a-zA-Z0-9]/.test(this.password); }
+  get passUppercase() { return /[A-Z]/.test(this.password); }
+  get passNumber() { return /[0-9]/.test(this.password); }
+  get passSymbol() { return /[@#$%&]/.test(this.password); }
 
   // Correo, DNI y teléfono duplicados ya no se revisan con listas falsas: los informa el backend (Precognition)
   setDni(v: string) {
@@ -253,8 +253,8 @@ export class CreoRegisterCandidateComponent implements OnInit {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
 
     if (!this.password.trim()) e['password'] = 'La contraseña es obligatoria';
-    else if (!this.passLength || !this.passLetter || !this.passNumber || !this.passSymbol) {
-      e['password'] = 'La contraseña no cumple los requisitos';
+    else if (!this.passLength || !this.passUppercase || !this.passNumber || !this.passSymbol) {
+      e['password'] = 'La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y uno de estos símbolos: @ # $ % &';
     }
 
     if (!this.phone.trim()) e['phone'] = 'El teléfono es obligatorio';

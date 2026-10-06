@@ -131,7 +131,13 @@ export const AREA_ESTUDIO_TO_CATEGORIA: Record<string, string> = {
 };
 
 export const CREO_SECTORS: string[] = [
-    "Salud y Medicina", "Ciencias e Investigación", "Tecnología e Informática",
-    "Educación", "Administración y Negocios", "Comunicación y Marketing",
-    "Diseño y Artes", "Derecho", "Ingeniería", "Otro",
+    "Salud y Medicina",
+    "Ciencias e Investigación",
+    "Tecnología e Informática",
+    "Educación",
+    "Administración y Negocios",
+    "Comunicación y Marketing",
+    "Diseño y Artes",
+    "Derecho",
+    "Ingeniería",
 ];
