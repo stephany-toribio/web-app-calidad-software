@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { companyGuard } from './core/guards/company.guard';
+import { candidatoGuard } from './core/guards/candidato.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'creo/landing', pathMatch: 'full' },
@@ -42,26 +43,32 @@ export const routes: Routes = [
       },
       {
         path: 'candidate-applications',
+        canActivate: [candidatoGuard],
         loadComponent: () => import('./screens/creo/candidate-applications/candidate-applications.component').then(m => m.CandidateApplicationsComponent)
       },
       {
         path: 'candidate-dashboard',
+        canActivate: [candidatoGuard],
         loadComponent: () => import('./screens/creo/candidate-dashboard/candidate-dashboard.component').then(m => m.CandidateDashboardComponent)
       },
       {
         path: 'candidate-job-detail',
+        canActivate: [candidatoGuard],
         loadComponent: () => import('./screens/creo/candidate-job-detail/candidate-job-detail.component').then(m => m.CandidateJobDetailComponent)
       },
       {
         path: 'candidate-jobs',
+        canActivate: [candidatoGuard],
         loadComponent: () => import('./screens/creo/candidate-jobs/candidate-jobs.component').then(m => m.CandidateJobsComponent)
       },
       {
         path: 'candidate-profile',
+        canActivate: [candidatoGuard],
         loadComponent: () => import('./screens/creo/candidate-profile/candidate-profile.component').then(m => m.CandidateProfileComponent)
       },
       {
         path: 'candidate-saved',
+        canActivate: [candidatoGuard],
         loadComponent: () => import('./screens/creo/candidate-saved/candidate-saved.component').then(m => m.CandidateSavedComponent)
       },
       {

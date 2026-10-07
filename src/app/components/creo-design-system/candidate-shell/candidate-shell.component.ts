@@ -2,6 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CreoWordmarkComponent } from '../creo-wordmark/creo-wordmark.component';
+import { AuthService } from '../../../core/api/auth.service';
 
 export type CandidateScreen = "candidate-dashboard" | "candidate-jobs" | "candidate-applications" | "candidate-saved" | "candidate-profile";
 
@@ -30,10 +31,13 @@ export class CandidateShellComponent {
     { id: "candidate-profile", label: "Mi Perfil", icon: "user" },
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   logout() {
-    this.router.navigate(['/creo/landing']);
+    this.authService.logout().subscribe({
+      complete: () => this.router.navigate(['/creo/landing']),
+      error: () => this.router.navigate(['/creo/landing']),
+    });
   }
   
   navigate(s: CandidateScreen) {
