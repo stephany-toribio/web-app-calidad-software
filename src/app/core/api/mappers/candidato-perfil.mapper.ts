@@ -1,4 +1,5 @@
 import { CandidatoPerfil, EstudioPerfil, ExperienciaPerfil, IdiomaPerfil } from '../models/candidato-perfil.model';
+import { RegistroCandidatoPayload } from '../models/registro-candidato.model';
 import {
     ESTADOS, EstudioFormulario, ExperienciaFormulario, IdiomaFormulario, MESES,
     NIVELES_EXPERIENCIA, NIVELES_IDIOMA,
@@ -51,6 +52,21 @@ export function perfilDesdeApi(c: CandidatoPerfil): PerfilVista {
         experience: c.experiencias.map(experienciaDesdeApi),
         education: c.estudios.map(estudioDesdeApi),
         languages: c.idiomas.map(idiomaDesdeApi),
+    };
+}
+
+/**  PUT /candidatos/me. El correo no va: pertenece a usuarios (módulo Auth) */
+export interface DatosPerfilFormulario {
+    firstName: string; lastName: string; dni: string; birthDate: string; phone: string;
+}
+
+export function payloadDatosPerfil(f: DatosPerfilFormulario): Partial<RegistroCandidatoPayload> {
+    return {
+        nombre: f.firstName.trim(),
+        apellidos: f.lastName.trim(),
+        dni: f.dni.trim(),
+        fecha_nacimiento: f.birthDate,
+        celular: f.phone.trim(),
     };
 }
 

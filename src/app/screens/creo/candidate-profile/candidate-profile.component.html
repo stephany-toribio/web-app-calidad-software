@@ -251,16 +251,13 @@
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium" style="color: #111111;">Nombres <span class="text-red-500">*</span></label>
             <input type="text" [(ngModel)]="editForm.firstName" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111; background-color: #FFFFFF;" />
+            <p *ngIf="errores['firstName']" class="text-xs text-red-500">{{ errores['firstName'] }}</p>
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium" style="color: #111111;">Apellidos <span class="text-red-500">*</span></label>
             <input type="text" [(ngModel)]="editForm.lastName" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111; background-color: #FFFFFF;" />
+            <p *ngIf="errores['lastName']" class="text-xs text-red-500">{{ errores['lastName'] }}</p>
           </div>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium" style="color: #111111;">Resumen profesional <span class="text-red-500">*</span></label>
-          <textarea [(ngModel)]="editForm.summary" rows="4" class="w-full p-3 rounded-lg border text-sm outline-none focus:ring-1 transition-all resize-none" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111; background-color: #FFFFFF;"></textarea>
         </div>
 
         <h3 class="text-lg font-bold mt-2" style="color: #111111;">Información personal</h3>
@@ -269,10 +266,12 @@
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium" style="color: #111111;">DNI <span class="text-red-500">*</span></label>
             <input type="text" [(ngModel)]="editForm.dni" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111; background-color: #FFFFFF;" />
+            <p *ngIf="errores['dni']" class="text-xs text-red-500">{{ errores['dni'] }}</p>
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium" style="color: #111111;">Fecha de nacimiento <span class="text-red-500">*</span></label>
             <input type="date" [(ngModel)]="editForm.birthDate" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111; background-color: #FFFFFF;" />
+            <p *ngIf="errores['birthdate']" class="text-xs text-red-500">{{ errores['birthdate'] }}</p>
           </div>
         </div>
 
@@ -285,15 +284,17 @@
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium" style="color: #111111;">Teléfono <span class="text-red-500">*</span></label>
             <input type="tel" [(ngModel)]="editForm.phone" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 transition-all" style="border-color: #94A3B8; focus:ring-color: #111111; color: #111111; background-color: #FFFFFF;" />
+            <p *ngIf="errores['phone']" class="text-xs text-red-500">{{ errores['phone'] }}</p>
           </div>
         </div>
 
       </div>
       
       <!-- Footer -->
-      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">
-        <button (click)="saveProfile()" class="px-6 py-2 rounded-full text-sm font-bold transition-all hover:opacity-90" style="background-color: #F2B705; color: #111111;">
-          Guardar
+      <div class="flex justify-between items-center gap-4 px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">
+        <p class="text-xs text-red-500">{{ errores['api'] }}</p>
+        <button (click)="saveProfile()" [disabled]="guardando" class="px-6 py-2 rounded-full text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50" style="background-color: #F2B705; color: #111111;">
+          {{ guardando ? 'Guardando...' : 'Guardar' }}
         </button>
       </div>
     </div>
@@ -310,7 +311,10 @@
       <div class="flex-1 overflow-y-auto p-0" style="scrollbar-width: thin;">
         <app-experience-list [(experiences)]="candidate.experience"></app-experience-list>
       </div>
-      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;"><button (click)="saveExp()" class="px-6 py-2 rounded-full text-sm font-bold hover:opacity-90" style="background-color: #F2B705; color: #111111;">Guardar</button></div>
+      <div class="flex justify-between items-center gap-4 px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">
+        <p class="text-xs text-red-500">{{ errores['experiencia'] || errores['api'] }}</p>
+        <button (click)="saveExp()" [disabled]="guardando" class="px-6 py-2 rounded-full text-sm font-bold hover:opacity-90 disabled:opacity-50" style="background-color: #F2B705; color: #111111;">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+      </div>
     </div>
   </div>
 
@@ -330,7 +334,11 @@
           <app-language-list [(languages)]="candidate.languages" [maxLanguages]="10"></app-language-list>
         </div>
       </div>
-      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;"><button (click)="saveEdu()" class="px-6 py-2 rounded-full text-sm font-bold hover:opacity-90" style="background-color: #F2B705; color: #111111;">Guardar</button></div>
+      <div class="flex justify-between items-center gap-4 px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">
+        <!-- skills: regla C, si se quita un área que respaldaba habilidades técnicas -->
+        <p class="text-xs text-red-500">{{ errores['carreras'] || errores['idiomas'] || errores['skills'] || errores['api'] }}</p>
+        <button (click)="saveEdu()" [disabled]="guardando" class="px-6 py-2 rounded-full text-sm font-bold hover:opacity-90 disabled:opacity-50" style="background-color: #F2B705; color: #111111;">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+      </div>
     </div>
   </div>
 
@@ -345,14 +353,17 @@
       <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6" style="scrollbar-width: thin;">
         <div>
           <h3 class="text-sm font-bold mb-3" style="color: #111111;">Habilidades Técnicas</h3>
-          <app-creo-skill-picker [catalog]="hardSkillsCatalog" [selected]="candidate.hardSkills" (toggle)="toggleHardSkill($event)" [suggestedSections]="[]" [maxSkills]="15"></app-creo-skill-picker>
+          <app-creo-skill-picker [catalog]="hardSkillsCatalog" [selected]="candidate.hardSkills" (toggle)="toggleHardSkill($event)" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
         </div>
         <div>
           <h3 class="text-sm font-bold mb-3" style="color: #111111;">Habilidades Blandas</h3>
-          <app-creo-skill-picker [catalog]="softSkillsCatalog" [selected]="candidate.softSkills" (toggle)="toggleSoftSkill($event)" [suggestedSections]="[]" [maxSkills]="15"></app-creo-skill-picker>
+          <app-creo-skill-picker [catalog]="softSkillsCatalog" [selected]="candidate.softSkills" (toggle)="toggleSoftSkill($event)" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
         </div>
       </div>
-      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;"><button (click)="saveSkills()" class="px-6 py-2 rounded-full text-sm font-bold hover:opacity-90" style="background-color: #F2B705; color: #111111;">Guardar</button></div>
+      <div class="flex justify-between items-center gap-4 px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">
+        <p class="text-xs text-red-500">{{ errores['skills'] || errores['api'] }}</p>
+        <button (click)="saveSkills()" [disabled]="guardando" class="px-6 py-2 rounded-full text-sm font-bold hover:opacity-90 disabled:opacity-50" style="background-color: #F2B705; color: #111111;">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+      </div>
     </div>
   </div>
 </app-candidate-shell>

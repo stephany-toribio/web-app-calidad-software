@@ -33,4 +33,11 @@ export class CandidatosService {
             .get<ApiResponse<CandidatoPerfil>>(`${this.url}/me`)
             .pipe(map(respuesta => respuesta.data));
     }
+
+    /** Actualización parcial: cada sección enviada reemplaza a la guardada. Devuelve el perfil actualizado */
+    actualizarMiPerfil(payload: Partial<RegistroCandidatoPayload>): Observable<CandidatoPerfil> {
+        return this.http
+            .put<ApiResponse<CandidatoPerfil>>(`${this.url}/me`, payload)
+            .pipe(map(respuesta => respuesta.data));
+    }
 }

@@ -1,15 +1,25 @@
-﻿import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { CandidateShellComponent } from '../../../components/creo-design-system/candidate-shell/candidate-shell.component';
-import { ExperienceListComponent, ExperienceEntry } from '../creo-register-candidate/experience-list/experience-list.component';
-import { StudyListComponent, StudyEntry } from '../creo-register-candidate/study-list/study-list.component';
-import { LanguageListComponent, LanguageEntry } from '../creo-register-candidate/language-list/language-list.component';
+import { ExperienceListComponent } from '../creo-register-candidate/experience-list/experience-list.component';
+import { StudyListComponent } from '../creo-register-candidate/study-list/study-list.component';
+import { LanguageListComponent } from '../creo-register-candidate/language-list/language-list.component';
 import { CreoSkillPickerComponent } from '../../../components/creo-design-system/creo-skill-picker/creo-skill-picker.component';
-import { SkillsService } from '../../../services/skills.service';
 import { CandidatosService } from '../../../core/api/candidatos.service';
-import { perfilDesdeApi } from '../../../core/api/mappers/candidato-perfil.mapper';
+import { CatalogosService } from '../../../core/api/catalogos.service';
+import { Habilidad } from '../../../core/api/models/catalogos.model';
+import { CandidatoPerfil } from '../../../core/api/models/candidato-perfil.model';
+import { RegistroCandidatoPayload } from '../../../core/api/models/registro-candidato.model';
+import { PerfilVista, payloadDatosPerfil, perfilDesdeApi } from '../../../core/api/mappers/candidato-perfil.mapper';
+import {
+  CatalogosRegistro, payloadEstudiosIdiomas, payloadExperiencia, payloadHabilidades,
+} from '../../../core/api/mappers/registro-candidato.mapper';
+import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
+
+const MAX_SKILLS = 15;          // por tipo (técnicas y blandas), igual que el backend
 
 @Component({
   selector: 'app-candidate-profile',
@@ -22,72 +32,60 @@ import { perfilDesdeApi } from '../../../core/api/mappers/candidato-perfil.mappe
 })
 export class CandidateProfileComponent implements OnInit {
   private candidatosService = inject(CandidatosService);
+  private catalogosService = inject(CatalogosService);
 
-  // Se llena con GET /candidatos/me. summary no existe en el backend: queda vacío (se revisa en la fase de edición)
-  candidate = {
-    initials: '',
-    name: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    dni: '',
-    birthDate: '',
-    summary: '',
-    hardSkills: [] as string[],
-    softSkills: [] as string[],
-    experience: [] as ExperienceEntry[],
-    education: [] as StudyEntry[],
-    languages: [] as LanguageEntry[]
+  // Se llena con GET /candidatos/me y se refresca con la respuesta de cada PUT
+  candidate: PerfilVista = {
+    initials: '', name: '', firstName: '', lastName: '', email: '',
+    phone: '', dni: '', birthDate: '',
+    hardSkills: [], softSkills: [], experience: [], education: [], languages: [],
   };
 
   cargando = true;
   errorCarga = '';
+  guardando = false;
+  errores: Record<string, string> = {};
+  maxSkills = MAX_SKILLS;
 
   showEditModal = false;
   showExpModal = false;
   showEduModal = false;
   showSkillsModal = false;
 
-  editForm = { firstName: '', lastName: '', email: '', phone: '', dni: '', birthDate: '', summary: '' };
-  
+  editForm = { firstName: '', lastName: '', email: '', phone: '', dni: '', birthDate: '' };
+
   hardSkillsCatalog: string[] = [];
   softSkillsCatalog: string[] = [];
 
-  constructor(private router: Router, private skillsService: SkillsService) {}
-
-
-  private saveToLocalStorage() {
-    localStorage.setItem('creo_user_profile', JSON.stringify({
-      firstName: this.candidate.firstName,
-      lastName: this.candidate.lastName,
-      email: this.candidate.email,
-      phone: this.candidate.phone,
-      dni: this.candidate.dni,
-      birthDate: this.candidate.birthDate,
-      hardSkills: this.candidate.hardSkills,
-      softSkills: this.candidate.softSkills,
-      experience: this.candidate.experience,
-      education: this.candidate.education,
-      languages: this.candidate.languages,
-      summary: this.candidate.summary
-    }));
-  }
+  // Catálogos para traducir nombres → IDs al guardar (los mismos que usa el registro)
+  private catalogos: CatalogosRegistro = {
+    paises: [], tiposEstudio: [], areasEstudio: [], idiomas: [], puestos: [], habilidades: [],
+  };
+  // Habilidades que ya tiene el candidato: se suman al catálogo aunque el admin las haya desactivado
+  private habilidadesActuales: Habilidad[] = [];
+  // Copia del perfil al abrir un modal: cerrar sin guardar la restaura
+  private copia: PerfilVista | null = null;
 
   ngOnInit() {
     this.cargarPerfil();
-    this.hardSkillsCatalog = this.skillsService.getHardSkills(true).map(s => s.name);
-    this.softSkillsCatalog = this.skillsService.getSoftSkills(true).map(s => s.name);
   }
 
-  /** GET /candidatos/me → datos de la pantalla. Un 401 lo resuelve el interceptor (vuelve al landing) */
+  /** GET /candidatos/me + catálogos. Un 401 lo resuelve el interceptor (vuelve al landing) */
   cargarPerfil() {
     this.cargando = true;
     this.errorCarga = '';
 
-    this.candidatosService.obtenerMiPerfil().subscribe({
-      next: perfil => {
-        this.candidate = { ...perfilDesdeApi(perfil), summary: '' };
+    forkJoin({
+      perfil: this.candidatosService.obtenerMiPerfil(),
+      paises: this.catalogosService.paises(),
+      tiposEstudio: this.catalogosService.tiposEstudio(),
+      areasEstudio: this.catalogosService.areasEstudio(),
+      idiomas: this.catalogosService.idiomas(),
+      puestos: this.catalogosService.puestos(),
+    }).subscribe({
+      next: ({ perfil, ...catalogos }) => {
+        this.catalogos = { ...catalogos, habilidades: this.catalogos.habilidades };
+        this.aplicarPerfil(perfil);
         this.cargando = false;
       },
       error: () => {
@@ -97,49 +95,102 @@ export class CandidateProfileComponent implements OnInit {
     });
   }
 
-  // Edit Intro
-  openEditModal() {
-    this.editForm = { ...this.candidate, firstName: this.candidate.name.split(' ')[0], lastName: this.candidate.name.split(' ').slice(1).join(' ') };
-    this.showEditModal = true;
+  private aplicarPerfil(perfil: CandidatoPerfil) {
+    this.candidate = perfilDesdeApi(perfil);
+    this.habilidadesActuales = perfil.habilidades;
+    this.cargarHabilidades(perfil.estudios.map(e => e.area_estudio.id));
+  }
+
+  /** Habilidades seleccionables para las áreas de sus estudios (GET /habilidades?areas[]=) + las que ya tiene */
+  private cargarHabilidades(areaIds: number[]) {
+    this.catalogosService.habilidades([...new Set(areaIds)]).subscribe({
+      next: lista => {
+        const todas = [...new Map([...lista, ...this.habilidadesActuales].map(h => [h.id, h])).values()];
+        this.catalogos = { ...this.catalogos, habilidades: todas };
+        this.hardSkillsCatalog = todas.filter(h => h.tipo_habilidad === 'tecnica').map(h => h.nombre);
+        this.softSkillsCatalog = todas.filter(h => h.tipo_habilidad === 'blanda').map(h => h.nombre);
+      },
+    });
+  }
+
+  /** PUT /candidatos/me con una sola sección. Si sale bien, la pantalla toma la respuesta del backend */
+  private guardar(payload: Partial<RegistroCandidatoPayload>) {
+    if (this.guardando) return;
+    this.guardando = true;
+    this.errores = {};
+
+    this.candidatosService.actualizarMiPerfil(payload).subscribe({
+      next: perfil => {
+        this.guardando = false;
+        this.aplicarPerfil(perfil);
+        this.copia = null;            // lo guardado ya es el estado actual: cerrar no restaura nada
+        this.cerrarModal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.guardando = false;
+        this.errores = erroresDesdeApi(err);
+      },
+    });
+  }
+
+  private abrirModal() {
+    this.copia = structuredClone(this.candidate);
+    this.errores = {};
     document.body.style.overflow = 'hidden';
   }
-  closeEditModal() { this.showEditModal = false; document.body.style.overflow = 'auto'; }
-  saveProfile() {
-    this.candidate.name = `${this.editForm.firstName} ${this.editForm.lastName}`.trim();
-    this.candidate.initials = (this.editForm.firstName.charAt(0) + this.editForm.lastName.charAt(0)).toUpperCase();
-    this.candidate.email = this.editForm.email;
-    this.candidate.phone = this.editForm.phone;
-    this.candidate.dni = this.editForm.dni;
-    this.candidate.birthDate = this.editForm.birthDate;
-    this.candidate.summary = this.editForm.summary;
-    this.saveToLocalStorage();
-    this.closeEditModal();
+
+  /** Cerrar sin guardar: descarta los cambios y vuelve a lo que había */
+  private cerrarModal() {
+    if (this.copia) this.candidate = this.copia;
+    this.copia = null;
+    this.errores = {};
+    this.showEditModal = this.showExpModal = this.showEduModal = this.showSkillsModal = false;
+    document.body.style.overflow = 'auto';
   }
 
-  // Modals for lists just control visibility, since the components mutate the array directly!
-  openExpModal() { this.showExpModal = true; document.body.style.overflow = 'hidden'; }
-  closeExpModal() { this.showExpModal = false; document.body.style.overflow = 'auto'; }
-  saveExp() { this.saveToLocalStorage(); this.closeExpModal(); }
+  // Datos personales
+  openEditModal() {
+    const { firstName, lastName, email, phone, dni, birthDate } = this.candidate;
+    this.editForm = { firstName, lastName, email, phone, dni, birthDate };
+    this.abrirModal();
+    this.showEditModal = true;
+  }
+  closeEditModal() { this.cerrarModal(); }
+  saveProfile() { this.guardar(payloadDatosPerfil(this.editForm)); }
 
-  openEduModal() { this.showEduModal = true; document.body.style.overflow = 'hidden'; }
-  closeEduModal() { this.showEduModal = false; document.body.style.overflow = 'auto'; }
-  saveEdu() { this.saveToLocalStorage(); this.closeEduModal(); }
+  // Experiencia: sin experiencias => busca_primer_empleo = true (el backend borra las guardadas)
+  openExpModal() { this.abrirModal(); this.showExpModal = true; }
+  closeExpModal() { this.cerrarModal(); }
+  saveExp() {
+    const { experience } = this.candidate;
+    this.guardar(payloadExperiencia(experience.length > 0, experience, this.catalogos));
+  }
 
-  openSkillsModal() { this.showSkillsModal = true; document.body.style.overflow = 'hidden'; }
-  closeSkillsModal() { this.showSkillsModal = false; document.body.style.overflow = 'auto'; }
-  saveSkills() { this.saveToLocalStorage(); this.closeSkillsModal(); }
+  // Estudios e idiomas comparten modal
+  openEduModal() { this.abrirModal(); this.showEduModal = true; }
+  closeEduModal() { this.cerrarModal(); }
+  saveEdu() {
+    this.guardar(payloadEstudiosIdiomas(this.candidate.education, this.candidate.languages, this.catalogos));
+  }
+
+  // Habilidades (técnicas + blandas en una sola lista de IDs)
+  openSkillsModal() { this.abrirModal(); this.showSkillsModal = true; }
+  closeSkillsModal() { this.cerrarModal(); }
+  saveSkills() {
+    this.guardar(payloadHabilidades([...this.candidate.hardSkills, ...this.candidate.softSkills], this.catalogos));
+  }
 
   toggleHardSkill(skill: string) {
-    const idx = this.candidate.hardSkills.indexOf(skill);
-    if (idx >= 0) this.candidate.hardSkills.splice(idx, 1);
-    else this.candidate.hardSkills.push(skill);
-    this.saveToLocalStorage();
+    this.candidate.hardSkills = this.alternar(this.candidate.hardSkills, skill);
   }
 
   toggleSoftSkill(skill: string) {
-    const idx = this.candidate.softSkills.indexOf(skill);
-    if (idx >= 0) this.candidate.softSkills.splice(idx, 1);
-    else this.candidate.softSkills.push(skill);
-    this.saveToLocalStorage();
+    this.candidate.softSkills = this.alternar(this.candidate.softSkills, skill);
+  }
+
+  /** Quita la habilidad si está; si no, la agrega mientras no pase el máximo por tipo */
+  private alternar(lista: string[], skill: string): string[] {
+    if (lista.includes(skill)) return lista.filter(s => s !== skill);
+    return lista.length >= MAX_SKILLS ? lista : [...lista, skill];
   }
 }
