@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, finalize, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from './models/api-response.model';
@@ -14,11 +14,22 @@ export class AuthService {
   private http = inject(HttpClient);
 
   private loginUrl = `${environment.apiUrl}/auth/login`;
+  private logoutUrl = `${environment.apiUrl}/auth/logout`;
 
   login(payload: LoginPayload): Observable<SesionUsuario> {
     return this.http
       .post<ApiResponse<SesionUsuario>>(this.loginUrl, payload)
       .pipe(map(respuesta => respuesta.data));
+  }
+
+  /** Revoca el token en el backend (Sanctum) y limpia la sesión local, aunque la petición falle */
+  logout(): Observable<void> {
+    return this.http
+      .post<ApiResponse<null>>(this.logoutUrl, {})
+      .pipe(
+        map(() => undefined),
+        finalize(() => this.clearSession())
+      );
   }
 
   getToken(): string | null {
@@ -83,5 +94,12 @@ export class AuthService {
     const user = this.getUser();
 
     return !!token && user?.rol === 'empresa';
+  }
+
+  isCandidato(): boolean {
+    const token = this.getToken();
+    const user = this.getUser();
+
+    return !!token && user?.rol === 'candidato';
   }
 }

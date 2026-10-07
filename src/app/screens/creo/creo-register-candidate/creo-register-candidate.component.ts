@@ -16,6 +16,7 @@ import { LanguageListComponent, LanguageEntry } from './language-list/language-l
 import { ExperienceListComponent, ExperienceEntry } from './experience-list/experience-list.component';
 import { CatalogosService } from '../../../core/api/catalogos.service';
 import { CandidatosService } from '../../../core/api/candidatos.service';
+import { AuthService } from '../../../core/api/auth.service';
 import { CAMPOS_PASO } from '../../../core/api/registro-candidato.pasos';
 import { RegistroCandidatoPayload } from '../../../core/api/models/registro-candidato.model';
 import { Habilidad } from '../../../core/api/models/catalogos.model';
@@ -53,6 +54,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
   private router = inject(Router);
   private catalogosService = inject(CatalogosService);
   private candidatosService = inject(CandidatosService);
+  private authService = inject(AuthService);
 
   steps = STEPS;
   genderOptions = GENDER_OPTIONS;
@@ -348,7 +350,21 @@ export class CreoRegisterCandidateComponent implements OnInit {
         birthDate: payload.fecha_nacimiento, hardSkills: this.skills, softSkills: this.softSkills,
         experience: this.experiencias, education: this.estudios, languages: this.idiomas,
       }));
-      this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
+      this.iniciarSesion();
+    });
+  }
+
+  /** Tras el 201 inicia sesión con las mismas credenciales (HU-10). Si falla, la cuenta ya existe y puede entrar desde el landing */
+  private iniciarSesion() {
+    const irAExito = () => this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
+
+    this.enviando = true;
+    this.authService.login({ correo: this.email.trim(), password: this.password }).subscribe({
+      next: sesion => {
+        this.authService.saveSession(sesion);
+        irAExito();
+      },
+      error: () => irAExito(),
     });
   }
 
