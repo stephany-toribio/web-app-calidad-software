@@ -26,7 +26,7 @@ import {
 } from '../../../core/api/mappers/registro-candidato.mapper';
 
 const STEPS = ['Cuenta y datos', 'Educación', 'Experiencia', 'Habilidades', 'Resumen'];
-const MAX_SKILLS = 30;          // el backend acepta 30 en total (técnicas + blandas)
+const MAX_SKILLS = 15;          // el backend acepta 30 en total (técnicas + blandas)
 const GENDER_OPTIONS = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'];
 
 // Pantalla del formulario donde se corrige cada error (para volver a ella si falla el registro final)
