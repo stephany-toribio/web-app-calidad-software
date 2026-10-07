@@ -7,7 +7,7 @@ import {
 export interface DatosPersonalesFormulario {
     firstName: string; lastName: string;
     birthDay: string; birthMonth: string; birthYear: string;
-    dni: string; gender: string; email: string; password: string; phone: string;
+    dni: string; gender: string; email: string; password: string; passwordConfirm: string; phone: string;
 }
 
 export interface EstudioFormulario {
@@ -96,7 +96,7 @@ export function payloadDatosPersonales(f: DatosPersonalesFormulario): Partial<Re
         celular: f.phone,
         correo: f.email.trim(),
         password: f.password,
-        password_confirmation: f.password, //falta en el front confirmar contraseña
+        password_confirmation: f.passwordConfirm,
     };
 }
 
