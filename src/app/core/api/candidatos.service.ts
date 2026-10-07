@@ -4,16 +4,14 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from './models/api-response.model';
 import { CandidatoRegistrado, RegistroCandidatoPayload } from './models/registro-candidato.model';
+import { CandidatoPerfil } from './models/candidato-perfil.model';
 
 @Injectable({ providedIn: 'root' })
 export class CandidatosService {
     private http = inject(HttpClient);
     private url = `${environment.apiUrl}/candidatos`;
 
-    /**
-     * Laravel Precognition: valida solo los campos indicados SIN guardar nada.
-     * 204 => válido. 422 (o 400 si hay más de 15 habilidades) => error con el formato ApiError.
-     */
+
     validarPaso(payload: Partial<RegistroCandidatoPayload>, campos: string[]): Observable<void> {
         const headers = new HttpHeaders({
             Precognition: 'true',
@@ -22,10 +20,24 @@ export class CandidatosService {
         return this.http.post<void>(this.url, payload, { headers });
     }
 
-    /** Registro final (paso 4): valida todo de nuevo y crea el candidato. 201 => registrado */
+    /** Registro final (paso 4): valida todo de nuevo y crea el candidato. 201  */
     registrar(payload: RegistroCandidatoPayload): Observable<CandidatoRegistrado> {
         return this.http
             .post<ApiResponse<CandidatoRegistrado>>(this.url, payload)
+            .pipe(map(respuesta => respuesta.data));
+    }
+
+    /** Perfil completo del candidato autenticado  */
+    obtenerMiPerfil(): Observable<CandidatoPerfil> {
+        return this.http
+            .get<ApiResponse<CandidatoPerfil>>(`${this.url}/me`)
+            .pipe(map(respuesta => respuesta.data));
+    }
+
+    /** Actualización parcial: cada sección enviada reemplaza a la guardada. Devuelve el perfil actualizado */
+    actualizarMiPerfil(payload: Partial<RegistroCandidatoPayload>): Observable<CandidatoPerfil> {
+        return this.http
+            .put<ApiResponse<CandidatoPerfil>>(`${this.url}/me`, payload)
             .pipe(map(respuesta => respuesta.data));
     }
 }

@@ -41,18 +41,18 @@ export interface CatalogosRegistro {
 
 // Conversiones de valores (textos del formulario → valores del backend)
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto',
+export const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto',
     'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-const ESTADOS: Record<string, EstadoEstudio> = {
+export const ESTADOS: Record<string, EstadoEstudio> = {
     'Finalizado': 'finalizado', 'En curso': 'en_curso', 'Incompleto': 'incompleto',
 };
 
-const NIVELES_IDIOMA: Record<string, NivelIdioma> = {
+export const NIVELES_IDIOMA: Record<string, NivelIdioma> = {
     'Básico': 'basico', 'Intermedio': 'intermedio', 'Avanzado': 'avanzado', 'Nativo': 'nativo',
 };
 
-const NIVELES_EXPERIENCIA: Record<string, NivelExperiencia> = {
+export const NIVELES_EXPERIENCIA: Record<string, NivelExperiencia> = {
     'Trainee': 'trainee', 'Junior': 'junior', 'Semi Senior': 'semi_senior', 'Senior': 'senior',
     'Jefe / Supervisor': 'jefe_supervisor', 'Gerente / Director': 'gerente_director',
 };
