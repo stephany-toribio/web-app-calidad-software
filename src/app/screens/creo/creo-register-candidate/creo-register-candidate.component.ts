@@ -32,7 +32,7 @@ const GENDER_OPTIONS = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'];
 // Pantalla del formulario donde se corrige cada error (para volver a ella si falla el registro final)
 const PASO_DE_ERROR: Record<string, number> = {
   firstName: 0, lastName: 0, birthdate: 0, dni: 0, dniTaken: 0, email: 0, emailTaken: 0,
-  phone: 0, phoneTaken: 0, password: 0,
+  phone: 0, phoneTaken: 0, password: 0, passwordConfirm: 0,
   carreras: 1, idiomas: 1,
   experiencia: 2,
   skills: 3,
@@ -81,8 +81,10 @@ export class CreoRegisterCandidateComponent implements OnInit {
   gender = '';
   email = '';
   password = '';
+  passwordConfirm = '';
   phone = '';
   showPassword = false;
+  showPasswordConfirm = false;
 
   dias = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   mesesNac = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -215,6 +217,10 @@ export class CreoRegisterCandidateComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
+  togglePasswordConfirm() {
+    this.showPasswordConfirm = !this.showPasswordConfirm;
+  }
+
   validateAge() {
     if (this.birthDay && this.birthMonth && this.birthYear) {
       const bd = parseInt(this.birthDay);
@@ -256,6 +262,9 @@ export class CreoRegisterCandidateComponent implements OnInit {
     else if (!this.passLength || !this.passUppercase || !this.passNumber || !this.passSymbol) {
       e['password'] = 'La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y uno de estos símbolos: @ # $ % &';
     }
+
+    if (!this.passwordConfirm) e['passwordConfirm'] = 'Confirma tu contraseña';
+    else if (this.passwordConfirm !== this.password) e['passwordConfirm'] = 'Las contraseñas no coinciden';
 
     if (!this.phone.trim()) e['phone'] = 'El teléfono es obligatorio';
     else if (this.phone.length !== 9) e['phone'] = 'El teléfono debe tener exactamente 9 dígitos';
