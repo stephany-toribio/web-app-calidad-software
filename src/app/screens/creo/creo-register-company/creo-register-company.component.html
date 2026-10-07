@@ -38,7 +38,7 @@
 
             <app-creo-field label="Descripción" [value]="descripcion" (valueChange)="setDescripcion($event)"
               placeholder="Escribe una breve descripción de tu empresa" [error]="errors['descripcion']"
-              [hint]="descripcionWordCount + ' / 250 palabras'" [required]="false"></app-creo-field>
+              [hint]="descripcionCharCount + ' / 250 caracteres'" [required]="false"></app-creo-field>
 
             <!-- RUC (manual, con verificación en vivo) -->
             <div class="flex flex-col gap-1.5">
@@ -153,12 +153,12 @@
                   </svg>
                   Mínimo 8 caracteres
                 </p>
-                <p class="flex items-center gap-1.5" [style.color]="passLetter ? '#16a34a' : '#94a3b8'">
+                <p class="flex items-center gap-1.5" [style.color]="passUppercase ? '#16a34a' : '#94a3b8'">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                     stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
-                  Incluye letras
+                  Incluye una letra mayúscula
                 </p>
                 <p class="flex items-center gap-1.5" [style.color]="passNumber ? '#16a34a' : '#94a3b8'">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
@@ -172,7 +172,7 @@
                     stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
-                  Incluye un símbolo especial
+                  Incluye uno de estos símbolos: &#64; # $ % &amp;
                 </p>
               </div>
               <p *ngIf="errors['password']" class="text-xs text-red-500 mt-1">{{ errors['password'] }}</p>
@@ -262,7 +262,8 @@
         <div class="px-6 sm:px-8 py-5 border-t rounded-b-2xl flex flex-col gap-3"
           style="background-color: #F0ECD8; border-color: #E8E3CC;">
           <app-creo-alert *ngIf="hasErrors()" type="error"
-            message="Completa todos los campos obligatorios"></app-creo-alert>
+            [message]="errors['api'] || 'Revisa los campos indicados antes de continuar'">
+          </app-creo-alert>
           <app-creo-btn *ngIf="currentStep === 0 || currentStep === 1" type="button" (click)="nextStep()"
             [fullWidth]="true">
             Continuar

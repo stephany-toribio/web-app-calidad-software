@@ -1,32 +1,25 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
+import { AdminService } from '../../../core/api/admin.service';
+import { UsuarioAdmin } from '../../../core/api/models/admin.model';
+import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
 
-type AccountType = "candidate" | "company";
-type AccountStatus = "active" | "suspended";
+export type AccountType = 'candidate' | 'company' | 'admin';
+export type AccountStatus = 'active' | 'suspended';
 
-interface Account {
-  id: string;
+export interface AccountViewModel {
+  id: number;
   name: string;
   type: AccountType;
   email: string;
   status: AccountStatus;
   registeredAt: string;
   suspendReason?: string;
+  original: UsuarioAdmin;
 }
-
-const INITIAL_ACCOUNTS: Account[] = [
-  { id: "a1", name: "Valeria Rojas", type: "candidate", email: "valeria.rojas@gmail.com", status: "active", registeredAt: "12 Oct 2026" },
-  { id: "a2", name: "Carlos Mendoza", type: "company", email: "carlos@techcorp.pe", status: "active", registeredAt: "08 Oct 2026" },
-  { id: "a3", name: "Lucía Ramírez", type: "candidate", email: "lucia.ramirez@outlook.com", status: "active", registeredAt: "05 Oct 2026" },
-  { id: "a4", name: "Fintech Innova", type: "company", email: "rrhh@fintechinnova.pe", status: "active", registeredAt: "01 Oct 2026" },
-  { id: "a5", name: "Jorge Mendivil", type: "candidate", email: "jorge.m@empresa.com", status: "suspended", registeredAt: "28 Sep 2026", suspendReason: "Datos de perfil falsos detectados por moderación automática." },
-  { id: "a6", name: "Sofía Quispe", type: "candidate", email: "sofia.q@correo.com", status: "active", registeredAt: "24 Sep 2026" },
-  { id: "a7", name: "DataLab Perú", type: "company", email: "contacto@datalab.pe", status: "active", registeredAt: "20 Sep 2026" },
-  { id: "a8", name: "Miguel Torres", type: "candidate", email: "miguel.t@pucp.edu.pe", status: "active", registeredAt: "15 Sep 2026" },
-  { id: "a9", name: "Nexus Digital SRL", type: "company", email: "hr@nexusdigital.pe", status: "suspended", registeredAt: "10 Sep 2026", suspendReason: "Vacantes con contenido engañoso repetido. Pendiente de revisión legal." },
-];
 
 @Component({
   selector: 'app-admin-accounts',
@@ -35,20 +28,70 @@ const INITIAL_ACCOUNTS: Account[] = [
   templateUrl: './admin-accounts.component.html',
   styleUrl: './admin-accounts.component.css'
 })
-export class AdminAccountsComponent implements OnDestroy {
-  accounts = [...INITIAL_ACCOUNTS];
+export class AdminAccountsComponent implements OnInit, OnDestroy {
+  private adminService = inject(AdminService);
+
+  accounts: AccountViewModel[] = [];
+  loading = false;
   query = '';
-  typeFilter: 'all' | AccountType = 'all';
+  typeFilter: 'all' | 'candidate' | 'company' = 'all';
   statusFilter: 'all' | AccountStatus = 'all';
 
-  suspending: Account | null = null;
+  suspending: AccountViewModel | null = null;
   suspendReason = '';
   suspendError = '';
 
-  resetting: Account | null = null;
+  resetting: AccountViewModel | null = null;
 
   toast: string | null = null;
   toastTimeout: any;
+
+  ngOnInit() {
+    this.cargarUsuarios();
+  }
+
+  cargarUsuarios() {
+    this.loading = true;
+    this.adminService.listarUsuarios().subscribe({
+      next: (usuarios) => {
+        this.loading = false;
+        this.accounts = usuarios.map(u => this.mapearAUsuarioViewModel(u));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading = false;
+        const errMap = erroresDesdeApi(err);
+        this.showToast(errMap['api'] || 'No se pudieron cargar los usuarios.');
+      }
+    });
+  }
+
+  private mapearAUsuarioViewModel(u: UsuarioAdmin): AccountViewModel {
+    let name = u.correo;
+    let type: AccountType = 'candidate';
+
+    if (u.rol?.nombre === 'empresa' && u.empresa) {
+      name = u.empresa.razon_social || u.empresa.encargado_empresa || u.correo;
+      type = 'company';
+    } else if (u.candidato) {
+      name = `${u.candidato.nombre} ${u.candidato.apellidos}`.trim() || u.correo;
+      type = 'candidate';
+    } else if (u.rol?.nombre === 'admin') {
+      type = 'admin';
+    }
+
+    const fecha = u.created_at ? new Date(u.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+
+    return {
+      id: u.id,
+      name,
+      type,
+      email: u.correo,
+      status: u.estado_cuenta === 'suspendido' ? 'suspended' : 'active',
+      registeredAt: fecha,
+      suspendReason: u.motivo_suspension || undefined,
+      original: u
+    };
+  }
 
   get filteredAccounts() {
     const q = this.query.toLowerCase();
@@ -73,38 +116,48 @@ export class AdminAccountsComponent implements OnDestroy {
     this.toastTimeout = setTimeout(() => this.toast = null, 3500);
   }
 
-  beginSuspend(a: Account) {
+  beginSuspend(a: AccountViewModel) {
     this.suspending = a;
     this.suspendReason = '';
     this.suspendError = '';
   }
 
   confirmSuspend() {
-    if (!this.suspendReason.trim()) {
-      this.suspendError = 'Debes ingresar un motivo de suspensión';
-      return;
-    }
-    if (this.suspending) {
-      const idx = this.accounts.findIndex(a => a.id === this.suspending!.id);
-      if (idx !== -1) {
-        this.accounts[idx].status = 'suspended';
-        this.accounts[idx].suspendReason = this.suspendReason;
+    if (!this.suspending) return;
+
+    this.adminService.suspenderUsuario(this.suspending.id, this.suspendReason.trim() || undefined).subscribe({
+      next: (usuarioActualizado) => {
+        const idx = this.accounts.findIndex(a => a.id === this.suspending!.id);
+        if (idx !== -1) {
+          this.accounts[idx] = this.mapearAUsuarioViewModel(usuarioActualizado);
+        }
+        this.suspending = null;
+        this.showToast('Cuenta suspendida correctamente.');
+      },
+      error: (err: HttpErrorResponse) => {
+        const errMap = erroresDesdeApi(err);
+        this.suspendError = errMap['api'] || 'No se pudo suspender la cuenta.';
       }
-      this.suspending = null;
-      this.showToast('Cuenta suspendida correctamente.');
-    }
+    });
   }
 
-  reactivate(a: Account) {
-    const idx = this.accounts.findIndex(x => x.id === a.id);
-    if (idx !== -1) {
-      this.accounts[idx].status = 'active';
-      this.accounts[idx].suspendReason = undefined;
-      this.showToast('Cuenta reactivada correctamente.');
-    }
+  reactivate(a: AccountViewModel) {
+    this.adminService.reactivarUsuario(a.id).subscribe({
+      next: (usuarioActualizado) => {
+        const idx = this.accounts.findIndex(x => x.id === a.id);
+        if (idx !== -1) {
+          this.accounts[idx] = this.mapearAUsuarioViewModel(usuarioActualizado);
+        }
+        this.showToast('Cuenta reactivada correctamente.');
+      },
+      error: (err: HttpErrorResponse) => {
+        const errMap = erroresDesdeApi(err);
+        this.showToast(errMap['api'] || 'No se pudo reactivar la cuenta.');
+      }
+    });
   }
 
-  beginReset(a: Account) {
+  beginReset(a: AccountViewModel) {
     this.resetting = a;
   }
 
@@ -115,7 +168,7 @@ export class AdminAccountsComponent implements OnDestroy {
     }
   }
 
-  trackById(index: number, account: Account) {
+  trackById(index: number, account: AccountViewModel) {
     return account.id;
   }
 }

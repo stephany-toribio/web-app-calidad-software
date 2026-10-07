@@ -1,80 +1,186 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+
 import { CreoWordmarkComponent } from '../../../components/creo-design-system/creo-wordmark/creo-wordmark.component';
 import { CreoBtnComponent } from '../../../components/creo-design-system/creo-btn/creo-btn.component';
 import { CreoFieldComponent } from '../../../components/creo-design-system/creo-field/creo-field.component';
 import { CreoAlertComponent } from '../../../components/creo-design-system/creo-alert/creo-alert.component';
 
-const MAX_ATTEMPTS = 5;
+import { AuthService } from '../../../core/api/auth.service';
 
 @Component({
   selector: 'app-creo-admin-login',
   standalone: true,
-  imports: [CommonModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent, CreoAlertComponent],
+  imports: [
+    CommonModule,
+    CreoWordmarkComponent,
+    CreoBtnComponent,
+    CreoFieldComponent,
+    CreoAlertComponent
+  ],
   templateUrl: './creo-admin-login.component.html',
   styleUrl: './creo-admin-login.component.css'
 })
 export class CreoAdminLoginComponent {
   email = '';
   password = '';
+
   errors: Record<string, string> = {};
   attempted = false;
-  failedAttempts = 0;
+  isSubmitting = false;
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
-  get isLocked(): boolean {
-    return this.failedAttempts >= MAX_ATTEMPTS;
-  }
-
+  /**
+   * Valida únicamente el formato de los campos.
+   *
+   * La autenticación real, los intentos fallidos y cualquier bloqueo
+   * de seguridad son responsabilidad del backend.
+   */
   private validate(): Record<string, string> {
-    const e: Record<string, string> = {};
-    if (!this.email.trim()) e['email'] = 'El correo es obligatorio';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Ingresa un correo válido';
-    if (!this.password.trim()) e['password'] = 'La contraseña es obligatoria';
-    else if (this.password.length < 6) e['password'] = 'Mínimo 6 caracteres';
-    return e;
-  }
+    const errors: Record<string, string> = {};
 
-  handleSubmit(e: Event) {
-    e.preventDefault();
-    if (this.isLocked) return;
-
-    const errs = this.validate();
-    this.errors = errs;
-    this.attempted = true;
-
-    if (Object.keys(errs).length === 0) {
-      const isValid = this.email === 'admin@creo.pe' && this.password === 'admin123';
-      if (!isValid) {
-        const next = this.failedAttempts + 1;
-        this.failedAttempts = next;
-        const remaining = MAX_ATTEMPTS - next;
-        if (next >= MAX_ATTEMPTS) {
-          this.errors = { auth: 'Acceso bloqueado. Contacta al soporte técnico de CREO+.' };
-        } else {
-          this.errors = {
-            auth: `Credenciales de administrador incorrectas. ${remaining} intento${remaining !== 1 ? 's' : ''} restante${remaining !== 1 ? 's' : ''}.`
-          };
-        }
-        return;
-      }
-      this.router.navigate(['/creo/admin-skills']);
+    if (!this.email.trim()) {
+      errors['email'] = 'El correo es obligatorio';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) {
+      errors['email'] = 'Ingresa un correo válido';
     }
+
+    if (!this.password.trim()) {
+      errors['password'] = 'La contraseña es obligatoria';
+    }
+
+    return errors;
   }
 
-  onEmailChange(value: string) {
+  handleSubmit(event: Event): void {
+    event.preventDefault();
+
+    if (this.isSubmitting) {
+      return;
+    }
+
+    this.attempted = true;
+    this.errors = this.validate();
+
+    if (Object.keys(this.errors).length > 0) {
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.errors = {};
+
+    this.authService.login({
+      correo: this.email.trim(),
+      password: this.password
+    }).subscribe({
+      next: (sesion) => {
+        this.isSubmitting = false;
+
+        if (sesion.rol !== 'admin') {
+          this.clearSession();
+
+          this.errors = {
+            auth: 'Esta cuenta no tiene permisos de administrador.'
+          };
+
+          return;
+        }
+
+        this.saveSession(
+          sesion.token,
+          sesion.usuario_id,
+          sesion.correo,
+          sesion.rol
+        );
+
+        this.router.navigate(['/creo/admin-skills']);
+      },
+
+      error: (error: HttpErrorResponse) => {
+        this.isSubmitting = false;
+
+        if (error.status === 401) {
+          this.errors = {
+            auth: 'Credenciales de administrador incorrectas.'
+          };
+          return;
+        }
+
+        if (error.status === 403) {
+          this.errors = {
+            auth: 'No tienes permisos para acceder como administrador.'
+          };
+          return;
+        }
+
+        if (error.status === 422) {
+          this.errors = {
+            auth: 'Verifica los datos ingresados.'
+          };
+          return;
+        }
+
+        if (error.status === 429) {
+          this.errors = {
+            auth: 'Demasiados intentos. Inténtalo nuevamente más tarde.'
+          };
+          return;
+        }
+
+        if (error.status === 0) {
+          this.errors = {
+            auth: 'No se pudo conectar con el servidor.'
+          };
+          return;
+        }
+
+        this.errors = {
+          auth: 'No se pudo iniciar sesión. Inténtalo nuevamente.'
+        };
+      }
+    });
+  }
+
+  onEmailChange(value: string): void {
     this.email = value;
     this.errors = {};
   }
 
-  onPasswordChange(value: string) {
+  onPasswordChange(value: string): void {
     this.password = value;
     this.errors = {};
   }
 
-  goToLanding() {
+  goToLanding(): void {
     this.router.navigate(['/creo/landing']);
+  }
+
+  private saveSession(
+    token: string,
+    usuarioId: number,
+    correo: string,
+    rol: string
+  ): void {
+    localStorage.setItem('token', token);
+
+    localStorage.setItem(
+      'creo_user',
+      JSON.stringify({
+        usuario_id: usuarioId,
+        correo,
+        rol
+      })
+    );
+  }
+
+  private clearSession(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('creo_user');
   }
 }

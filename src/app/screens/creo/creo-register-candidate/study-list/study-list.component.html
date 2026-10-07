@@ -75,7 +75,8 @@
 
           <!-- Tipo de estudio -->
           <div class="sm:col-span-1">
-            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Tipo de estudio <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Tipo de estudio <span
+                class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <select [(ngModel)]="currentStudy.tipoEstudio" (ngModelChange)="onTipoEstudioChange()"
               [style.color]="currentStudy.tipoEstudio ? '#111111' : '#94A3B8'"
               class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
@@ -89,15 +90,16 @@
           <!-- Título / Carrera -->
           <div class="sm:col-span-1 relative">
             <app-creo-field [label]="'Título / Carrera'" [required]="tituloEnabled" [value]="currentStudy.titulo"
-              (valueChange)="onCarreraChange($event)" (fieldFocus)="showCarreras = true" (fieldBlur)="onCarreraBlur()" placeholder="Ingresa tu título o carrera"
-              [disabled]="!tituloEnabled"
+              (valueChange)="onCarreraChange($event)" (fieldFocus)="showCarreras = true" (fieldBlur)="onCarreraBlur()"
+              placeholder="Ingresa tu título o carrera" [disabled]="!tituloEnabled"
               [error]="errors['titulo']"></app-creo-field>
-            <p *ngIf="!tituloEnabled" class="text-xs text-slate-400 mt-1">No aplica para el tipo de estudio 
-seleccionado.</p>
-            <ul *ngIf="showCarreras && filteredCarreras.length > 0" 
-                class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
+            <p *ngIf="!tituloEnabled" class="text-xs text-slate-400 mt-1">No aplica para el tipo de estudio
+              seleccionado.</p>
+            <ul *ngIf="showCarreras && filteredCarreras.length > 0"
+              class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1"
+              style="font-family: Inter, system-ui, sans-serif;">
               <li *ngFor="let c of filteredCarreras" (mousedown)="selectCarrera(c)"
-                  class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
                 {{ c }}
               </li>
             </ul>
@@ -105,8 +107,9 @@ seleccionado.</p>
 
           <!-- País -->
           <div class="sm:col-span-1">
-            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">País <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
-            <select [(ngModel)]="currentStudy.pais"
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">País <span
+                class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <select [(ngModel)]="currentStudy.pais" (ngModelChange)="onPaisChange()"
               [style.color]="currentStudy.pais ? '#111111' : '#94A3B8'"
               class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
               [ngStyle]="{'border-color': errors['pais'] ? '#E5140D' : '#E2E8F0'}">
@@ -118,8 +121,9 @@ seleccionado.</p>
 
           <!-- Área de estudio -->
           <div class="sm:col-span-1">
-            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Área de estudio <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
-            <select [(ngModel)]="currentStudy.areaEstudio"
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Área de estudio <span
+                class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <select [(ngModel)]="currentStudy.areaEstudio" (ngModelChange)="onFiltrosCarreraChange()"
               [style.color]="currentStudy.areaEstudio ? '#111111' : '#94A3B8'"
               class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
               [ngStyle]="{'border-color': errors['areaEstudio'] ? '#E5140D' : '#E2E8F0'}">
@@ -131,13 +135,15 @@ seleccionado.</p>
 
           <!-- Institución -->
           <div class="sm:col-span-1 relative">
-            <app-creo-field label="Institución" [required]="true" [value]="currentStudy.institucion"
-              (valueChange)="onInstitucionChange($event)" (fieldFocus)="showInstituciones = true" (fieldBlur)="onInstitucionBlur()" placeholder="Ingresa la institución"
-              [error]="errors['institucion']"></app-creo-field>
-            <ul *ngIf="showInstituciones && filteredInstituciones.length > 0" 
-                class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
+            <app-creo-field label="Institución" [required]="tituloEnabled" [disabled]="!tituloEnabled"
+              [value]="currentStudy.institucion" (valueChange)="onInstitucionChange($event)"
+              (fieldFocus)="showInstituciones = true" (fieldBlur)="onInstitucionBlur()"
+              placeholder="Ingresa la institución" [error]="errors['institucion']"></app-creo-field>
+            <ul *ngIf="showInstituciones && filteredInstituciones.length > 0"
+              class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1"
+              style="font-family: Inter, system-ui, sans-serif;">
               <li *ngFor="let inst of filteredInstituciones" (mousedown)="selectInstitucion(inst)"
-                  class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
                 {{ inst }}
               </li>
             </ul>
@@ -145,7 +151,8 @@ seleccionado.</p>
 
           <!-- Estado -->
           <div class="sm:col-span-1">
-            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Estado <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Estado <span
+                class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <select [(ngModel)]="currentStudy.estado" (ngModelChange)="onEstadoChange()"
               [style.color]="currentStudy.estado ? '#111111' : '#94A3B8'"
               class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
@@ -158,18 +165,19 @@ seleccionado.</p>
 
           <!-- Fecha de inicio -->
           <div class="sm:col-span-1">
-            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Fecha de inicio <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+            <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Fecha de inicio <span
+                class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <div class="flex gap-2">
               <select [(ngModel)]="currentStudy.fechaInicioMes" (ngModelChange)="validateDates()"
                 [style.color]="currentStudy.fechaInicioMes ? '#111111' : '#94A3B8'"
-              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
+                class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                 [ngStyle]="{'border-color': errors['fechaInicio'] ? '#E5140D' : '#E2E8F0'}">
                 <option value="" class="text-[#111111]">Mes</option>
                 <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
               </select>
               <select [(ngModel)]="currentStudy.fechaInicioAno" (ngModelChange)="validateDates()"
                 [style.color]="currentStudy.fechaInicioAno ? '#111111' : '#94A3B8'"
-              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
+                class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                 [ngStyle]="{'border-color': errors['fechaInicio'] ? '#E5140D' : '#E2E8F0'}">
                 <option value="" class="text-[#111111]">Año</option>
                 <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>
@@ -181,18 +189,19 @@ seleccionado.</p>
           <!-- Fecha de finalización -->
           <div class="sm:col-span-1">
             <label class="block text-sm font-medium mb-1.5" style="color: #111111;"
-              [class.opacity-50]="currentStudy.alPresente">Fecha de finalización <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
+              [class.opacity-50]="currentStudy.alPresente">Fecha de finalización <span class="text-xs font-semibold"
+                style="color: #F2B705;">*</span></label>
             <div class="flex gap-2 mb-2">
-              <select [(ngModel)]="currentStudy.fechaFinMes" (ngModelChange)="validateDates()" [disabled]="currentStudy.alPresente"
-                [style.color]="currentStudy.fechaFinMes ? '#111111' : '#94A3B8'"
-              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100"
+              <select [(ngModel)]="currentStudy.fechaFinMes" (ngModelChange)="validateDates()"
+                [disabled]="currentStudy.alPresente" [style.color]="currentStudy.fechaFinMes ? '#111111' : '#94A3B8'"
+                class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100"
                 [ngStyle]="{'border-color': errors['fechaFin'] ? '#E5140D' : '#E2E8F0'}">
                 <option value="" class="text-[#111111]">Mes</option>
                 <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
               </select>
-              <select [(ngModel)]="currentStudy.fechaFinAno" (ngModelChange)="validateDates()" [disabled]="currentStudy.alPresente"
-                [style.color]="currentStudy.fechaFinAno ? '#111111' : '#94A3B8'"
-              class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100"
+              <select [(ngModel)]="currentStudy.fechaFinAno" (ngModelChange)="validateDates()"
+                [disabled]="currentStudy.alPresente" [style.color]="currentStudy.fechaFinAno ? '#111111' : '#94A3B8'"
+                class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100"
                 [ngStyle]="{'border-color': errors['fechaFin'] ? '#E5140D' : '#E2E8F0'}">
                 <option value="" class="text-[#111111]">Año</option>
                 <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>

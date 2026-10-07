@@ -1,7 +1,9 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SkillsService } from '../../../../services/skills.service';
+import { CatalogosService } from '../../../../core/api/catalogos.service';
+import { ItemCatalogo, Organizacion } from '../../../../core/api/models/catalogos.model';
+import { aId } from '../../../../core/api/mappers/registro-candidato.mapper';
 
 const MAX_DESCRIPCION_CARACTERES = 300;
 
@@ -16,6 +18,9 @@ export interface ExperienceEntry {
   fechaFinAno: string;
   alPresente: boolean;
   descripcion: string;
+  // id del catálogo si se eligió de la lista; null si se escribió uno nuevo (se envía como propuesta)
+  puestoId?: number | null;
+  organizacionId?: number | null;
 }
 
 @Component({
@@ -24,8 +29,9 @@ export interface ExperienceEntry {
   imports: [CommonModule, FormsModule],
   templateUrl: './experience-list.component.html'
 })
-export class ExperienceListComponent {
-  constructor(public skillsService: SkillsService) {}
+export class ExperienceListComponent implements OnInit {
+  private catalogos = inject(CatalogosService);
+
   @Input() experiences: ExperienceEntry[] = [];
   @Input() maxExperiences: number = 5;
   @Output() experiencesChange = new EventEmitter<ExperienceEntry[]>();
@@ -34,35 +40,58 @@ export class ExperienceListComponent {
   editingIndex = -1;
   errors: Record<string, boolean> = {};
 
-  paises = ['Perú', 'Argentina', 'Chile', 'Colombia', 'México', 'España', 'Francia', 'Alemania', 'Italia', 'Reino Unido', 'Otro'];
+  paises: string[] = [];                         // nombres de GET /paises (los usa el HTML)
   niveles = ['Trainee', 'Junior', 'Semi Senior', 'Senior', 'Jefe / Supervisor', 'Gerente / Director'];
   meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  anos = Array.from({length: 50}, (_, i) => (new Date().getFullYear() - i).toString());
+  anos = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
+
+  private catalogoPaises: ItemCatalogo[] = [];
+  private catalogoPuestos: ItemCatalogo[] = [];
+  private catalogoOrganizaciones: Organizacion[] = [];
 
   currentExp: ExperienceEntry = this.getEmptyExp();
 
   showEmpresas = false;
   showPuestos = false;
 
+  ngOnInit() {
+    this.catalogos.paises().subscribe(lista => {
+      this.catalogoPaises = lista;
+      this.paises = lista.map(p => p.nombre);
+    });
+    this.catalogos.puestos().subscribe(lista => this.catalogoPuestos = lista);
+    this.catalogos.organizaciones().subscribe(lista => this.catalogoOrganizaciones = lista);
+  }
+
+  private get paisId(): number | null {
+    return aId(this.catalogoPaises, this.currentExp.pais);
+  }
+
+  /** Solo las organizaciones del país elegido (si aún no hay país, todas) */
+  private get organizacionesDelPais(): Organizacion[] {
+    const paisId = this.paisId;
+    return this.catalogoOrganizaciones.filter(o => !paisId || o.pais_id === paisId);
+  }
+
   get filteredEmpresas(): string[] {
     const val = (this.currentExp.empresa || '').toLowerCase();
-    const empresasSugeridas = ['Banco BCP', 'BBVA', 'Interbank', 'Alicorp', 'Gloria', 'Pacífico Seguros'];
-    return empresasSugeridas.filter(e => e.toLowerCase().includes(val));
+    return this.organizacionesDelPais.map(o => o.nombre).filter(e => e.toLowerCase().includes(val));
   }
 
   get filteredPuestos(): string[] {
     const val = (this.currentExp.puesto || '').toLowerCase();
-    const puestosSugeridos = this.skillsService.getPositions().filter(p => p.active).map(p => p.name);
-    return puestosSugeridos.filter(p => p.toLowerCase().includes(val));
+    return this.catalogoPuestos.map(p => p.nombre).filter(p => p.toLowerCase().includes(val));
   }
 
   onEmpresaChange(val: string) {
     this.currentExp.empresa = val;
+    this.currentExp.organizacionId = null;       // escrita a mano: se enviará como propuesta
     this.showEmpresas = true;
   }
 
   selectEmpresa(emp: string) {
     this.currentExp.empresa = emp;
+    this.currentExp.organizacionId = aId(this.organizacionesDelPais, emp);
     this.showEmpresas = false;
   }
 
@@ -74,11 +103,13 @@ export class ExperienceListComponent {
 
   onPuestoChange(val: string) {
     this.currentExp.puesto = val;
+    this.currentExp.puestoId = null;             // escrito a mano: se enviará como propuesta
     this.showPuestos = true;
   }
 
   selectPuesto(puesto: string) {
     this.currentExp.puesto = puesto;
+    this.currentExp.puestoId = aId(this.catalogoPuestos, puesto);
     this.showPuestos = false;
   }
 
@@ -92,7 +123,7 @@ export class ExperienceListComponent {
     return {
       puesto: '', empresa: '', nivel: '', pais: '',
       fechaInicioMes: '', fechaInicioAno: '', fechaFinMes: '', fechaFinAno: '',
-      alPresente: false, descripcion: ''
+      alPresente: false, descripcion: '', puestoId: null, organizacionId: null
     };
   }
 
@@ -135,7 +166,7 @@ export class ExperienceListComponent {
       const fAno = parseInt(this.currentExp.fechaFinAno);
       const iMes = this.meses.indexOf(this.currentExp.fechaInicioMes);
       const fMes = this.meses.indexOf(this.currentExp.fechaFinMes);
-      
+
       if (fAno < iAno || (fAno === iAno && fMes < iMes)) {
         this.errors['fechaFinError'] = true;
       }
@@ -149,18 +180,24 @@ export class ExperienceListComponent {
     if (!this.currentExp.nivel) e['nivel'] = true;
     if (!this.currentExp.pais) e['pais'] = true;
     if (!this.currentExp.fechaInicioMes || !this.currentExp.fechaInicioAno) e['fechaInicio'] = true;
-    
+
     if (!this.currentExp.alPresente) {
       if (!this.currentExp.fechaFinMes || !this.currentExp.fechaFinAno) {
         e['fechaFin'] = true;
       }
     }
-    
+
     this.errors = e;
     this.validateDates();
     if (this.errors['fechaFinError']) e['fechaFinError'] = true;
 
     if (Object.keys(e).length > 0) return;
+
+    // Si cambió el país después de elegir la empresa, esa empresa ya no corresponde: se envía como propuesta
+    const organizacion = this.catalogoOrganizaciones.find(o => o.id === this.currentExp.organizacionId);
+    if (organizacion && organizacion.pais_id !== this.paisId) {
+      this.currentExp.organizacionId = null;
+    }
 
     if (this.currentExp.alPresente) {
       this.currentExp.fechaFinMes = '';
@@ -177,15 +214,15 @@ export class ExperienceListComponent {
     updated.sort((a, b) => {
       if (a.alPresente && !b.alPresente) return -1;
       if (!a.alPresente && b.alPresente) return 1;
-      
+
       const aYear = a.alPresente ? 9999 : parseInt(a.fechaFinAno || a.fechaInicioAno || '0');
       const bYear = b.alPresente ? 9999 : parseInt(b.fechaFinAno || b.fechaInicioAno || '0');
-      
+
       if (aYear !== bYear) return bYear - aYear;
-      
+
       const aMonth = a.alPresente ? 99 : this.meses.indexOf(a.fechaFinMes || a.fechaInicioMes);
       const bMonth = b.alPresente ? 99 : this.meses.indexOf(b.fechaFinMes || b.fechaInicioMes);
-      
+
       return bMonth - aMonth;
     });
 
