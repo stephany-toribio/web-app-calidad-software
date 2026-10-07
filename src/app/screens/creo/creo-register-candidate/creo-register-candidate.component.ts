@@ -343,15 +343,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
       [...this.skills, ...this.softSkills], this.catalogos,
     );
 
-    this.llamarApi(this.candidatosService.registrar(payload), () => {
-      // La pantalla de perfil (aún simulada) lee estos datos de localStorage; se quita al integrar HU-12
-      localStorage.setItem('creo_user_profile', JSON.stringify({
-        firstName: this.firstName, lastName: this.lastName, email: this.email, phone: this.phone, dni: this.dni,
-        birthDate: payload.fecha_nacimiento, hardSkills: this.skills, softSkills: this.softSkills,
-        experience: this.experiencias, education: this.estudios, languages: this.idiomas,
-      }));
-      this.iniciarSesion();
-    });
+    this.llamarApi(this.candidatosService.registrar(payload), () => this.iniciarSesion());
   }
 
   /** Tras el 201 inicia sesión con las mismas credenciales (HU-10). Si falla, la cuenta ya existe y puede entrar desde el landing */

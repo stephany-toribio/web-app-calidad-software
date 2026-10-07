@@ -31,7 +31,11 @@ export class CandidateShellComponent {
     { id: "candidate-profile", label: "Mi Perfil", icon: "user" },
   ];
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(private router: Router, private authService: AuthService) { }
+
+  get correo(): string {
+    return this.authService.getUser()?.correo ?? '';
+  }
 
   logout() {
     this.authService.logout().subscribe({
@@ -39,7 +43,7 @@ export class CandidateShellComponent {
       error: () => this.router.navigate(['/creo/landing']),
     });
   }
-  
+
   navigate(s: CandidateScreen) {
     this.router.navigate(['/creo', s]);
   }

@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,6 +8,8 @@ import { StudyListComponent, StudyEntry } from '../creo-register-candidate/study
 import { LanguageListComponent, LanguageEntry } from '../creo-register-candidate/language-list/language-list.component';
 import { CreoSkillPickerComponent } from '../../../components/creo-design-system/creo-skill-picker/creo-skill-picker.component';
 import { SkillsService } from '../../../services/skills.service';
+import { CandidatosService } from '../../../core/api/candidatos.service';
+import { perfilDesdeApi } from '../../../core/api/mappers/candidato-perfil.mapper';
 
 @Component({
   selector: 'app-candidate-profile',
@@ -19,50 +21,28 @@ import { SkillsService } from '../../../services/skills.service';
   templateUrl: './candidate-profile.component.html',
 })
 export class CandidateProfileComponent implements OnInit {
+  private candidatosService = inject(CandidatosService);
+
+  // Se llena con GET /candidatos/me. summary no existe en el backend: queda vacío (se revisa en la fase de edición)
   candidate = {
-    initials: 'VR',
-    name: 'Valeria Rojas',
-    firstName: 'Valeria',
-    lastName: 'Rojas',
-    email: 'valeria.rojas@ejemplo.com',
-    phone: '+51 999 555 123',
-    dni: '76543210',
-    birthDate: '1998-09-16',
-    summary: 'Ingeniera de software apasionada por el desarrollo frontend y la creación de interfaces de usuario intuitivas.',
-    hardSkills: ['React', 'TypeScript', 'Node.js', 'Angular'] as string[],
-    softSkills: ['Comunicación efectiva', 'Trabajo en equipo'] as string[],
-    experience: [
-      {
-        puesto: 'Desarrollador Frontend Semi Senior',
-        empresa: 'Tech Solutions SAC',
-        nivel: 'Semi Senior',
-        pais: 'Perú',
-        fechaInicioMes: '01',
-        fechaInicioAno: '2022',
-        fechaFinMes: '',
-        fechaFinAno: '',
-        alPresente: true,
-        descripcion: 'Desarrollo de aplicaciones web usando Angular y TypeScript.'
-      }
-    ] as ExperienceEntry[],
-    education: [
-      {
-        titulo: 'Ingeniería de Sistemas',
-        pais: 'Perú',
-        tipoEstudio: 'Universitario',
-        areaEstudio: 'Ingeniería',
-        institucion: 'Universidad Nacional de Ingeniería (UNI)',
-        estado: 'Culminado',
-        fechaInicioMes: '03',
-        fechaInicioAno: '2015',
-        fechaFinMes: '12',
-        fechaFinAno: '2019'
-      }
-    ] as StudyEntry[],
-    languages: [
-      { idioma: 'Inglés', nivelEscrito: 'Avanzado', nivelOral: 'Avanzado' }
-    ] as LanguageEntry[]
+    initials: '',
+    name: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dni: '',
+    birthDate: '',
+    summary: '',
+    hardSkills: [] as string[],
+    softSkills: [] as string[],
+    experience: [] as ExperienceEntry[],
+    education: [] as StudyEntry[],
+    languages: [] as LanguageEntry[]
   };
+
+  cargando = true;
+  errorCarga = '';
 
   showEditModal = false;
   showExpModal = false;
@@ -95,31 +75,26 @@ export class CandidateProfileComponent implements OnInit {
   }
 
   ngOnInit() {
-    const saved = localStorage.getItem('creo_user_profile');
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data.firstName) {
-          this.candidate.firstName = data.firstName;
-          this.candidate.lastName = data.lastName;
-          this.candidate.name = `${data.firstName} ${data.lastName}`;
-          this.candidate.initials = (data.firstName.charAt(0) || '') + (data.lastName.charAt(0) || '');
-          this.candidate.email = data.email;
-          this.candidate.phone = data.phone || this.candidate.phone;
-          this.candidate.dni = data.dni || this.candidate.dni;
-          if (data.birthDate) this.candidate.birthDate = data.birthDate;
-          this.candidate.hardSkills = data.hardSkills || [];
-          this.candidate.softSkills = data.softSkills || [];
-          this.candidate.experience = data.experience || [];
-          this.candidate.education = data.education || [];
-          this.candidate.languages = data.languages || [];
-        }
-      } catch (e) {
-        console.error("Error parsing user profile", e);
-      }
-    }
+    this.cargarPerfil();
     this.hardSkillsCatalog = this.skillsService.getHardSkills(true).map(s => s.name);
     this.softSkillsCatalog = this.skillsService.getSoftSkills(true).map(s => s.name);
+  }
+
+  /** GET /candidatos/me → datos de la pantalla. Un 401 lo resuelve el interceptor (vuelve al landing) */
+  cargarPerfil() {
+    this.cargando = true;
+    this.errorCarga = '';
+
+    this.candidatosService.obtenerMiPerfil().subscribe({
+      next: perfil => {
+        this.candidate = { ...perfilDesdeApi(perfil), summary: '' };
+        this.cargando = false;
+      },
+      error: () => {
+        this.errorCarga = 'No se pudo cargar tu perfil. Inténtalo nuevamente.';
+        this.cargando = false;
+      },
+    });
   }
 
   // Edit Intro
