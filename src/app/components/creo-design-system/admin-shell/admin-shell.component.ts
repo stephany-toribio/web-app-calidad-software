@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/api/auth.service';
 import { CreoWordmarkComponent } from '../creo-wordmark/creo-wordmark.component';
 
 export type AdminScreen = "admin-dashboard" | "admin-accounts" | "admin-skills" | "admin-moderation" | "admin-audit";
@@ -28,7 +29,7 @@ export class AdminShellComponent {
     { id: "admin-audit",      label: "Auditoría" },
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
     showProximamente = false;
 
@@ -37,6 +38,10 @@ export class AdminShellComponent {
   }
 
   logout() {
-    this.router.navigate(['/creo/landing']);
+    // Cierra sesión en el back y borra token + usuario de localStorage (AuthService.logout)
+    this.authService.logout().subscribe({
+      complete: () => this.router.navigate(['/creo/landing']),
+      error: () => this.router.navigate(['/creo/landing']),
+    });
   }
 }
