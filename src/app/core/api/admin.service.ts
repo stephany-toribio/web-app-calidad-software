@@ -8,7 +8,11 @@ import {
   AreaEstudio,
   Habilidad,
   CrearHabilidadPayload,
-  EditarHabilidadPayload
+  EditarHabilidadPayload,
+  PaisAdmin,
+  InstitucionAdmin,
+  PuestoAdmin,
+  CrearInstitucionPayload
 } from './models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -110,6 +114,92 @@ export class AdminService {
   reactivarHabilidad(id: number): Observable<Habilidad> {
     return this.http
       .patch<ApiResponse<Habilidad>>(`${this.baseUrl}/habilidades/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Países ---
+
+  listarPaises(): Observable<PaisAdmin[]> {
+    return this.http
+      .get<ApiResponse<PaisAdmin[]>>(`${this.baseUrl}/paises`)
+      .pipe(map(res => res.data));
+  }
+
+  crearPais(nombre: string): Observable<PaisAdmin> {
+    return this.http
+      .post<ApiResponse<PaisAdmin>>(`${this.baseUrl}/paises`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  editarPais(id: number, nombre: string): Observable<PaisAdmin> {
+    return this.http
+      .patch<ApiResponse<PaisAdmin>>(`${this.baseUrl}/paises/${id}`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  desactivarPais(id: number): Observable<PaisAdmin> {
+    return this.http
+      .patch<ApiResponse<PaisAdmin>>(`${this.baseUrl}/paises/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  reactivarPais(id: number): Observable<PaisAdmin> {
+    return this.http
+      .patch<ApiResponse<PaisAdmin>>(`${this.baseUrl}/paises/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Instituciones ---
+
+  listarInstituciones(): Observable<InstitucionAdmin[]> {
+    return this.http
+      .get<ApiResponse<InstitucionAdmin[]>>(`${this.baseUrl}/instituciones`)
+      .pipe(map(res => res.data));
+  }
+
+  crearInstitucion(payload: CrearInstitucionPayload): Observable<InstitucionAdmin> {
+    return this.http
+      .post<ApiResponse<InstitucionAdmin>>(`${this.baseUrl}/instituciones`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo se puede renombrar: el país de una institución no cambia. */
+  editarInstitucion(id: number, nombre: string): Observable<InstitucionAdmin> {
+    return this.http
+      .patch<ApiResponse<InstitucionAdmin>>(`${this.baseUrl}/instituciones/${id}`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  desactivarInstitucion(id: number): Observable<InstitucionAdmin> {
+    return this.http
+      .patch<ApiResponse<InstitucionAdmin>>(`${this.baseUrl}/instituciones/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  reactivarInstitucion(id: number): Observable<InstitucionAdmin> {
+    return this.http
+      .patch<ApiResponse<InstitucionAdmin>>(`${this.baseUrl}/instituciones/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Puestos (solo listar y activar/desactivar) ---
+
+  listarPuestos(): Observable<PuestoAdmin[]> {
+    return this.http
+      .get<ApiResponse<PuestoAdmin[]>>(`${this.baseUrl}/puestos`)
+      .pipe(map(res => res.data));
+  }
+
+  desactivarPuesto(id: number): Observable<PuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  /** Activar un puesto propuesto por un candidato también lo aprueba. */
+  reactivarPuesto(id: number): Observable<PuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos/${id}/reactivar`, {})
       .pipe(map(res => res.data));
   }
 }

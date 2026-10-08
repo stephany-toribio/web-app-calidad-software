@@ -73,4 +73,38 @@ export interface EditarHabilidadPayload {
   area_estudio_id?: number | null;
 }
 
+export interface PaisAdmin {
+  id: number;
+  nombre: string;
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface InstitucionAdmin {
+  id: number;
+  nombre: string;
+  pais_id: number;
+  pais?: { id: number; nombre: string; activo: boolean };
+  estado: 'activo' | 'inactivo';
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PuestoAdmin {
+  id: number;
+  nombre: string;
+  estado: 'activo' | 'inactivo';
+  estado_catalogo: 'aprobado' | 'pendiente' | 'rechazado';
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CrearInstitucionPayload {
+  nombre: string;
+  pais_id: number;
+}
+
 export type { AreaEstudio, Habilidad };

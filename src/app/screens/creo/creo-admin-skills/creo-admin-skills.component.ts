@@ -3,9 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
-import { SkillsService } from '../../../services/skills.service';
 import { AdminService } from '../../../core/api/admin.service';
-import { AreaEstudio, Habilidad } from '../../../core/api/models/admin.model';
+import { AreaEstudio, Habilidad, PaisAdmin, InstitucionAdmin, PuestoAdmin } from '../../../core/api/models/admin.model';
 import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
 
 export type SkillStatus = 'active' | 'inactive';
@@ -27,6 +26,28 @@ export interface StudyAreaViewModel {
   original?: AreaEstudio;
 }
 
+export interface CountryViewModel {
+  id: number;
+  name: string;
+  active: boolean;
+}
+
+export interface InstitutionViewModel {
+  id: number;
+  name: string;
+  countryId: number | null;
+  country: string;
+  active: boolean;
+}
+
+export interface PositionViewModel {
+  id: number;
+  name: string;
+  active: boolean;
+  /** Propuesto por un candidato y aún sin aprobar */
+  pending: boolean;
+}
+
 interface Toast {
   id: number;
   message: string;
@@ -42,7 +63,6 @@ interface Toast {
 })
 export class CreoAdminSkillsComponent implements OnInit {
   private adminService = inject(AdminService);
-  private skillsService = inject(SkillsService);
 
   query = '';
   categoryFilter = 'Todas';
@@ -51,14 +71,21 @@ export class CreoAdminSkillsComponent implements OnInit {
 
   loadingHabilidades = false;
   loadingAreas = false;
+  loadingCountries = false;
+  loadingInstitutions = false;
+  loadingPositions = false;
 
   skills: SkillItemViewModel[] = [];
   studyAreas: StudyAreaViewModel[] = [];
 
-  // Mocks para pestañas secundarias sin endpoint admin aún (Países, Instituciones, Puestos)
-  get countries() { return this.skillsService.getCountries(); }
-  get institutions() { return this.skillsService.getInstitutions(); }
-  get positions() { return this.skillsService.getPositions(); }
+  countries: CountryViewModel[] = [];
+  institutions: InstitutionViewModel[] = [];
+  positions: PositionViewModel[] = [];
+
+  /** Países activos: únicos que se pueden elegir al crear una institución */
+  get activeCountries() {
+    return this.countries.filter(c => c.active);
+  }
 
   get activeCategories() {
     return ['Todas', ...this.studyAreas.map(s => s.name)];
@@ -97,17 +124,89 @@ export class CreoAdminSkillsComponent implements OnInit {
   studyError = '';
   
   showCountryModal = false;
-  editingCountry = { id: 0, name: '', active: true };
-  
+  editingCountry: CountryViewModel = { id: 0, name: '', active: true };
+  countryError = '';
+
   showInstitutionModal = false;
-  editingInstitution = { id: 0, name: '', country: '', active: true };
-  
-  showPositionModal = false;
-  editingPosition = { id: 0, name: '', active: true };
+  editingInstitution: InstitutionViewModel = { id: 0, name: '', countryId: null, country: '', active: true };
+  institutionError = '';
 
   ngOnInit() {
     this.cargarAreas();
     this.cargarHabilidades();
+    this.cargarPaises();
+    this.cargarInstituciones();
+    this.cargarPuestos();
+  }
+
+  /** Primer mensaje de error de la API (422 con detalle, 409 de negocio, sin conexión...) */
+  private mensajeError(err: HttpErrorResponse, porDefecto: string): string {
+    return Object.values(erroresDesdeApi(err))[0] || porDefecto;
+  }
+
+  private aPaisVM(p: PaisAdmin): CountryViewModel {
+    return { id: p.id, name: p.nombre, active: p.activo };
+  }
+
+  private aInstitucionVM(i: InstitucionAdmin): InstitutionViewModel {
+    return {
+      id: i.id,
+      name: i.nombre,
+      countryId: i.pais_id,
+      country: i.pais?.nombre ?? '',
+      active: i.activo
+    };
+  }
+
+  private aPuestoVM(p: PuestoAdmin): PositionViewModel {
+    return {
+      id: p.id,
+      name: p.nombre,
+      active: p.activo,
+      pending: p.estado_catalogo === 'pendiente'
+    };
+  }
+
+  cargarPaises() {
+    this.loadingCountries = true;
+    this.adminService.listarPaises().subscribe({
+      next: (paises) => {
+        this.loadingCountries = false;
+        this.countries = paises.map(p => this.aPaisVM(p));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingCountries = false;
+        this.showToast(this.mensajeError(err, 'No se pudieron cargar los países.'), 'error');
+      }
+    });
+  }
+
+  cargarInstituciones() {
+    this.loadingInstitutions = true;
+    this.adminService.listarInstituciones().subscribe({
+      next: (instituciones) => {
+        this.loadingInstitutions = false;
+        this.institutions = instituciones.map(i => this.aInstitucionVM(i));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingInstitutions = false;
+        this.showToast(this.mensajeError(err, 'No se pudieron cargar las instituciones.'), 'error');
+      }
+    });
+  }
+
+  cargarPuestos() {
+    this.loadingPositions = true;
+    this.adminService.listarPuestos().subscribe({
+      next: (puestos) => {
+        this.loadingPositions = false;
+        this.positions = puestos.map(p => this.aPuestoVM(p));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingPositions = false;
+        this.showToast(this.mensajeError(err, 'No se pudieron cargar los puestos.'), 'error');
+      }
+    });
   }
 
   cargarAreas() {
@@ -477,71 +576,171 @@ export class CreoAdminSkillsComponent implements OnInit {
     });
   }
 
-  // --- Países, Instituciones, Puestos (Local / Mocks) ---
+  // --- Países ---
 
-  openCountryModal(c?: any) {
-    if (c) this.editingCountry = { ...c };
-    else this.editingCountry = { id: 0, name: '', active: true };
+  openCountryModal(c?: CountryViewModel) {
+    this.editingCountry = c ? { ...c } : { id: 0, name: '', active: true };
+    this.countryError = '';
     this.showCountryModal = true;
     document.body.style.overflow = 'hidden';
   }
-  closeCountryModal() { this.showCountryModal = false; document.body.style.overflow = 'auto'; }
-  saveCountry() {
-    if (this.editingCountry.id) {
-      const idx = this.countries.findIndex(x => x.id === this.editingCountry.id);
-      if (idx >= 0) this.countries[idx] = { ...this.editingCountry };
-    } else {
-      this.countries.push({ ...this.editingCountry, id: Date.now() });
-    }
-    this.showToast('País guardado', 'success');
-    this.closeCountryModal();
-  }
-  toggleCountryStatus(c: any) {
-    c.active = !c.active;
-    this.showToast(`País ${c.active ? 'activado' : 'desactivado'}`, 'success');
+
+  closeCountryModal() {
+    this.showCountryModal = false;
+    document.body.style.overflow = 'auto';
   }
 
-  openInstitutionModal(i?: any) {
-    if (i) this.editingInstitution = { ...i };
-    else this.editingInstitution = { id: 0, name: '', country: '', active: true };
+  saveCountry() {
+    this.countryError = '';
+    const nombre = this.editingCountry.name.trim();
+
+    if (!nombre) {
+      this.countryError = 'El nombre del país es requerido.';
+      return;
+    }
+    if (nombre.length > 100) {
+      this.countryError = 'El nombre del país no puede superar los 100 caracteres.';
+      return;
+    }
+
+    const editando = this.editingCountry.id !== 0;
+    const peticion$ = editando
+      ? this.adminService.editarPais(this.editingCountry.id, nombre)
+      : this.adminService.crearPais(nombre);
+
+    peticion$.subscribe({
+      next: (pais) => {
+        const vm = this.aPaisVM(pais);
+        if (editando) {
+          const idx = this.countries.findIndex(x => x.id === vm.id);
+          if (idx !== -1) this.countries[idx] = vm;
+          // El nombre del país se muestra también en la tabla de instituciones
+          this.institutions = this.institutions.map(i =>
+            i.countryId === vm.id ? { ...i, country: vm.name } : i
+          );
+        } else {
+          this.countries.push(vm);
+          this.countries.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        this.showToast(editando ? 'País actualizado' : 'País creado', 'success');
+        this.closeCountryModal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.countryError = this.mensajeError(err, 'No se pudo guardar el país.');
+      }
+    });
+  }
+
+  toggleCountryStatus(c: CountryViewModel) {
+    const accion$ = c.active
+      ? this.adminService.desactivarPais(c.id)
+      : this.adminService.reactivarPais(c.id);
+
+    accion$.subscribe({
+      next: (pais) => {
+        c.active = pais.activo;
+        this.showToast(`País ${pais.activo ? 'activado' : 'desactivado'}`, 'success');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado del país.'), 'error');
+      }
+    });
+  }
+
+  // --- Instituciones ---
+
+  openInstitutionModal(i?: InstitutionViewModel) {
+    this.editingInstitution = i
+      ? { ...i }
+      : { id: 0, name: '', countryId: null, country: '', active: true };
+    this.institutionError = '';
     this.showInstitutionModal = true;
     document.body.style.overflow = 'hidden';
   }
-  closeInstitutionModal() { this.showInstitutionModal = false; document.body.style.overflow = 'auto'; }
-  saveInstitution() {
-    if (this.editingInstitution.id) {
-      const idx = this.institutions.findIndex(x => x.id === this.editingInstitution.id);
-      if (idx >= 0) this.institutions[idx] = { ...this.editingInstitution };
-    } else {
-      this.institutions.push({ ...this.editingInstitution, id: Date.now() });
-    }
-    this.showToast('Institución guardada', 'success');
-    this.closeInstitutionModal();
-  }
-  toggleInstitutionStatus(i: any) {
-    i.active = !i.active;
-    this.showToast(`Institución ${i.active ? 'activada' : 'desactivada'}`, 'success');
+
+  closeInstitutionModal() {
+    this.showInstitutionModal = false;
+    document.body.style.overflow = 'auto';
   }
 
-  openPositionModal(p?: any) {
-    if (p) this.editingPosition = { ...p };
-    else this.editingPosition = { id: 0, name: '', active: true };
-    this.showPositionModal = true;
-    document.body.style.overflow = 'hidden';
-  }
-  closePositionModal() { this.showPositionModal = false; document.body.style.overflow = 'auto'; }
-  savePosition() {
-    if (this.editingPosition.id) {
-      const idx = this.positions.findIndex(x => x.id === this.editingPosition.id);
-      if (idx >= 0) this.positions[idx] = { ...this.editingPosition };
-    } else {
-      this.positions.push({ ...this.editingPosition, id: Date.now() });
+  saveInstitution() {
+    this.institutionError = '';
+    const nombre = this.editingInstitution.name.trim();
+
+    if (!nombre) {
+      this.institutionError = 'El nombre de la institución es requerido.';
+      return;
     }
-    this.showToast('Puesto guardado', 'success');
-    this.closePositionModal();
+    if (nombre.length > 255) {
+      this.institutionError = 'El nombre de la institución no puede superar los 255 caracteres.';
+      return;
+    }
+
+    const editando = this.editingInstitution.id !== 0;
+
+    if (!editando && !this.editingInstitution.countryId) {
+      this.institutionError = 'Debes seleccionar un país.';
+      return;
+    }
+
+    const peticion$ = editando
+      ? this.adminService.editarInstitucion(this.editingInstitution.id, nombre)
+      : this.adminService.crearInstitucion({
+          nombre,
+          pais_id: Number(this.editingInstitution.countryId)
+        });
+
+    peticion$.subscribe({
+      next: (institucion) => {
+        const vm = this.aInstitucionVM(institucion);
+        if (editando) {
+          const idx = this.institutions.findIndex(x => x.id === vm.id);
+          if (idx !== -1) this.institutions[idx] = vm;
+        } else {
+          this.institutions.unshift(vm);
+        }
+        this.showToast(editando ? 'Institución actualizada' : 'Institución creada', 'success');
+        this.closeInstitutionModal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.institutionError = this.mensajeError(err, 'No se pudo guardar la institución.');
+      }
+    });
   }
-  togglePositionStatus(p: any) {
-    p.active = !p.active;
-    this.showToast(`Puesto ${p.active ? 'activado' : 'desactivado'}`, 'success');
+
+  toggleInstitutionStatus(i: InstitutionViewModel) {
+    const accion$ = i.active
+      ? this.adminService.desactivarInstitucion(i.id)
+      : this.adminService.reactivarInstitucion(i.id);
+
+    accion$.subscribe({
+      next: (institucion) => {
+        i.active = institucion.activo;
+        this.showToast(`Institución ${institucion.activo ? 'activada' : 'desactivada'}`, 'success');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado de la institución.'), 'error');
+      }
+    });
+  }
+
+  // --- Puestos: el admin solo activa/desactiva los que registran los candidatos ---
+
+  togglePositionStatus(p: PositionViewModel) {
+    const accion$ = p.active
+      ? this.adminService.desactivarPuesto(p.id)
+      : this.adminService.reactivarPuesto(p.id);
+
+    accion$.subscribe({
+      next: (puesto) => {
+        const vm = this.aPuestoVM(puesto);
+        p.active = vm.active;
+        p.pending = vm.pending;
+        this.showToast(`Puesto ${vm.active ? 'activado' : 'desactivado'}`, 'success');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado del puesto.'), 'error');
+      }
+    });
   }
 }
