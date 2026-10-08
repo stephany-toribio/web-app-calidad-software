@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { CreoFieldComponent } from '../../../../components/creo-design-system/creo-field/creo-field.component';
 import { CreoBtnComponent } from '../../../../components/creo-design-system/creo-btn/creo-btn.component';
 import { CatalogosService } from '../../../../core/api/catalogos.service';
-import { AreaEstudio, Carrera, Institucion, ItemCatalogo, TipoEstudio } from '../../../../core/api/models/catalogos.model';
+import { Carrera, Institucion, ItemCatalogo, TipoEstudio } from '../../../../core/api/models/catalogos.model';
 import { aId } from '../../../../core/api/mappers/registro-candidato.mapper';
 
 export interface StudyEntry {
@@ -28,7 +28,13 @@ export interface StudyEntry {
 const ESTADOS = ['Finalizado', 'En curso', 'Incompleto'];
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const ANOS = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
-const POSGRADOS = ['Posgrado', 'Master', 'Doctorado'];
+// Igual que el backend (TipoEstudio::MAXIMOS_POR_GRUPO). No hay máximo total.
+const LIMITES_POR_GRUPO = [
+  { tipos: ['Universitario'], maximo: 3, descripcion: 'carreras universitarias' },
+  { tipos: ['Posgrado', 'Master', 'Doctorado'], maximo: 5, descripcion: 'posgrados (posgrado, maestría y doctorado)' },
+  { tipos: ['Terciario'], maximo: 1, descripcion: 'estudio terciario' },
+  { tipos: ['Secundario'], maximo: 1, descripcion: 'estudio secundario' },
+];
 
 @Component({
   selector: 'app-study-list',
@@ -41,7 +47,6 @@ export class StudyListComponent implements OnInit {
 
   @Input() title: string = '';
   @Input() studies: StudyEntry[] = [];
-  @Input() maxStudies: number = 5;
   @Input() disabled: boolean = false;
   @Output() studiesChange = new EventEmitter<StudyEntry[]>();
 
@@ -58,9 +63,8 @@ export class StudyListComponent implements OnInit {
   // Catálogos completos, para obtener ids y requiere_carrera
   private catalogoPaises: ItemCatalogo[] = [];
   private catalogoTipos: TipoEstudio[] = [];
-  private catalogoAreas: AreaEstudio[] = [];
   private catalogoInstituciones: Institucion[] = [];
-  private carreras: Carrera[] = [];              // dependen de tipo + área + país
+  private carreras: Carrera[] = [];              // globales: dependen solo del tipo de estudio
   private carrerasSub?: Subscription;
 
   editingIndex = -1;
@@ -76,10 +80,7 @@ export class StudyListComponent implements OnInit {
       this.catalogoTipos = lista;
       this.tiposEstudio = lista.map(t => t.nombre);
     });
-    this.catalogos.areasEstudio().subscribe(lista => {
-      this.catalogoAreas = lista;
-      this.areasEstudio = lista.map(a => a.nombre);
-    });
+    this.catalogos.areasEstudio().subscribe(lista => this.areasEstudio = lista.map(a => a.nombre));
     this.catalogos.instituciones().subscribe(lista => this.catalogoInstituciones = lista);
   }
 
@@ -107,13 +108,12 @@ export class StudyListComponent implements OnInit {
     this.onFiltrosCarreraChange();
   }
 
-  /** País: cambia las instituciones y las carreras disponibles */
+  /** País: cambia solo las instituciones disponibles (las carreras son globales) */
   onPaisChange() {
     this.limpiarInstitucion();
-    this.onFiltrosCarreraChange();
   }
 
-  /** Tipo, área o país cambiaron: la carrera elegida deja de valer y se recarga la lista */
+  /** Tipo de estudio cambió: la carrera elegida deja de valer y se recarga la lista */
   onFiltrosCarreraChange() {
     this.currentStudy.titulo = '';
     this.currentStudy.carreraId = null;
@@ -125,12 +125,9 @@ export class StudyListComponent implements OnInit {
     this.carreras = [];
 
     const tipoId = aId(this.catalogoTipos, this.currentStudy.tipoEstudio);
-    const areaId = aId(this.catalogoAreas, this.currentStudy.areaEstudio);
-    const paisId = aId(this.catalogoPaises, this.currentStudy.pais);
+    if (!this.tituloEnabled || !tipoId) return;
 
-    if (!this.tituloEnabled || !tipoId || !areaId || !paisId) return;
-
-    this.carrerasSub = this.catalogos.carreras(tipoId, areaId, paisId).subscribe(lista => this.carreras = lista);
+    this.carrerasSub = this.catalogos.carreras(tipoId).subscribe(lista => this.carreras = lista);
   }
 
   private limpiarInstitucion() {
@@ -138,12 +135,26 @@ export class StudyListComponent implements OnInit {
     this.currentStudy.institucionId = null;
   }
 
-  get normalCount(): number {
-    return this.studies.filter(s => !POSGRADOS.includes(s.tipoEstudio)).length;
+  private grupoDe(tipo: string) {
+    return LIMITES_POR_GRUPO.find(g => g.tipos.includes(tipo));
   }
 
-  get postgradCount(): number {
-    return this.studies.filter(s => POSGRADOS.includes(s.tipoEstudio)).length;
+  /** Estudios del mismo grupo ya cargados, sin contar el que se está editando */
+  private cantidadEnGrupo(tipo: string): number {
+    const grupo = this.grupoDe(tipo);
+    if (!grupo) return 0;
+    return this.studies.filter((s, i) => i !== this.editingIndex && grupo.tipos.includes(s.tipoEstudio)).length;
+  }
+
+  /** true si ya no se puede agregar otro estudio de este tipo */
+  tipoLleno(tipo: string): boolean {
+    const grupo = this.grupoDe(tipo);
+    return !!grupo && this.cantidadEnGrupo(tipo) >= grupo.maximo;
+  }
+
+  /** Queda cupo en algún grupo: controla el botón "Agregar" */
+  get hayCupo(): boolean {
+    return LIMITES_POR_GRUPO.some(g => this.studies.filter(s => g.tipos.includes(s.tipoEstudio)).length < g.maximo);
   }
 
   showInstituciones = false;
@@ -278,30 +289,11 @@ export class StudyListComponent implements OnInit {
     this.validateDates();
 
     if (Object.keys(this.errors).length === 0) {
-      const isPostgrad = POSGRADOS.includes(this.currentStudy.tipoEstudio);
-      const isNew = this.editingIndex === -1;
-
-      if (isNew) {
-        if (isPostgrad && this.postgradCount >= 3) {
-          this.errors['limite'] = 'Puedes agregar máximo 3 estudios de posgrado';
-          return;
-        }
-        if (!isPostgrad && this.normalCount >= 5) {
-          this.errors['limite'] = 'Puedes agregar máximo 5 estudios normales/carreras';
-          return;
-        }
-      } else {
-        const oldStudy = this.studies[this.editingIndex];
-        const oldIsPostgrad = POSGRADOS.includes(oldStudy.tipoEstudio);
-
-        if (isPostgrad && !oldIsPostgrad && this.postgradCount >= 3) {
-          this.errors['limite'] = 'Puedes agregar máximo 3 estudios de posgrado';
-          return;
-        }
-        if (!isPostgrad && oldIsPostgrad && this.normalCount >= 5) {
-          this.errors['limite'] = 'Puedes agregar máximo 5 estudios normales/carreras';
-          return;
-        }
+      // Límite por grupo de tipos (igual que el backend); el error se muestra bajo el select de tipo
+      if (this.tipoLleno(this.currentStudy.tipoEstudio)) {
+        const grupo = this.grupoDe(this.currentStudy.tipoEstudio)!;
+        this.errors['tipoEstudio'] = `Puedes registrar como máximo ${grupo.maximo} ${grupo.descripcion}.`;
+        return;
       }
 
       if (this.currentStudy.alPresente) {

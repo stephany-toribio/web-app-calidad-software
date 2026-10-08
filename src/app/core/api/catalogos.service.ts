@@ -35,11 +35,9 @@ export class CatalogosService {
         return this.lista<Organizacion>('organizaciones', paisId ? new HttpParams().set('pais_id', paisId) : undefined);
     }
 
-    carreras(tipoEstudioId: number, areaEstudioId: number, paisId: number): Observable<Carrera[]> {
-        const params = new HttpParams()
-            .set('tipo_estudio_id', tipoEstudioId)
-            .set('area_estudio_id', areaEstudioId)
-            .set('pais_id', paisId);
+    /** Las carreras son globales: dependen solo del tipo de estudio */
+    carreras(tipoEstudioId: number): Observable<Carrera[]> {
+        const params = new HttpParams().set('tipo_estudio_id', tipoEstudioId);
         return this.lista<Carrera>('carreras', params);
     }
 
