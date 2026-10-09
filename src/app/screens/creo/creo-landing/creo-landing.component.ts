@@ -164,7 +164,7 @@ export class CreoLandingComponent {
 
           case 'candidato':
             this.doNavigate(
-              'candidate-dashboard',
+              'candidate-profile',
               { name }
             );
             break;
