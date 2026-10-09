@@ -184,7 +184,7 @@ export class CreoLandingComponent {
 
         if (error.status === 401) {
           this.errors.set({
-            auth: 'Correo o contraseña incorrectos.'
+            auth: 'Correo o contraseña incorrectos.' + this.textoIntentosRestantes(error)
           });
           return;
         }
@@ -222,6 +222,15 @@ export class CreoLandingComponent {
         });
       }
     });
+  }
+
+  /** Texto con los intentos que quedan antes del bloqueo (el back lo envía en errors.intentos_restantes del 401) */
+  private textoIntentosRestantes(error: HttpErrorResponse): string {
+    const restantes = error.error?.errors?.intentos_restantes;
+    if (typeof restantes !== 'number') return '';
+    return restantes === 1
+      ? ' Te queda 1 intento antes de que se bloquee tu cuenta.'
+      : ` Te quedan ${restantes} intentos antes de que se bloquee tu cuenta.`;
   }
 
   doNavigate(
