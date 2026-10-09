@@ -15,6 +15,8 @@ export class CreoSkillPickerComponent {
     @Input() selected: string[] = [];
     @Input() error?: string;
     @Input() suggestedSections: SkillSection[] = [];
+    /** Habilidades agrupadas por área de estudio (cada grupo se muestra como una tarjeta desplegable) */
+    @Input() groupedSections: SkillSection[] = [];
     /** Cuando se define, limita el número total de habilidades seleccionables */
     @Input() maxSkills?: number;
 
@@ -72,6 +74,50 @@ export class CreoSkillPickerComponent {
             this._sectionSkillsCache.set(key, filtered);
         }
         return this._sectionSkillsCache.get(key)!;
+    }
+
+    // ── Grupos por área de estudio ────────────────────────────────────────────
+    private readonly accents = ['#F2B705', '#0EA5E9', '#10B981', '#8B5CF6', '#F43F5E', '#F97316'];
+    private collapsedGroups = new Set<string>();
+
+    accent(i: number): string {
+        return this.accents[i % this.accents.length];
+    }
+
+    /** Color de la franja de la cabecera: el acento con transparencia */
+    tint(i: number): string {
+        return this.accent(i) + '1A';
+    }
+
+    groupSkills(group: SkillSection): string[] {
+        return this.trimmedQuery
+            ? group.skills.filter(s => s.toLowerCase().includes(this.trimmedQuery))
+            : group.skills;
+    }
+
+    selectedIn(group: SkillSection): number {
+        return group.skills.filter(s => this.selected.includes(s)).length;
+    }
+
+    /** Mientras se busca, todos los grupos con resultados se muestran abiertos */
+    isGroupOpen(group: SkillSection): boolean {
+        return !!this.trimmedQuery || !this.collapsedGroups.has(group.label);
+    }
+
+    toggleGroup(group: SkillSection) {
+        if (this.collapsedGroups.has(group.label)) {
+            this.collapsedGroups.delete(group.label);
+        } else {
+            this.collapsedGroups.add(group.label);
+        }
+    }
+
+    get hasGroups(): boolean {
+        return this.groupedSections.length > 0;
+    }
+
+    get hasGroupResults(): boolean {
+        return this.groupedSections.some(g => this.groupSkills(g).length > 0);
     }
 
     isSelected(skill: string): boolean {
