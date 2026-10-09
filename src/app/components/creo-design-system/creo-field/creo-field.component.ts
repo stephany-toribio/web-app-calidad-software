@@ -21,9 +21,20 @@ export class CreoFieldComponent {
   @Input() disabled: boolean = false;
   @Input() listId?: string;
 
+  /** Solo aplica cuando type === 'password': muestra u oculta el texto */
+  showPassword = false;
+
   @Output() valueChange = new EventEmitter<string>();
   @Output() fieldFocus = new EventEmitter<void>();
   @Output() fieldBlur = new EventEmitter<void>();
+
+  get inputType(): string {
+    return this.type === 'password' && this.showPassword ? 'text' : this.type;
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
 
   onKeyPress(e: KeyboardEvent) {
     if (this.numbersOnly) {
