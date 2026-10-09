@@ -12,7 +12,9 @@ import {
   PaisAdmin,
   InstitucionAdmin,
   PuestoAdmin,
-  CrearInstitucionPayload
+  CrearInstitucionPayload,
+  OrganizacionAdmin,
+  CrearOrganizacionPayload
 } from './models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -214,6 +216,41 @@ export class AdminService {
   reactivarPuesto(id: number): Observable<PuestoAdmin> {
     return this.http
       .patch<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Organizaciones (lugares de trabajo de la experiencia laboral) ---
+
+  listarOrganizaciones(): Observable<OrganizacionAdmin[]> {
+    return this.http
+      .get<ApiResponse<OrganizacionAdmin[]>>(`${this.baseUrl}/organizaciones`)
+      .pipe(map(res => res.data));
+  }
+
+  /** Crea una organización del catálogo global en un país activo. */
+  crearOrganizacion(payload: CrearOrganizacionPayload): Observable<OrganizacionAdmin> {
+    return this.http
+      .post<ApiResponse<OrganizacionAdmin>>(`${this.baseUrl}/organizaciones`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo el nombre y solo globales: el país no cambia y una personalizada responde 409. */
+  editarOrganizacion(id: number, nombre: string): Observable<OrganizacionAdmin> {
+    return this.http
+      .patch<ApiResponse<OrganizacionAdmin>>(`${this.baseUrl}/organizaciones/${id}`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  desactivarOrganizacion(id: number): Observable<OrganizacionAdmin> {
+    return this.http
+      .patch<ApiResponse<OrganizacionAdmin>>(`${this.baseUrl}/organizaciones/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo la habilita (409 si su país está inactivo): una personalizada no pasa al catálogo global. */
+  reactivarOrganizacion(id: number): Observable<OrganizacionAdmin> {
+    return this.http
+      .patch<ApiResponse<OrganizacionAdmin>>(`${this.baseUrl}/organizaciones/${id}/reactivar`, {})
       .pipe(map(res => res.data));
   }
 }

@@ -2,12 +2,14 @@ import { Habilidad, ItemCatalogo } from './catalogos.model';
 import { EstadoEstudio, Genero, NivelExperiencia, NivelIdioma } from './registro-candidato.model';
 
 // Respuesta de GET /candidatos/me 
-export interface ItemPropuesto extends ItemCatalogo {
-    estado_catalogo: string;
-}
-
 // personalizado: lo escribió el candidato. activo = false: el admin lo deshabilitó (lo conserva, pero no puede volver a elegirlo)
 export interface PuestoPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
+}
+
+// Mismo criterio que el puesto
+export interface OrganizacionPerfil extends ItemCatalogo {
     personalizado: boolean;
     activo: boolean;
 }
@@ -35,7 +37,7 @@ export interface IdiomaPerfil {
 export interface ExperienciaPerfil {
     id: number;
     puesto: PuestoPerfil;
-    organizacion: ItemPropuesto;
+    organizacion: OrganizacionPerfil;
     pais: ItemCatalogo;
     nivel: NivelExperiencia;
     fecha_inicio: string;

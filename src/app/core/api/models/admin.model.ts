@@ -109,6 +109,30 @@ export interface PuestoAdmin {
   updated_at?: string;
 }
 
+/**
+ * Igual que PuestoAdmin, pero cada organización pertenece a un país (que no se puede cambiar).
+ * personalizado = true: la escribió un candidato; es solo suya y el admin solo la activa o desactiva.
+ */
+export interface OrganizacionAdmin {
+  id: number;
+  nombre: string;
+  pais_id: number;
+  pais?: { id: number; nombre: string; activo: boolean };
+  personalizado: boolean;
+  creado_por: { candidato_id: number; nombre: string; apellidos: string } | null;
+  /** Solo viene en el listado: cuántos candidatos escribieron ese mismo nombre en ese país */
+  candidatos_con_mismo_nombre?: number;
+  estado: 'activo' | 'inactivo';
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CrearOrganizacionPayload {
+  nombre: string;
+  pais_id: number;
+}
+
 export interface CrearInstitucionPayload {
   nombre: string;
   pais_id: number;

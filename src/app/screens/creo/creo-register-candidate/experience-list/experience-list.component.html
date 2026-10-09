@@ -98,8 +98,9 @@
           <ul *ngIf="showEmpresas && filteredEmpresas.length > 0" 
               class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
             <li *ngFor="let emp of filteredEmpresas" (mousedown)="selectEmpresa(emp)"
-                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors flex items-center justify-between gap-2">
               {{ emp }}
+              <span *ngIf="esOrganizacionPropia(emp)" class="px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #F1F5F9; color: #475569;">Tuya</span>
             </li>
           </ul>
         </div>

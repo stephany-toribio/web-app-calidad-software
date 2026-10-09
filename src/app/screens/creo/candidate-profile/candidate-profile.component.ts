@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,9 +15,10 @@ import { CandidatoPerfil } from '../../../core/api/models/candidato-perfil.model
 import { RegistroCandidatoPayload } from '../../../core/api/models/registro-candidato.model';
 import { PerfilVista, payloadDatosPerfil, perfilDesdeApi } from '../../../core/api/mappers/candidato-perfil.mapper';
 import {
-  CatalogosRegistro, payloadEstudiosIdiomas, payloadExperiencia, payloadHabilidades,
+  aId, CatalogosRegistro, payloadEstudiosIdiomas, payloadExperiencia, payloadHabilidades,
 } from '../../../core/api/mappers/registro-candidato.mapper';
 import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
+import { AVISO_LISTA_ACTUALIZADA, corregirCatalogosRechazados } from '../../../core/api/mappers/catalogos-rechazados.mapper';
 
 const MAX_SKILLS = 15;          // por tipo (técnicas y blandas), igual que el backend
 
@@ -33,6 +34,10 @@ const MAX_SKILLS = 15;          // por tipo (técnicas y blandas), igual que el 
 export class CandidateProfileComponent implements OnInit {
   private candidatosService = inject(CandidatosService);
   private catalogosService = inject(CatalogosService);
+
+  // Solo existen mientras su modal está abierto (están dentro de un *ngIf)
+  @ViewChild(StudyListComponent) private studyList?: StudyListComponent;
+  @ViewChild(ExperienceListComponent) private experienceList?: ExperienceListComponent;
 
   // Se llena con GET /candidatos/me y se refresca con la respuesta de cada PUT
   candidate: PerfilVista = {
@@ -77,13 +82,9 @@ export class CandidateProfileComponent implements OnInit {
 
     forkJoin({
       perfil: this.candidatosService.obtenerMiPerfil(),
-      paises: this.catalogosService.paises(),
-      tiposEstudio: this.catalogosService.tiposEstudio(),
-      areasEstudio: this.catalogosService.areasEstudio(),
-      idiomas: this.catalogosService.idiomas(),
-      puestos: this.candidatosService.misPuestos(),   // globales + sus personalizados: el mapper los convierte en id
+      catalogos: this.catalogosFijos(),
     }).subscribe({
-      next: ({ perfil, ...catalogos }) => {
+      next: ({ perfil, catalogos }) => {
         this.catalogos = { ...catalogos, habilidades: this.catalogos.habilidades };
         this.aplicarPerfil(perfil);
         this.cargando = false;
@@ -95,22 +96,68 @@ export class CandidateProfileComponent implements OnInit {
     });
   }
 
+  /** Catálogos para traducir nombres → IDs al guardar */
+  private catalogosFijos() {
+    return forkJoin({
+      paises: this.catalogosService.paises(),
+      tiposEstudio: this.catalogosService.tiposEstudio(),
+      areasEstudio: this.catalogosService.areasEstudio(),
+      idiomas: this.catalogosService.idiomas(),
+      puestos: this.candidatosService.misPuestos(),   // globales + sus personalizados: el mapper los convierte en id
+    });
+  }
+
   private aplicarPerfil(perfil: CandidatoPerfil) {
     this.candidate = perfilDesdeApi(perfil);
     this.habilidadesActuales = perfil.habilidades;
     this.cargarHabilidades(perfil.estudios.map(e => e.area_estudio.id));
   }
 
-  /** Habilidades seleccionables para las áreas de sus estudios (GET /habilidades?areas[]=) + las que ya tiene */
-  private cargarHabilidades(areaIds: number[]) {
+  /**
+   * Habilidades seleccionables para las áreas de sus estudios (GET /habilidades?areas[]=) + las que ya tiene.
+   * depurarSeleccion: quita de lo seleccionado las que ya no están (tras un 422 por una habilidad desactivada)
+   */
+  private cargarHabilidades(areaIds: number[], depurarSeleccion = false) {
     this.catalogosService.habilidades([...new Set(areaIds)]).subscribe({
       next: lista => {
         const todas = [...new Map([...lista, ...this.habilidadesActuales].map(h => [h.id, h])).values()];
         this.catalogos = { ...this.catalogos, habilidades: todas };
         this.hardSkillsCatalog = todas.filter(h => h.tipo_habilidad === 'tecnica').map(h => h.nombre);
         this.softSkillsCatalog = todas.filter(h => h.tipo_habilidad === 'blanda').map(h => h.nombre);
+
+        if (depurarSeleccion) {
+          this.candidate.hardSkills = this.candidate.hardSkills.filter(s => this.hardSkillsCatalog.includes(s));
+          this.candidate.softSkills = this.candidate.softSkills.filter(s => this.softSkillsCatalog.includes(s));
+        }
       },
     });
+  }
+
+  /**
+   * Igual que el registro: si la API rechazó un valor de catálogo que el admin desactivó mientras se editaba,
+   * se vacía ese campo y se vuelven a pedir las listas, para que lo elija de nuevo sin cerrar el modal.
+   */
+  private corregirCatalogosRechazados(err: HttpErrorResponse) {
+    const correccion = corregirCatalogosRechazados(err, this.candidate.education, this.candidate.experience);
+    if (!correccion) return;
+
+    this.candidate = { ...this.candidate, education: correccion.estudios, experience: correccion.experiencias };
+
+    this.catalogosFijos().subscribe(catalogos => this.catalogos = { ...catalogos, habilidades: this.catalogos.habilidades });
+    if (correccion.recargarEstudios) {
+      this.studyList?.recargarCatalogos();
+      if (this.errores['carreras']) this.errores['carreras'] += AVISO_LISTA_ACTUALIZADA;
+    }
+    if (correccion.recargarExperiencias) {
+      this.experienceList?.recargarCatalogos();
+      if (this.errores['experiencia']) this.errores['experiencia'] += AVISO_LISTA_ACTUALIZADA;
+    }
+    if (correccion.recargarHabilidades) {
+      const areaIds = this.candidate.education
+        .map(e => aId(this.catalogos.areasEstudio, e.areaEstudio))
+        .filter((id): id is number => id !== null);
+      this.cargarHabilidades(areaIds, true);
+    }
   }
 
   /** PUT /candidatos/me con una sola sección. Si sale bien, la pantalla toma la respuesta del backend */
@@ -129,6 +176,7 @@ export class CandidateProfileComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.guardando = false;
         this.errores = erroresDesdeApi(err);
+        this.corregirCatalogosRechazados(err);
       },
     });
   }

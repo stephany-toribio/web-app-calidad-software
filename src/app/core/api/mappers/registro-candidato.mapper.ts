@@ -24,8 +24,9 @@ export interface IdiomaFormulario { idioma: string; nivelEscrito: string; nivelO
 export interface ExperienciaFormulario {
     puesto: string; empresa: string; pais: string; nivel: string; descripcion: string;
     puestoId?: number | null; organizacionId?: number | null;
-    // Solo lectura, vienen del perfil: puesto escrito por el candidato / deshabilitado por el admin
+    // Solo lectura, vienen del perfil: escrito por el candidato / deshabilitado por el admin
     puestoPersonalizado?: boolean; puestoActivo?: boolean;
+    organizacionPersonalizada?: boolean; organizacionActiva?: boolean;
     fechaInicioMes: string; fechaInicioAno: string;
     fechaFinMes: string; fechaFinAno: string; alPresente: boolean;
 }

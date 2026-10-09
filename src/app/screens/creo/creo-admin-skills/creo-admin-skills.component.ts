@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
 import { AdminService } from '../../../core/api/admin.service';
-import { AreaEstudio, Habilidad, PaisAdmin, InstitucionAdmin, PuestoAdmin } from '../../../core/api/models/admin.model';
+import { AreaEstudio, Habilidad, PaisAdmin, InstitucionAdmin, PuestoAdmin, OrganizacionAdmin } from '../../../core/api/models/admin.model';
 import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
 
 export type SkillStatus = 'active' | 'inactive';
@@ -52,6 +52,20 @@ export interface PositionViewModel {
   mismoNombre: number;
 }
 
+export interface OrganizationViewModel {
+  id: number;
+  name: string;
+  countryId: number;
+  country: string;
+  active: boolean;
+  /** Escrita por un candidato: es solo suya, no se edita ni pasa al catálogo global */
+  personalizado: boolean;
+  /** "Nombre Apellidos" del candidato que la escribió; null en las del catálogo */
+  creadoPor: string | null;
+  /** Cuántos candidatos escribieron ese mismo nombre en ese país como personalizada */
+  mismoNombre: number;
+}
+
 interface Toast {
   id: number;
   message: string;
@@ -71,13 +85,14 @@ export class CreoAdminSkillsComponent implements OnInit {
   query = '';
   categoryFilter = 'Todas';
   statusFilter: 'all' | SkillStatus = 'all';
-  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'puestos' = 'estudios';
+  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'puestos' | 'organizaciones' = 'estudios';
 
   loadingHabilidades = false;
   loadingAreas = false;
   loadingCountries = false;
   loadingInstitutions = false;
   loadingPositions = false;
+  loadingOrganizations = false;
 
   skills: SkillItemViewModel[] = [];
   studyAreas: StudyAreaViewModel[] = [];
@@ -85,6 +100,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   countries: CountryViewModel[] = [];
   institutions: InstitutionViewModel[] = [];
   positions: PositionViewModel[] = [];
+  organizations: OrganizationViewModel[] = [];
 
   /** Países activos: únicos que se pueden elegir al crear una institución */
   get activeCountries() {
@@ -144,12 +160,23 @@ export class CreoAdminSkillsComponent implements OnInit {
   editingPosition: { id: number; name: string } = { id: 0, name: '' };
   positionError = '';
 
+  // Organizaciones: mismos filtros que puestos + país
+  organizationQuery = '';
+  organizationCountryFilter: number | null = null;
+  organizationTypeFilter: 'all' | 'global' | 'personalizado' = 'all';
+  organizationStatusFilter: 'all' | SkillStatus = 'all';
+
+  showOrganizationModal = false;
+  editingOrganization: { id: number; name: string; countryId: number | null } = { id: 0, name: '', countryId: null };
+  organizationError = '';
+
   ngOnInit() {
     this.cargarAreas();
     this.cargarHabilidades();
     this.cargarPaises();
     this.cargarInstituciones();
     this.cargarPuestos();
+    this.cargarOrganizaciones();
   }
 
   /** Primer mensaje de error de la API (422 con detalle, 409 de negocio, sin conexión...) */
@@ -641,9 +668,12 @@ export class CreoAdminSkillsComponent implements OnInit {
         if (editando) {
           const idx = this.countries.findIndex(x => x.id === vm.id);
           if (idx !== -1) this.countries[idx] = vm;
-          // El nombre del país se muestra también en la tabla de instituciones
+          // El nombre del país se muestra también en las tablas de instituciones y organizaciones
           this.institutions = this.institutions.map(i =>
             i.countryId === vm.id ? { ...i, country: vm.name } : i
+          );
+          this.organizations = this.organizations.map(o =>
+            o.countryId === vm.id ? { ...o, country: vm.name } : o
           );
         } else {
           this.countries.push(vm);
@@ -817,6 +847,127 @@ export class CreoAdminSkillsComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado del puesto.'), 'error');
+      }
+    });
+  }
+
+  // --- Organizaciones: igual que puestos, pero cada una pertenece a un país (que no se puede cambiar) ---
+
+  private aOrganizacionVM(o: OrganizacionAdmin): OrganizationViewModel {
+    return {
+      id: o.id,
+      name: o.nombre,
+      countryId: o.pais_id,
+      country: o.pais?.nombre ?? '',
+      active: o.activo,
+      personalizado: o.personalizado,
+      creadoPor: o.creado_por ? `${o.creado_por.nombre} ${o.creado_por.apellidos}` : null,
+      mismoNombre: o.candidatos_con_mismo_nombre ?? 0
+    };
+  }
+
+  cargarOrganizaciones() {
+    this.loadingOrganizations = true;
+    this.adminService.listarOrganizaciones().subscribe({
+      next: (organizaciones) => {
+        this.loadingOrganizations = false;
+        this.organizations = organizaciones.map(o => this.aOrganizacionVM(o));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingOrganizations = false;
+        this.showToast(this.mensajeError(err, 'No se pudieron cargar las organizaciones.'), 'error');
+      }
+    });
+  }
+
+  get filteredOrganizations() {
+    const q = this.organizationQuery.trim().toLowerCase();
+    return this.organizations.filter(o => {
+      const matchQ = o.name.toLowerCase().includes(q);
+      const matchPais = this.organizationCountryFilter === null || o.countryId === this.organizationCountryFilter;
+      const matchTipo = this.organizationTypeFilter === 'all'
+        || (this.organizationTypeFilter === 'personalizado') === o.personalizado;
+      const matchEstado = this.organizationStatusFilter === 'all'
+        || (this.organizationStatusFilter === 'active') === o.active;
+      return matchQ && matchPais && matchTipo && matchEstado;
+    });
+  }
+
+  openOrganizationModal(o?: OrganizationViewModel) {
+    if (o?.personalizado) {
+      return; // el texto es del candidato: no se edita
+    }
+    this.editingOrganization = o
+      ? { id: o.id, name: o.name, countryId: o.countryId }
+      : { id: 0, name: '', countryId: null };
+    this.organizationError = '';
+    this.showOrganizationModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeOrganizationModal() {
+    this.showOrganizationModal = false;
+    document.body.style.overflow = 'auto';
+  }
+
+  saveOrganization() {
+    this.organizationError = '';
+    const nombre = this.editingOrganization.name.trim();
+
+    if (!nombre) {
+      this.organizationError = 'El nombre de la organización es requerido.';
+      return;
+    }
+    if (nombre.length > 200) {
+      this.organizationError = 'El nombre de la organización no puede superar los 200 caracteres.';
+      return;
+    }
+
+    const editando = this.editingOrganization.id !== 0;
+
+    if (!editando && !this.editingOrganization.countryId) {
+      this.organizationError = 'Debes seleccionar un país.';
+      return;
+    }
+
+    const peticion$ = editando
+      ? this.adminService.editarOrganizacion(this.editingOrganization.id, nombre)
+      : this.adminService.crearOrganizacion({
+          nombre,
+          pais_id: Number(this.editingOrganization.countryId)
+        });
+
+    peticion$.subscribe({
+      next: (organizacion) => {
+        const idx = this.organizations.findIndex(x => x.id === organizacion.id);
+        // La respuesta de crear/editar no trae el conteo: se conserva el que ya tenía la fila
+        const vm = { ...this.aOrganizacionVM(organizacion), mismoNombre: idx !== -1 ? this.organizations[idx].mismoNombre : 0 };
+        if (idx !== -1) {
+          this.organizations[idx] = vm;
+        } else {
+          this.organizations.unshift(vm);
+        }
+        this.showToast(editando ? 'Organización actualizada' : 'Organización creada', 'success');
+        this.closeOrganizationModal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.organizationError = this.mensajeError(err, 'No se pudo guardar la organización.');
+      }
+    });
+  }
+
+  toggleOrganizationStatus(o: OrganizationViewModel) {
+    const accion$ = o.active
+      ? this.adminService.desactivarOrganizacion(o.id)
+      : this.adminService.reactivarOrganizacion(o.id);
+
+    accion$.subscribe({
+      next: (organizacion) => {
+        o.active = organizacion.activo;
+        this.showToast(`Organización ${organizacion.activo ? 'activada' : 'desactivada'}`, 'success');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado de la organización.'), 'error');
       }
     });
   }

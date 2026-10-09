@@ -25,9 +25,10 @@ export interface Institucion extends ItemCatalogo {
     pais_id: number;
 }
 
-/** GET /organizaciones?pais_id= */
+/** GET /organizaciones?pais_id= y GET /candidatos/me/organizaciones (este último trae personalizado) */
 export interface Organizacion extends ItemCatalogo {
     pais_id: number;
+    personalizado?: boolean;
 }
 
 /** GET /carreras?tipo_estudio_id= (carreras globales, iguales en todos los países) */

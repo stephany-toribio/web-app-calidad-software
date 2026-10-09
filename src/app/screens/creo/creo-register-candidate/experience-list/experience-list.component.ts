@@ -35,11 +35,11 @@ export class ExperienceListComponent implements OnInit {
   private candidatos = inject(CandidatosService);
 
   /**
-   * De dónde salen las sugerencias de puesto:
-   * 'catalogo' (registro, aún sin cuenta) = GET /puestos;
-   * 'candidato' (perfil) = GET /candidatos/me/puestos, que suma sus puestos personalizados.
+   * De dónde salen las sugerencias de puesto y organización:
+   * 'catalogo' (registro, aún sin cuenta) = GET /puestos y GET /organizaciones;
+   * 'candidato' (perfil) = GET /candidatos/me/puestos y /me/organizaciones, que suman sus valores personalizados.
    */
-  @Input() fuentePuestos: 'catalogo' | 'candidato' = 'catalogo';
+  @Input() fuenteCatalogos: 'catalogo' | 'candidato' = 'catalogo';
   @Input() experiences: ExperienceEntry[] = [];
   @Input() maxExperiences: number = 5;
   @Output() experiencesChange = new EventEmitter<ExperienceEntry[]>();
@@ -72,9 +72,11 @@ export class ExperienceListComponent implements OnInit {
       this.catalogoPaises = lista;
       this.paises = lista.map(p => p.nombre);
     });
-    const puestos$ = this.fuentePuestos === 'candidato' ? this.candidatos.misPuestos() : this.catalogos.puestos();
+    const delCandidato = this.fuenteCatalogos === 'candidato';
+    const puestos$ = delCandidato ? this.candidatos.misPuestos() : this.catalogos.puestos();
+    const organizaciones$ = delCandidato ? this.candidatos.misOrganizaciones() : this.catalogos.organizaciones();
     puestos$.subscribe(lista => this.catalogoPuestos = lista);
-    this.catalogos.organizaciones().subscribe(lista => this.catalogoOrganizaciones = lista);
+    organizaciones$.subscribe(lista => this.catalogoOrganizaciones = lista);
   }
 
   private get paisId(): number | null {
@@ -118,6 +120,11 @@ export class ExperienceListComponent implements OnInit {
   /** Puesto escrito antes por el mismo candidato (se marca como "Tuyo" en las sugerencias) */
   esPuestoPropio(nombre: string): boolean {
     return this.catalogoPuestos.some(p => p.nombre === nombre && p.personalizado);
+  }
+
+  /** Organización escrita antes por el mismo candidato en el país elegido (se marca como "Tuya") */
+  esOrganizacionPropia(nombre: string): boolean {
+    return this.organizacionesDelPais.some(o => o.nombre === nombre && o.personalizado);
   }
 
   onPuestoChange(val: string) {

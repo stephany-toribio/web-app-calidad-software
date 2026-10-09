@@ -76,7 +76,13 @@
                   <p *ngIf="exp.puestoActivo === false" class="text-xs font-medium mt-1" style="color: #B45309;">
                     Este puesto fue deshabilitado por el administrador. Se conserva en tu perfil, pero no podrás volver a elegirlo.
                   </p>
-                  <p class="text-[15px] font-medium mt-0.5" style="color: #475569;">{{ exp.empresa }}</p>
+                  <p class="text-[15px] font-medium mt-0.5 flex flex-wrap items-center gap-2" style="color: #475569;">
+                    {{ exp.empresa }}
+                    <span *ngIf="exp.organizacionPersonalizada" class="px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #F1F5F9; color: #475569;">Personalizada</span>
+                  </p>
+                  <p *ngIf="exp.organizacionActiva === false" class="text-xs font-medium mt-1" style="color: #B45309;">
+                    Esta organización fue deshabilitada por el administrador. Se conserva en tu perfil, pero no podrás volver a elegirla.
+                  </p>
                   <p class="text-xs font-medium mt-1" style="color: #94A3B8;">{{ exp.fechaInicioMes | slice:0:3 }} {{ exp.fechaInicioAno }} — {{ exp.alPresente ? 'Presente' : ((exp.fechaFinMes | slice:0:3) + ' ' + exp.fechaFinAno) }}</p>
                   <p class="text-sm mt-3 leading-relaxed" style="color: #475569;">{{ exp.descripcion }}</p>
                 </div>
@@ -315,7 +321,7 @@
         <button (click)="closeExpModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
       <div class="flex-1 overflow-y-auto p-0" style="scrollbar-width: thin;">
-        <app-experience-list [(experiences)]="candidate.experience" fuentePuestos="candidato"></app-experience-list>
+        <app-experience-list [(experiences)]="candidate.experience" fuenteCatalogos="candidato"></app-experience-list>
       </div>
       <div class="flex justify-between items-center gap-4 px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">
         <p class="text-xs text-red-500">{{ errores['experiencia'] || errores['api'] }}</p>

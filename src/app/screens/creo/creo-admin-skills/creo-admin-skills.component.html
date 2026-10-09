@@ -72,6 +72,13 @@
                 [style.border]="activeTab === 'puestos' ? '1px solid #E2E8F0' : '1px solid transparent'">
           Puestos
         </button>
+        <button (click)="activeTab = 'organizaciones'"
+                class="px-4 py-2.5 text-sm font-medium rounded-xl text-left transition-colors"
+                [style.background-color]="activeTab === 'organizaciones' ? '#FFFFFF' : 'transparent'"
+                [style.color]="activeTab === 'organizaciones' ? '#111111' : '#64748B'"
+                [style.border]="activeTab === 'organizaciones' ? '1px solid #E2E8F0' : '1px solid transparent'">
+          Organizaciones
+        </button>
       </nav>
     </aside>
 
@@ -346,6 +353,85 @@
         </div>
       </div>
 
+      <!-- ORGANIZACIONES -->
+      <div *ngIf="activeTab === 'organizaciones'">
+        <div class="flex items-start justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-xl font-bold" style="color: #111111;">Organizaciones</h2>
+            <p class="text-sm text-slate-500 mt-1">Lugares de trabajo de la experiencia laboral. Las del catálogo las crea el administrador. Las que escriben los candidatos son personalizadas: solo se pueden activar o desactivar.</p>
+          </div>
+          <button (click)="openOrganizationModal()" class="px-4 py-2 rounded-xl text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90 transition-opacity shrink-0">Nueva organización</button>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-4 mb-6">
+          <div class="relative flex-1 max-w-md">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <input type="search" [(ngModel)]="organizationQuery" placeholder="Buscar organización..." class="w-full h-10 pl-10 pr-4 rounded-xl border text-sm outline-none transition-all" style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111;" />
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4 lg:ml-auto">
+            <div class="relative">
+              <select [(ngModel)]="organizationCountryFilter" class="h-10 pl-4 pr-10 rounded-xl border text-sm outline-none appearance-none" style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111; min-width: 160px;">
+                <option [ngValue]="null">Todos los países</option>
+                <option *ngFor="let c of countries" [ngValue]="c.id">{{ c.name }}</option>
+              </select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><polyline points="6 9 12 15 18 9" /></svg>
+            </div>
+            <div class="relative">
+              <select [(ngModel)]="organizationTypeFilter" class="h-10 pl-4 pr-10 rounded-xl border text-sm outline-none appearance-none" style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111; min-width: 160px;">
+                <option value="all">Todos los tipos</option>
+                <option value="global">Catálogo</option>
+                <option value="personalizado">Personalizadas</option>
+              </select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><polyline points="6 9 12 15 18 9" /></svg>
+            </div>
+            <div class="flex bg-white border rounded-lg p-1" style="border-color: #E2E8F0;">
+              <button (click)="organizationStatusFilter = 'all'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="organizationStatusFilter === 'all' ? '#111111' : 'transparent'" [style.color]="organizationStatusFilter === 'all' ? '#FFFFFF' : '#64748B'">Todas</button>
+              <button (click)="organizationStatusFilter = 'active'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="organizationStatusFilter === 'active' ? '#111111' : 'transparent'" [style.color]="organizationStatusFilter === 'active' ? '#FFFFFF' : '#64748B'">Activas</button>
+              <button (click)="organizationStatusFilter = 'inactive'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="organizationStatusFilter === 'inactive' ? '#111111' : 'transparent'" [style.color]="organizationStatusFilter === 'inactive' ? '#FFFFFF' : '#64748B'">Inactivas</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border rounded-2xl overflow-hidden mb-6" style="border-color: #E2E8F0;">
+          <table class="w-full text-left border-collapse min-w-[600px]">
+            <thead class="bg-slate-50 border-b" style="border-color: #E2E8F0;">
+              <tr>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Organización</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">País</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Escrita por</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
+                <th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngIf="!loadingOrganizations && !filteredOrganizations.length">
+                <td colspan="5" class="px-5 py-8 text-center text-sm text-slate-500">No hay organizaciones que coincidan con los filtros.</td>
+              </tr>
+              <tr *ngFor="let o of filteredOrganizations; trackBy: trackById" class="hover:bg-slate-50 transition-colors">
+                <td class="px-5 py-4 text-sm font-medium" style="color: #111111;">
+                  {{ o.name }}
+                  <span *ngIf="o.personalizado" class="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #FEF3C7; color: #B45309;">Personalizada</span>
+                  <span *ngIf="o.personalizado && o.mismoNombre > 1" class="ml-1 px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #E0F2FE; color: #0369A1;">La escribieron {{ o.mismoNombre }} candidatos</span>
+                </td>
+                <td class="px-5 py-4 text-sm" style="color: #64748B;">{{ o.country }}</td>
+                <td class="px-5 py-4 text-sm" style="color: #64748B;">{{ o.creadoPor ?? 'Catálogo' }}</td>
+                <td class="px-5 py-4">
+                  <span class="px-2.5 py-1 text-[11px] font-bold rounded-full" [style.background-color]="o.active ? '#DCFCE7' : '#FEE2E2'" [style.color]="o.active ? '#15803D' : '#B91C1C'">
+                    {{ o.active ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button *ngIf="!o.personalizado" (click)="openOrganizationModal(o)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-[#0A66C2] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button (click)="toggleOrganizationStatus(o)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors" [ngClass]="o.active ? 'text-red-500 hover:text-red-600' : 'text-green-600 hover:text-green-700'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path *ngIf="o.active" d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line *ngIf="o.active" x1="12" y1="2" x2="12" y2="12"/><path *ngIf="!o.active" d="M12 2v10"/><path *ngIf="!o.active" d="M18.36 6.64A9 9 0 0 1 21 13a9 9 0 1 1-18 0c0-2.5 1-4.75 2.64-6.36"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -524,6 +610,36 @@
       </div>
       <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
         <button (click)="savePosition()" class="px-6 py-2 rounded-full text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Organization Modal (solo organizaciones del catálogo) -->
+  <div *ngIf="showOrganizationModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="background-color: rgba(17, 17, 17, 0.6);">
+    <div class="absolute inset-0" (click)="closeOrganizationModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-[500px] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up">
+      <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: #E2E8F0;">
+        <h2 class="text-xl font-bold text-[#111111]">{{ editingOrganization.id ? 'Editar Organización' : 'Nueva Organización' }}</h2>
+        <button (click)="closeOrganizationModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="p-6 flex flex-col gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1.5 text-[#111111]">Nombre de la Organización <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="editingOrganization.name" maxlength="200" class="w-full h-11 px-3 rounded-lg border text-sm outline-none focus:ring-1 border-slate-300 focus:ring-[#111111] text-[#111111]" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5 text-[#111111]">País <span class="text-red-500">*</span></label>
+          <select [(ngModel)]="editingOrganization.countryId" [disabled]="editingOrganization.id !== 0" class="w-full h-11 px-3 rounded-lg border text-sm outline-none appearance-none focus:ring-1 border-slate-300 focus:ring-[#111111] text-[#111111] disabled:bg-slate-100 disabled:text-slate-500">
+            <option [ngValue]="null" disabled>Selecciona un país...</option>
+            <option *ngFor="let c of (editingOrganization.id !== 0 ? countries : activeCountries)" [ngValue]="c.id">{{ c.name }}</option>
+          </select>
+          <p *ngIf="editingOrganization.id !== 0" class="mt-1.5 text-xs text-slate-500">El país de una organización no se puede cambiar.</p>
+        </div>
+        <p class="text-xs text-slate-500">Se agrega al catálogo que ven todos los candidatos de ese país.</p>
+        <p *ngIf="organizationError" class="text-sm text-red-600">{{ organizationError }}</p>
+      </div>
+      <div class="flex justify-end items-center px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #F8FAFC;">
+        <button (click)="saveOrganization()" class="px-6 py-2 rounded-full text-sm font-bold bg-[#F2B705] text-[#111111] hover:opacity-90">Guardar</button>
       </div>
     </div>
   </div>
