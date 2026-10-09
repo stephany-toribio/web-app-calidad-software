@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse } from './models/api-response.model';
 import { CandidatoRegistrado, RegistroCandidatoPayload } from './models/registro-candidato.model';
 import { CandidatoPerfil } from './models/candidato-perfil.model';
-import { Organizacion, PuestoSeleccionable } from './models/catalogos.model';
+import { NivelPuestoSeleccionable, Organizacion, PuestoSeleccionable } from './models/catalogos.model';
 
 @Injectable({ providedIn: 'root' })
 export class CandidatosService {
@@ -39,6 +39,13 @@ export class CandidatosService {
     misPuestos(): Observable<PuestoSeleccionable[]> {
         return this.http
             .get<ApiResponse<PuestoSeleccionable[]>>(`${this.url}/me/puestos`)
+            .pipe(map(respuesta => respuesta.data));
+    }
+
+    /** Niveles que puede elegir el candidato autenticado: globales (en su orden) + sus personalizados habilitados */
+    misNivelesPuesto(): Observable<NivelPuestoSeleccionable[]> {
+        return this.http
+            .get<ApiResponse<NivelPuestoSeleccionable[]>>(`${this.url}/me/niveles-puesto`)
             .pipe(map(respuesta => respuesta.data));
     }
 

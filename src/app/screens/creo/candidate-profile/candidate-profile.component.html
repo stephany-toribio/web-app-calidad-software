@@ -83,6 +83,13 @@
                   <p *ngIf="exp.organizacionActiva === false" class="text-xs font-medium mt-1" style="color: #B45309;">
                     Esta organización fue deshabilitada por el administrador. Se conserva en tu perfil, pero no podrás volver a elegirla.
                   </p>
+                  <p *ngIf="exp.nivel" class="text-sm mt-1 flex flex-wrap items-center gap-2" style="color: #475569;">
+                    Nivel: {{ exp.nivel }}
+                    <span *ngIf="exp.nivelPersonalizado" class="px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #F1F5F9; color: #475569;">Personalizado</span>
+                  </p>
+                  <p *ngIf="exp.nivelActivo === false" class="text-xs font-medium mt-1" style="color: #B45309;">
+                    Este nivel fue deshabilitado por el administrador. Se conserva en tu perfil, pero no podrás volver a elegirlo.
+                  </p>
                   <p class="text-xs font-medium mt-1" style="color: #94A3B8;">{{ exp.fechaInicioMes | slice:0:3 }} {{ exp.fechaInicioAno }} — {{ exp.alPresente ? 'Presente' : ((exp.fechaFinMes | slice:0:3) + ' ' + exp.fechaFinAno) }}</p>
                   <p class="text-sm mt-3 leading-relaxed" style="color: #475569;">{{ exp.descripcion }}</p>
                 </div>

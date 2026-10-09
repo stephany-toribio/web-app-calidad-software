@@ -3,9 +3,6 @@
 export type Genero = 'masculino' | 'femenino' | 'otro' | 'prefiero no decir';
 export type EstadoEstudio = 'finalizado' | 'en_curso' | 'incompleto';
 export type NivelIdioma = 'basico' | 'intermedio' | 'avanzado' | 'nativo';
-export type NivelExperiencia =
-    | 'practicante_pre' | 'practicante_pro' | 'trainee' | 'junior'
-    | 'semi_senior' | 'senior' | 'jefe_supervisor' | 'gerente_director';
 
 export interface EstudioPayload {
     tipo_estudio_id: number;
@@ -25,14 +22,15 @@ export interface IdiomaPayload {
     nivel_oral: NivelIdioma;
 }
 
-/** Puesto y organización: el id si existe en el catálogo, o el nombre si es una propuesta nueva */
+/** Puesto, organización y nivel: el id si existe en el catálogo, o el nombre si el candidato lo escribió */
 export interface ExperienciaPayload {
     puesto_id?: number;
     puesto_nombre?: string;
     organizacion_id?: number;
     organizacion_nombre?: string;
+    nivel_puesto_id?: number;
+    nivel_puesto_nombre?: string;
     pais_id: number;
-    nivel: NivelExperiencia;
     fecha_inicio: string;
     fecha_fin: string | null;
     descripcion: string | null;

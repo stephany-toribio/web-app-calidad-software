@@ -133,6 +133,29 @@ export interface CrearOrganizacionPayload {
   pais_id: number;
 }
 
+/**
+ * Igual que PuestoAdmin, más el orden jerárquico de los globales (los personalizados no tienen orden).
+ */
+export interface NivelPuestoAdmin {
+  id: number;
+  nombre: string;
+  orden: number | null;
+  personalizado: boolean;
+  creado_por: { candidato_id: number; nombre: string; apellidos: string } | null;
+  /** Solo viene en el listado: cuántos candidatos escribieron ese mismo nombre */
+  candidatos_con_mismo_nombre?: number;
+  estado: 'activo' | 'inactivo';
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** orden opcional al crear: si no se envía, el nivel va al final de la jerarquía */
+export interface NivelPuestoPayload {
+  nombre?: string;
+  orden?: number;
+}
+
 export interface CrearInstitucionPayload {
   nombre: string;
   pais_id: number;

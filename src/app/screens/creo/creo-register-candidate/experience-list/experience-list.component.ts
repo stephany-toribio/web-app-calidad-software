@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CatalogosService } from '../../../../core/api/catalogos.service';
 import { CandidatosService } from '../../../../core/api/candidatos.service';
-import { ItemCatalogo, Organizacion, PuestoSeleccionable } from '../../../../core/api/models/catalogos.model';
+import { ItemCatalogo, NivelPuestoSeleccionable, Organizacion, PuestoSeleccionable } from '../../../../core/api/models/catalogos.model';
 import { aId } from '../../../../core/api/mappers/registro-candidato.mapper';
 
 const MAX_DESCRIPCION_CARACTERES = 300;
@@ -19,9 +19,10 @@ export interface ExperienceEntry {
   fechaFinAno: string;
   alPresente: boolean;
   descripcion: string;
-  // id del catálogo si se eligió de la lista; null si se escribió uno nuevo (se envía como propuesta)
+  // id del catálogo si se eligió de la lista; null si se escribió uno nuevo (se envía como valor personalizado)
   puestoId?: number | null;
   organizacionId?: number | null;
+  nivelId?: number | null;
 }
 
 @Component({
@@ -49,18 +50,19 @@ export class ExperienceListComponent implements OnInit {
   errors: Record<string, boolean> = {};
 
   paises: string[] = [];                         // nombres de GET /paises (los usa el HTML)
-  niveles = ['Trainee', 'Junior', 'Semi Senior', 'Senior', 'Jefe / Supervisor', 'Gerente / Director'];
   meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   anos = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   private catalogoPaises: ItemCatalogo[] = [];
   private catalogoPuestos: PuestoSeleccionable[] = [];
   private catalogoOrganizaciones: Organizacion[] = [];
+  private catalogoNiveles: NivelPuestoSeleccionable[] = [];   // ya viene en orden jerárquico
 
   currentExp: ExperienceEntry = this.getEmptyExp();
 
   showEmpresas = false;
   showPuestos = false;
+  showNiveles = false;
 
   ngOnInit() {
     this.recargarCatalogos();
@@ -75,8 +77,39 @@ export class ExperienceListComponent implements OnInit {
     const delCandidato = this.fuenteCatalogos === 'candidato';
     const puestos$ = delCandidato ? this.candidatos.misPuestos() : this.catalogos.puestos();
     const organizaciones$ = delCandidato ? this.candidatos.misOrganizaciones() : this.catalogos.organizaciones();
+    const niveles$ = delCandidato ? this.candidatos.misNivelesPuesto() : this.catalogos.nivelesPuesto();
     puestos$.subscribe(lista => this.catalogoPuestos = lista);
     organizaciones$.subscribe(lista => this.catalogoOrganizaciones = lista);
+    niveles$.subscribe(lista => this.catalogoNiveles = lista);
+  }
+
+  /** Respeta el orden jerárquico del backend (no se ordena alfabéticamente) */
+  get filteredNiveles(): string[] {
+    const val = (this.currentExp.nivel || '').toLowerCase();
+    return this.catalogoNiveles.map(n => n.nombre).filter(n => n.toLowerCase().includes(val));
+  }
+
+  /** Nivel escrito antes por el mismo candidato (se marca como "Tuyo") */
+  esNivelPropio(nombre: string): boolean {
+    return this.catalogoNiveles.some(n => n.nombre === nombre && n.personalizado);
+  }
+
+  onNivelChange(val: string) {
+    this.currentExp.nivel = val;
+    this.currentExp.nivelId = null;              // escrito a mano: se enviará como valor personalizado
+    this.showNiveles = true;
+  }
+
+  selectNivel(nivel: string) {
+    this.currentExp.nivel = nivel;
+    this.currentExp.nivelId = aId(this.catalogoNiveles, nivel);
+    this.showNiveles = false;
+  }
+
+  onNivelBlur() {
+    setTimeout(() => {
+      this.showNiveles = false;
+    }, 200);
   }
 
   private get paisId(): number | null {
@@ -149,7 +182,7 @@ export class ExperienceListComponent implements OnInit {
     return {
       puesto: '', empresa: '', nivel: '', pais: '',
       fechaInicioMes: '', fechaInicioAno: '', fechaFinMes: '', fechaFinAno: '',
-      alPresente: false, descripcion: '', puestoId: null, organizacionId: null
+      alPresente: false, descripcion: '', puestoId: null, organizacionId: null, nivelId: null
     };
   }
 
@@ -203,7 +236,7 @@ export class ExperienceListComponent implements OnInit {
     const e: Record<string, boolean> = {};
     if (!this.currentExp.puesto.trim()) e['puesto'] = true;
     if (!this.currentExp.empresa.trim()) e['empresa'] = true;
-    if (!this.currentExp.nivel) e['nivel'] = true;
+    if (!this.currentExp.nivel.trim()) e['nivel'] = true;
     if (!this.currentExp.pais) e['pais'] = true;
     if (!this.currentExp.fechaInicioMes || !this.currentExp.fechaInicioAno) e['fechaInicio'] = true;
 

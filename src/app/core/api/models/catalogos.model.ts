@@ -10,6 +10,13 @@ export interface PuestoSeleccionable extends ItemCatalogo {
     personalizado?: boolean;
 }
 
+/**
+ * GET /niveles-puesto (globales, en orden jerárquico) y GET /candidatos/me/niveles-puesto (+ los suyos, con personalizado)
+ */
+export interface NivelPuestoSeleccionable extends ItemCatalogo {
+    personalizado?: boolean;
+}
+
 /** GET /tipos-estudio — requiere_carrera: true => el estudio lleva institución y carrera */
 export interface TipoEstudio extends ItemCatalogo {
     requiere_carrera: boolean;

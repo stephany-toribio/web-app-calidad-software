@@ -4,7 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
 import { AdminService } from '../../../core/api/admin.service';
-import { AreaEstudio, Habilidad, PaisAdmin, InstitucionAdmin, PuestoAdmin, OrganizacionAdmin } from '../../../core/api/models/admin.model';
+import {
+  AreaEstudio, Habilidad, PaisAdmin, InstitucionAdmin, PuestoAdmin, OrganizacionAdmin, NivelPuestoAdmin, NivelPuestoPayload
+} from '../../../core/api/models/admin.model';
 import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
 
 export type SkillStatus = 'active' | 'inactive';
@@ -52,6 +54,20 @@ export interface PositionViewModel {
   mismoNombre: number;
 }
 
+export interface LevelViewModel {
+  id: number;
+  name: string;
+  /** Posición en la jerarquía de los globales; null en los personalizados */
+  orden: number | null;
+  active: boolean;
+  /** Escrito por un candidato: es solo suyo, no se edita ni pasa al catálogo global */
+  personalizado: boolean;
+  /** "Nombre Apellidos" del candidato que lo escribió; null en los del catálogo */
+  creadoPor: string | null;
+  /** Cuántos candidatos escribieron ese mismo nombre como personalizado */
+  mismoNombre: number;
+}
+
 export interface OrganizationViewModel {
   id: number;
   name: string;
@@ -85,7 +101,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   query = '';
   categoryFilter = 'Todas';
   statusFilter: 'all' | SkillStatus = 'all';
-  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'puestos' | 'organizaciones' = 'estudios';
+  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'puestos' | 'niveles' | 'organizaciones' = 'estudios';
 
   loadingHabilidades = false;
   loadingAreas = false;
@@ -93,6 +109,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   loadingInstitutions = false;
   loadingPositions = false;
   loadingOrganizations = false;
+  loadingLevels = false;
 
   skills: SkillItemViewModel[] = [];
   studyAreas: StudyAreaViewModel[] = [];
@@ -101,6 +118,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   institutions: InstitutionViewModel[] = [];
   positions: PositionViewModel[] = [];
   organizations: OrganizationViewModel[] = [];
+  levels: LevelViewModel[] = [];
 
   /** Países activos: únicos que se pueden elegir al crear una institución */
   get activeCountries() {
@@ -160,6 +178,15 @@ export class CreoAdminSkillsComponent implements OnInit {
   editingPosition: { id: number; name: string } = { id: 0, name: '' };
   positionError = '';
 
+  // Niveles del puesto: mismos filtros que puestos; la tabla respeta el orden jerárquico del backend
+  levelQuery = '';
+  levelTypeFilter: 'all' | 'global' | 'personalizado' = 'all';
+  levelStatusFilter: 'all' | SkillStatus = 'all';
+
+  showLevelModal = false;
+  editingLevel: { id: number; name: string; orden: number | null } = { id: 0, name: '', orden: null };
+  levelError = '';
+
   // Organizaciones: mismos filtros que puestos + país
   organizationQuery = '';
   organizationCountryFilter: number | null = null;
@@ -177,6 +204,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.cargarInstituciones();
     this.cargarPuestos();
     this.cargarOrganizaciones();
+    this.cargarNiveles();
   }
 
   /** Primer mensaje de error de la API (422 con detalle, 409 de negocio, sin conexión...) */
@@ -847,6 +875,114 @@ export class CreoAdminSkillsComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado del puesto.'), 'error');
+      }
+    });
+  }
+
+  // --- Niveles del puesto: igual que puestos, más el orden jerárquico de los globales ---
+
+  private aNivelVM(n: NivelPuestoAdmin): LevelViewModel {
+    return {
+      id: n.id,
+      name: n.nombre,
+      orden: n.orden,
+      active: n.activo,
+      personalizado: n.personalizado,
+      creadoPor: n.creado_por ? `${n.creado_por.nombre} ${n.creado_por.apellidos}` : null,
+      mismoNombre: n.candidatos_con_mismo_nombre ?? 0
+    };
+  }
+
+  cargarNiveles() {
+    this.loadingLevels = true;
+    this.adminService.listarNivelesPuesto().subscribe({
+      next: (niveles) => {
+        this.loadingLevels = false;
+        this.levels = niveles.map(n => this.aNivelVM(n));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingLevels = false;
+        this.showToast(this.mensajeError(err, 'No se pudieron cargar los niveles del puesto.'), 'error');
+      }
+    });
+  }
+
+  get filteredLevels() {
+    const q = this.levelQuery.trim().toLowerCase();
+    return this.levels.filter(n => {
+      const matchQ = n.name.toLowerCase().includes(q);
+      const matchTipo = this.levelTypeFilter === 'all'
+        || (this.levelTypeFilter === 'personalizado') === n.personalizado;
+      const matchEstado = this.levelStatusFilter === 'all'
+        || (this.levelStatusFilter === 'active') === n.active;
+      return matchQ && matchTipo && matchEstado;
+    });
+  }
+
+  openLevelModal(n?: LevelViewModel) {
+    if (n?.personalizado) {
+      return; // el texto es del candidato: no se edita
+    }
+    this.editingLevel = n ? { id: n.id, name: n.name, orden: n.orden } : { id: 0, name: '', orden: null };
+    this.levelError = '';
+    this.showLevelModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeLevelModal() {
+    this.showLevelModal = false;
+    document.body.style.overflow = 'auto';
+  }
+
+  saveLevel() {
+    this.levelError = '';
+    const nombre = this.editingLevel.name.trim();
+    const orden = this.editingLevel.orden;
+    const editando = this.editingLevel.id !== 0;
+
+    if (!nombre) {
+      this.levelError = 'El nombre del nivel es requerido.';
+      return;
+    }
+    if (nombre.length > 100) {
+      this.levelError = 'El nombre del nivel no puede superar los 100 caracteres.';
+      return;
+    }
+    // Al crear el orden es opcional (va al final); al editar un global siempre tiene uno
+    if ((orden !== null || editando) && (!Number.isInteger(orden) || orden! < 1 || orden! > 999)) {
+      this.levelError = 'El orden debe ser un número entero entre 1 y 999.';
+      return;
+    }
+
+    const payload: NivelPuestoPayload = { nombre, ...(orden !== null ? { orden } : {}) };
+    const peticion$ = editando
+      ? this.adminService.editarNivelPuesto(this.editingLevel.id, payload)
+      : this.adminService.crearNivelPuesto(payload);
+
+    peticion$.subscribe({
+      next: () => {
+        this.showToast(editando ? 'Nivel actualizado' : 'Nivel creado', 'success');
+        this.closeLevelModal();
+        this.cargarNiveles();                     // cambiar el orden puede mover filas: se vuelve a pedir la lista
+      },
+      error: (err: HttpErrorResponse) => {
+        this.levelError = this.mensajeError(err, 'No se pudo guardar el nivel.');
+      }
+    });
+  }
+
+  toggleLevelStatus(n: LevelViewModel) {
+    const accion$ = n.active
+      ? this.adminService.desactivarNivelPuesto(n.id)
+      : this.adminService.reactivarNivelPuesto(n.id);
+
+    accion$.subscribe({
+      next: (nivel) => {
+        n.active = nivel.activo;
+        this.showToast(`Nivel ${nivel.activo ? 'activado' : 'desactivado'}`, 'success');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado del nivel.'), 'error');
       }
     });
   }

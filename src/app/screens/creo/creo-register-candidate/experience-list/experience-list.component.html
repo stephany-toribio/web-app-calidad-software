@@ -105,15 +105,22 @@
           </ul>
         </div>
 
-        <!-- Nivel -->
-        <div class="sm:col-span-1">
+        <!-- Nivel: igual que el puesto, se elige del catálogo o se escribe uno nuevo -->
+        <div class="sm:col-span-1 relative">
           <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Nivel del puesto <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
-          <select [(ngModel)]="currentExp.nivel" [style.color]="currentExp.nivel ? '#111111' : '#94A3B8'"
-              class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
-                  [ngStyle]="{'border-color': errors['nivel'] ? '#E5140D' : '#E2E8F0'}">
-            <option value="" class="text-[#111111]">Elige una opción</option>
-            <option *ngFor="let n of niveles" [value]="n" class="text-[#111111]">{{ n }}</option>
-          </select>
+          <input type="text" [ngModel]="currentExp.nivel" (ngModelChange)="onNivelChange($event)"
+                 (focus)="showNiveles = true" (blur)="onNivelBlur()"
+                 placeholder="Ej. Junior" maxlength="100"
+                 class="w-full px-3 h-11 rounded-xl border text-sm outline-none text-[#111111]"
+                 [ngStyle]="{'border-color': errors['nivel'] ? '#E5140D' : '#E2E8F0'}" />
+          <ul *ngIf="showNiveles && filteredNiveles.length > 0"
+              class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
+            <li *ngFor="let n of filteredNiveles" (mousedown)="selectNivel(n)"
+                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors flex items-center justify-between gap-2">
+              {{ n }}
+              <span *ngIf="esNivelPropio(n)" class="px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #F1F5F9; color: #475569;">Tuyo</span>
+            </li>
+          </ul>
         </div>
 
         <!-- País -->

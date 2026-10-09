@@ -9,13 +9,15 @@ import { EstudioFormulario, ExperienciaFormulario } from './registro-candidato.m
 
 // Campos que vienen de un catálogo que el admin puede desactivar
 const CAMPOS_CATALOGO_ESTUDIO = ['area_estudio_id', 'pais_id', 'institucion_id', 'carrera_id'];
-const CAMPOS_CATALOGO_EXPERIENCIA = ['puesto_id', 'puesto_nombre', 'organizacion_id', 'organizacion_nombre', 'pais_id'];
+const CAMPOS_CATALOGO_EXPERIENCIA = [
+    'puesto_id', 'puesto_nombre', 'organizacion_id', 'organizacion_nombre', 'nivel_puesto_id', 'nivel_puesto_nombre', 'pais_id',
+];
 
 export const AVISO_LISTA_ACTUALIZADA = ' Actualizamos la lista: vuelve a elegirlo.';
 
 // Solo los campos que se vacían: sirve tanto para los formularios del registro como para los del perfil
 type EstudioCorregible = Pick<EstudioFormulario, 'areaEstudio' | 'pais' | 'institucion' | 'institucionId' | 'titulo' | 'carreraId'>;
-type ExperienciaCorregible = Pick<ExperienciaFormulario, 'puesto' | 'puestoId' | 'empresa' | 'organizacionId' | 'pais'>;
+type ExperienciaCorregible = Pick<ExperienciaFormulario, 'puesto' | 'puestoId' | 'empresa' | 'organizacionId' | 'nivel' | 'nivelId' | 'pais'>;
 
 export interface CatalogosRechazados<E, X> {
     estudios: E[];
@@ -70,6 +72,7 @@ function vaciarCampoExperiencia<X extends ExperienciaCorregible>(original: X, at
     // Se borra también el nombre: si no, se reenviaría como valor escrito y volvería a ser rechazado
     if (atributo === 'puesto_id' || atributo === 'puesto_nombre') { experiencia.puesto = ''; experiencia.puestoId = null; }
     if (atributo === 'organizacion_id' || atributo === 'organizacion_nombre') { experiencia.empresa = ''; experiencia.organizacionId = null; }
+    if (atributo === 'nivel_puesto_id' || atributo === 'nivel_puesto_nombre') { experiencia.nivel = ''; experiencia.nivelId = null; }
     if (atributo === 'pais_id') experiencia.pais = '';
     return experiencia;
 }

@@ -71,7 +71,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
 
   // Catálogos que usa el mapper para convertir nombres en ids
   private catalogos: CatalogosRegistro = {
-    paises: [], tiposEstudio: [], areasEstudio: [], idiomas: [], puestos: [], habilidades: [],
+    paises: [], tiposEstudio: [], areasEstudio: [], idiomas: [], puestos: [], nivelesPuesto: [], habilidades: [],
   };
 
   // Habilidades seleccionables para las áreas de los estudios (GET /habilidades?areas[]=)
@@ -136,6 +136,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
       areasEstudio: this.catalogosService.areasEstudio(),
       idiomas: this.catalogosService.idiomas(),
       puestos: this.catalogosService.puestos(),
+      nivelesPuesto: this.catalogosService.nivelesPuesto(),
     }).subscribe({
       next: c => this.catalogos = { ...c, habilidades: this.catalogos.habilidades },
       error: (err: HttpErrorResponse) => this.errors = erroresDesdeApi(err),

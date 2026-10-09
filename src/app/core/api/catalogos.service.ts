@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from './models/api-response.model';
 import {
-    AreaEstudio, Carrera, Habilidad, Institucion, ItemCatalogo, Organizacion, TipoEstudio,
+    AreaEstudio, Carrera, Habilidad, Institucion, ItemCatalogo, NivelPuestoSeleccionable, Organizacion, TipoEstudio,
 } from './models/catalogos.model';
 
 @Injectable({ providedIn: 'root' })
@@ -19,6 +19,8 @@ export class CatalogosService {
     areasEstudio(): Observable<AreaEstudio[]> { return this.lista<AreaEstudio>('areas-estudio'); }
     idiomas(): Observable<ItemCatalogo[]> { return this.lista<ItemCatalogo>('idiomas'); }
     puestos(): Observable<ItemCatalogo[]> { return this.lista<ItemCatalogo>('puestos'); }
+    /** En orden jerárquico (Practicante → Gerente), tal como lo devuelve el backend */
+    nivelesPuesto(): Observable<NivelPuestoSeleccionable[]> { return this.lista<NivelPuestoSeleccionable>('niveles-puesto'); }
 
     // Catálogos que dependen de lo elegido en el formulario
     instituciones(paisId?: number): Observable<Institucion[]> {

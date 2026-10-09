@@ -1,5 +1,5 @@
 import { Habilidad, ItemCatalogo } from './catalogos.model';
-import { EstadoEstudio, Genero, NivelExperiencia, NivelIdioma } from './registro-candidato.model';
+import { EstadoEstudio, Genero, NivelIdioma } from './registro-candidato.model';
 
 // Respuesta de GET /candidatos/me 
 // personalizado: lo escribió el candidato. activo = false: el admin lo deshabilitó (lo conserva, pero no puede volver a elegirlo)
@@ -10,6 +10,12 @@ export interface PuestoPerfil extends ItemCatalogo {
 
 // Mismo criterio que el puesto
 export interface OrganizacionPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
+}
+
+// Mismo criterio que el puesto (antes el nivel era un código fijo como "junior")
+export interface NivelPuestoPerfil extends ItemCatalogo {
     personalizado: boolean;
     activo: boolean;
 }
@@ -39,7 +45,7 @@ export interface ExperienciaPerfil {
     puesto: PuestoPerfil;
     organizacion: OrganizacionPerfil;
     pais: ItemCatalogo;
-    nivel: NivelExperiencia;
+    nivel: NivelPuestoPerfil;
     fecha_inicio: string;
     fecha_fin: string | null;
     descripcion: string | null;

@@ -64,7 +64,7 @@ export class CandidateProfileComponent implements OnInit {
 
   // Catálogos para traducir nombres → IDs al guardar (los mismos que usa el registro)
   private catalogos: CatalogosRegistro = {
-    paises: [], tiposEstudio: [], areasEstudio: [], idiomas: [], puestos: [], habilidades: [],
+    paises: [], tiposEstudio: [], areasEstudio: [], idiomas: [], puestos: [], nivelesPuesto: [], habilidades: [],
   };
   // Habilidades que ya tiene el candidato: se suman al catálogo aunque el admin las haya desactivado
   private habilidadesActuales: Habilidad[] = [];
@@ -104,6 +104,7 @@ export class CandidateProfileComponent implements OnInit {
       areasEstudio: this.catalogosService.areasEstudio(),
       idiomas: this.catalogosService.idiomas(),
       puestos: this.candidatosService.misPuestos(),   // globales + sus personalizados: el mapper los convierte en id
+      nivelesPuesto: this.candidatosService.misNivelesPuesto(),
     });
   }
 

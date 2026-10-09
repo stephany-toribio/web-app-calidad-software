@@ -14,7 +14,9 @@ import {
   PuestoAdmin,
   CrearInstitucionPayload,
   OrganizacionAdmin,
-  CrearOrganizacionPayload
+  CrearOrganizacionPayload,
+  NivelPuestoAdmin,
+  NivelPuestoPayload
 } from './models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -82,7 +84,6 @@ export class AdminService {
       .pipe(map(res => res.data));
   }
 
-  // --- Habilidades (ADM-09 a ADM-13) ---
 
   /** ADM-09: Listar todas las habilidades (activas e inactivas) */
   listarHabilidades(): Observable<Habilidad[]> {
@@ -216,6 +217,42 @@ export class AdminService {
   reactivarPuesto(id: number): Observable<PuestoAdmin> {
     return this.http
       .patch<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Niveles del puesto ---
+
+  /** Globales en su orden jerárquico y después los personalizados */
+  listarNivelesPuesto(): Observable<NivelPuestoAdmin[]> {
+    return this.http
+      .get<ApiResponse<NivelPuestoAdmin[]>>(`${this.baseUrl}/niveles-puesto`)
+      .pipe(map(res => res.data));
+  }
+
+  /** Crea un nivel global. Sin orden, va al final de la jerarquía */
+  crearNivelPuesto(payload: NivelPuestoPayload): Observable<NivelPuestoAdmin> {
+    return this.http
+      .post<ApiResponse<NivelPuestoAdmin>>(`${this.baseUrl}/niveles-puesto`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  /** Nombre y/u orden, solo globales: un personalizado responde 409 */
+  editarNivelPuesto(id: number, payload: NivelPuestoPayload): Observable<NivelPuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<NivelPuestoAdmin>>(`${this.baseUrl}/niveles-puesto/${id}`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  desactivarNivelPuesto(id: number): Observable<NivelPuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<NivelPuestoAdmin>>(`${this.baseUrl}/niveles-puesto/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo lo habilita: un personalizado sigue siendo del candidato y no pasa al catálogo global */
+  reactivarNivelPuesto(id: number): Observable<NivelPuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<NivelPuestoAdmin>>(`${this.baseUrl}/niveles-puesto/${id}/reactivar`, {})
       .pipe(map(res => res.data));
   }
 

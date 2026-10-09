@@ -1,7 +1,7 @@
 import { AreaEstudio, Habilidad, ItemCatalogo, TipoEstudio } from '../models/catalogos.model';
 import {
     EstadoEstudio, EstudioPayload, ExperienciaPayload, Genero, IdiomaPayload,
-    NivelExperiencia, NivelIdioma, RegistroCandidatoPayload,
+    NivelIdioma, RegistroCandidatoPayload,
 } from '../models/registro-candidato.model';
 // Datos del formulario (misma forma que el componente y sus subcomponentes).
 export interface DatosPersonalesFormulario {
@@ -23,10 +23,11 @@ export interface IdiomaFormulario { idioma: string; nivelEscrito: string; nivelO
 
 export interface ExperienciaFormulario {
     puesto: string; empresa: string; pais: string; nivel: string; descripcion: string;
-    puestoId?: number | null; organizacionId?: number | null;
+    puestoId?: number | null; organizacionId?: number | null; nivelId?: number | null;
     // Solo lectura, vienen del perfil: escrito por el candidato / deshabilitado por el admin
     puestoPersonalizado?: boolean; puestoActivo?: boolean;
     organizacionPersonalizada?: boolean; organizacionActiva?: boolean;
+    nivelPersonalizado?: boolean; nivelActivo?: boolean;
     fechaInicioMes: string; fechaInicioAno: string;
     fechaFinMes: string; fechaFinAno: string; alPresente: boolean;
 }
@@ -38,6 +39,7 @@ export interface CatalogosRegistro {
     areasEstudio: AreaEstudio[];
     idiomas: ItemCatalogo[];
     puestos: ItemCatalogo[];
+    nivelesPuesto: ItemCatalogo[];
     habilidades: Habilidad[];
 }
 
@@ -53,11 +55,6 @@ export const ESTADOS: Record<string, EstadoEstudio> = {
 
 export const NIVELES_IDIOMA: Record<string, NivelIdioma> = {
     'Básico': 'basico', 'Intermedio': 'intermedio', 'Avanzado': 'avanzado', 'Nativo': 'nativo',
-};
-
-export const NIVELES_EXPERIENCIA: Record<string, NivelExperiencia> = {
-    'Trainee': 'trainee', 'Junior': 'junior', 'Semi Senior': 'semi_senior', 'Senior': 'senior',
-    'Jefe / Supervisor': 'jefe_supervisor', 'Gerente / Director': 'gerente_director',
 };
 
 const normalizar = (texto: string) => (texto ?? '').trim().toLowerCase();
@@ -179,13 +176,14 @@ function mapearIdioma(i: IdiomaFormulario, c: CatalogosRegistro): IdiomaPayload 
 
 function mapearExperiencia(e: ExperienciaFormulario, c: CatalogosRegistro): ExperienciaPayload {
     const puestoId = e.puestoId ?? aId(c.puestos, e.puesto);
+    const nivelId = e.nivelId ?? aId(c.nivelesPuesto, e.nivel);
 
     return {
-        // Del catálogo → id. Escrito a mano → nombre (el backend lo crea como propuesta pendiente)
+        // Del catálogo → id. Escrito a mano → nombre (el backend lo guarda como valor personalizado del candidato)
         ...(puestoId ? { puesto_id: puestoId } : { puesto_nombre: e.puesto.trim() }),
         ...(e.organizacionId ? { organizacion_id: e.organizacionId } : { organizacion_nombre: e.empresa.trim() }),
+        ...(nivelId ? { nivel_puesto_id: nivelId } : { nivel_puesto_nombre: e.nivel.trim() }),
         pais_id: aId(c.paises, e.pais) as number,
-        nivel: NIVELES_EXPERIENCIA[e.nivel],
         fecha_inicio: fechaMesAnio(e.fechaInicioMes, e.fechaInicioAno) as string,
         fecha_fin: e.alPresente ? null : fechaMesAnio(e.fechaFinMes, e.fechaFinAno),
         descripcion: e.descripcion?.trim() || null,

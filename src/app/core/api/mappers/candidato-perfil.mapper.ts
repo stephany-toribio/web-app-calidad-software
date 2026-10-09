@@ -2,7 +2,7 @@ import { CandidatoPerfil, EstudioPerfil, ExperienciaPerfil, IdiomaPerfil } from 
 import { RegistroCandidatoPayload } from '../models/registro-candidato.model';
 import {
     ESTADOS, EstudioFormulario, ExperienciaFormulario, IdiomaFormulario, MESES,
-    NIVELES_EXPERIENCIA, NIVELES_IDIOMA,
+    NIVELES_IDIOMA,
 } from './registro-candidato.mapper';
 
 // Traducción inversa a la del registro: respuesta de la API 
@@ -28,7 +28,6 @@ const invertir = <T extends string>(r: Record<string, T>) =>
 
 const ESTADO_TEXTO = invertir(ESTADOS);
 const NIVEL_IDIOMA_TEXTO = invertir(NIVELES_IDIOMA);
-const NIVEL_EXPERIENCIA_TEXTO = invertir(NIVELES_EXPERIENCIA);
 
 
 function mesAnio(fecha: string | null): { mes: string; anio: string } {
@@ -111,7 +110,10 @@ function experienciaDesdeApi(e: ExperienciaPerfil): ExperienciaFormulario {
         organizacionActiva: e.organizacion?.activo ?? true,
         organizacionId: e.organizacion?.id ?? null,
         pais: e.pais?.nombre ?? '',
-        nivel: NIVEL_EXPERIENCIA_TEXTO[e.nivel] ?? e.nivel,
+        nivel: e.nivel?.nombre ?? '',
+        nivelId: e.nivel?.id ?? null,
+        nivelPersonalizado: e.nivel?.personalizado ?? false,
+        nivelActivo: e.nivel?.activo ?? true,
         descripcion: e.descripcion ?? '',
         fechaInicioMes: inicio.mes, fechaInicioAno: inicio.anio,
         fechaFinMes: fin.mes, fechaFinAno: fin.anio,
