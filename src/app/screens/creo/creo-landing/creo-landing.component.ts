@@ -205,7 +205,7 @@ export class CreoLandingComponent {
 
         if (error.status === 429) {
           this.errors.set({
-            auth: 'Demasiados intentos. Inténtalo nuevamente más tarde.'
+            auth: 'Cuenta bloqueada temporalmente. Intente más tarde.'
           });
           return;
         }

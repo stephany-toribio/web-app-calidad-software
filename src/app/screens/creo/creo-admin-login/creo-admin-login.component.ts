@@ -128,7 +128,7 @@ export class CreoAdminLoginComponent {
 
         if (error.status === 429) {
           this.errors = {
-            auth: 'Demasiados intentos. Inténtalo nuevamente más tarde.'
+            auth: 'Cuenta bloqueada temporalmente. Intente más tarde.'
           };
           return;
         }
