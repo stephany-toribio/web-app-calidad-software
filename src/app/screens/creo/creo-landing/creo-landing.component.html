@@ -72,13 +72,8 @@
       </div>
 
       <!-- Session expired notification -->
-      <div
-        *ngIf="sessionMessage()"
-        class="fixed top-5 right-5 z-50 w-full max-w-sm"
-      >
-        <app-creo-alert
-          type="error"
-          [message]="sessionMessage()">
+      <div *ngIf="sessionMessage()" class="fixed top-5 right-5 z-50 w-full max-w-sm">
+        <app-creo-alert type="error" [message]="sessionMessage()">
         </app-creo-alert>
       </div>
 
@@ -99,11 +94,7 @@
         <app-creo-field label="Contraseña" type="password" [value]="password()" (valueChange)="setPassword($event)"
           placeholder="••••••••" [error]="errors()['password']" [required]="true"></app-creo-field>
 
-        <div class="flex items-center justify-between">
-          <label class="flex items-center gap-2 text-sm cursor-pointer select-none" style="color: #64748B">
-            <input type="checkbox" class="w-4 h-4 rounded border-slate-300" style="accent-color: #F2B705" />
-            Recordarme
-          </label>
+        <div class="flex items-center justify-end">
           <button type="button" (click)="doNavigate('forgot-password')" class="text-sm font-semibold hover:underline"
             style="color: #111111">
             Olvidé mi contraseña

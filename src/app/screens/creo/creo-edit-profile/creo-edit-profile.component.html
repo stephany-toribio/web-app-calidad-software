@@ -170,10 +170,10 @@
             <span class="text-sm font-semibold" style="color: #111111;">Educación y expectativa salarial</span>
           </div>
 
-          <app-study-list title="Carrera" [(studies)]="carreras" [maxStudies]="5"></app-study-list>
+          <app-study-list title="Carrera" [(studies)]="carreras"></app-study-list>
           <div *ngIf="errors['carreras']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['carreras'] }}</div>
           
-          <app-study-list title="Educación Superior" [(studies)]="educacionSuperior" [maxStudies]="5" [disabled]="carreras.length === 0"></app-study-list>
+          <app-study-list title="Educación Superior" [(studies)]="educacionSuperior" [disabled]="carreras.length === 0"></app-study-list>
           
           <app-language-list [(languages)]="idiomas" [maxLanguages]="10"></app-language-list>
           <div *ngIf="errors['idiomas']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['idiomas'] }}</div>

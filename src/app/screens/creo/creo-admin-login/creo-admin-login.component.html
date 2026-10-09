@@ -97,8 +97,7 @@
         <app-creo-field label="Correo electrónico" type="email" [value]="email" (valueChange)="onEmailChange($event)"
           placeholder="admin@creo.pe" [error]="errors['email']" [required]="true"></app-creo-field>
 
-        <app-creo-field label="Contraseña" type="password" [value]="password" (valueChange)="onPasswordChange($event)"
-          placeholder="••••••••" [error]="errors['password']" [required]="true"></app-creo-field>
+
 
         <app-creo-btn type="submit" [fullWidth]="true" [disabled]="isSubmitting">
           Acceder al panel

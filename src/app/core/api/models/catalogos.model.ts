@@ -25,11 +25,9 @@ export interface Organizacion extends ItemCatalogo {
     pais_id: number;
 }
 
-/** GET /carreras?tipo_estudio_id=&area_estudio_id=&pais_id= */
+/** GET /carreras?tipo_estudio_id= (carreras globales, iguales en todos los países) */
 export interface Carrera extends ItemCatalogo {
     tipo_estudio_id: number;
-    area_estudio_id: number;
-    pais_id: number;
 }
 
 /** GET /habilidades?areas[]= — las blandas no tienen área */

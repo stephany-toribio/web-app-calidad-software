@@ -20,6 +20,7 @@ import { AuthService } from '../../../core/api/auth.service';
 import { CAMPOS_PASO } from '../../../core/api/registro-candidato.pasos';
 import { RegistroCandidatoPayload } from '../../../core/api/models/registro-candidato.model';
 import { Habilidad } from '../../../core/api/models/catalogos.model';
+import { SkillSection } from '../../../data/creo-skills.data';
 import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
 import {
   aId, CatalogosRegistro, payloadCompleto, payloadDatosPersonales, payloadEstudiosIdiomas,
@@ -139,6 +140,20 @@ export class CreoRegisterCandidateComponent implements OnInit {
     return this.habilidadesDisponibles.filter(h => h.tipo_habilidad === 'tecnica').map(h => h.nombre);
   }
 
+  /** Técnicas agrupadas por área de estudio (se calcula al cargar, no en cada ciclo de detección de cambios) */
+  seccionesTecnicas: SkillSection[] = [];
+
+  private agruparPorArea(lista: Habilidad[]): SkillSection[] {
+    const grupos = new Map<string, string[]>();
+    for (const h of lista.filter(x => x.tipo_habilidad === 'tecnica')) {
+      const area = h.area_estudio?.nombre ?? 'Otras habilidades';
+      grupos.set(area, [...(grupos.get(area) ?? []), h.nombre]);
+    }
+    return [...grupos.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, 'es'))
+      .map(([label, skills]) => ({ label, skills }));
+  }
+
   get softCatalog(): string[] {
     return this.habilidadesDisponibles.filter(h => h.tipo_habilidad === 'blanda').map(h => h.nombre);
   }
@@ -160,6 +175,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
     this.catalogosService.habilidades(areaIds).subscribe({
       next: lista => {
         this.habilidadesDisponibles = lista;
+        this.seccionesTecnicas = this.agruparPorArea(lista);
         this.catalogos = { ...this.catalogos, habilidades: lista };
         const tecnicas = new Set(this.catalog);
         const blandas = new Set(this.softCatalog);

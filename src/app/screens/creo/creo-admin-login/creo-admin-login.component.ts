@@ -107,7 +107,7 @@ export class CreoAdminLoginComponent {
 
         if (error.status === 401) {
           this.errors = {
-            auth: 'Credenciales de administrador incorrectas.'
+            auth: 'Credenciales de administrador incorrectas.' + this.textoIntentosRestantes(error)
           };
           return;
         }
@@ -128,7 +128,7 @@ export class CreoAdminLoginComponent {
 
         if (error.status === 429) {
           this.errors = {
-            auth: 'Demasiados intentos. Inténtalo nuevamente más tarde.'
+            auth: 'Cuenta bloqueada temporalmente. Intente más tarde.'
           };
           return;
         }
@@ -145,6 +145,15 @@ export class CreoAdminLoginComponent {
         };
       }
     });
+  }
+
+  /** Texto con los intentos que quedan antes del bloqueo (el back lo envía en errors.intentos_restantes del 401) */
+  private textoIntentosRestantes(error: HttpErrorResponse): string {
+    const restantes = error.error?.errors?.intentos_restantes;
+    if (typeof restantes !== 'number') return '';
+    return restantes === 1
+      ? ' Te queda 1 intento antes de que se bloquee tu cuenta.'
+      : ` Te quedan ${restantes} intentos antes de que se bloquee tu cuenta.`;
   }
 
   onEmailChange(value: string): void {
