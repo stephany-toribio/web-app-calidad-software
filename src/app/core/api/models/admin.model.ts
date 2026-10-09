@@ -92,11 +92,18 @@ export interface InstitucionAdmin {
   updated_at?: string;
 }
 
+/**
+ * personalizado = false: catálogo global (lo crea el admin).
+ * personalizado = true: lo escribió un candidato; es solo suyo y el admin solo lo activa o desactiva.
+ */
 export interface PuestoAdmin {
   id: number;
   nombre: string;
+  personalizado: boolean;
+  creado_por: { candidato_id: number; nombre: string; apellidos: string } | null;
+  /** Solo viene en el listado: cuántos candidatos escribieron ese mismo nombre */
+  candidatos_con_mismo_nombre?: number;
   estado: 'activo' | 'inactivo';
-  estado_catalogo: 'aprobado' | 'pendiente' | 'rechazado';
   activo: boolean;
   created_at?: string;
   updated_at?: string;

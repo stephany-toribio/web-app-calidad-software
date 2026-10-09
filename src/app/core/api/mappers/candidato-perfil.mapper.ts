@@ -105,6 +105,8 @@ function experienciaDesdeApi(e: ExperienciaPerfil): ExperienciaFormulario {
         puesto: e.puesto?.nombre ?? '',
         empresa: e.organizacion?.nombre ?? '',
         puestoId: e.puesto?.id ?? null,
+        puestoPersonalizado: e.puesto?.personalizado ?? false,
+        puestoActivo: e.puesto?.activo ?? true,
         organizacionId: e.organizacion?.id ?? null,
         pais: e.pais?.nombre ?? '',
         nivel: NIVEL_EXPERIENCIA_TEXTO[e.nivel] ?? e.nivel,

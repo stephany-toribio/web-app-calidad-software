@@ -44,8 +44,12 @@ export interface PositionViewModel {
   id: number;
   name: string;
   active: boolean;
-  /** Propuesto por un candidato y aún sin aprobar */
-  pending: boolean;
+  /** Escrito por un candidato: es solo suyo, no se edita ni pasa al catálogo global */
+  personalizado: boolean;
+  /** "Nombre Apellidos" del candidato que lo escribió; null en los del catálogo */
+  creadoPor: string | null;
+  /** Cuántos candidatos escribieron ese mismo nombre como personalizado */
+  mismoNombre: number;
 }
 
 interface Toast {
@@ -131,6 +135,15 @@ export class CreoAdminSkillsComponent implements OnInit {
   editingInstitution: InstitutionViewModel = { id: 0, name: '', countryId: null, country: '', active: true };
   institutionError = '';
 
+  // Puestos: filtros en el cliente (se cargan todos una vez, como habilidades)
+  positionQuery = '';
+  positionTypeFilter: 'all' | 'global' | 'personalizado' = 'all';
+  positionStatusFilter: 'all' | SkillStatus = 'all';
+
+  showPositionModal = false;
+  editingPosition: { id: number; name: string } = { id: 0, name: '' };
+  positionError = '';
+
   ngOnInit() {
     this.cargarAreas();
     this.cargarHabilidades();
@@ -163,8 +176,22 @@ export class CreoAdminSkillsComponent implements OnInit {
       id: p.id,
       name: p.nombre,
       active: p.activo,
-      pending: p.estado_catalogo === 'pendiente'
+      personalizado: p.personalizado,
+      creadoPor: p.creado_por ? `${p.creado_por.nombre} ${p.creado_por.apellidos}` : null,
+      mismoNombre: p.candidatos_con_mismo_nombre ?? 0
     };
+  }
+
+  get filteredPositions() {
+    const q = this.positionQuery.trim().toLowerCase();
+    return this.positions.filter(p => {
+      const matchQ = p.name.toLowerCase().includes(q);
+      const matchTipo = this.positionTypeFilter === 'all'
+        || (this.positionTypeFilter === 'personalizado') === p.personalizado;
+      const matchEstado = this.positionStatusFilter === 'all'
+        || (this.positionStatusFilter === 'active') === p.active;
+      return matchQ && matchTipo && matchEstado;
+    });
   }
 
   cargarPaises() {
@@ -724,7 +751,59 @@ export class CreoAdminSkillsComponent implements OnInit {
     });
   }
 
-  // --- Puestos: el admin solo activa/desactiva los que registran los candidatos ---
+  // --- Puestos: el admin crea y edita los del catálogo; los personalizados solo los activa o desactiva ---
+
+  openPositionModal(p?: PositionViewModel) {
+    if (p?.personalizado) {
+      return; // el texto es del candidato: no se edita
+    }
+    this.editingPosition = p ? { id: p.id, name: p.name } : { id: 0, name: '' };
+    this.positionError = '';
+    this.showPositionModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closePositionModal() {
+    this.showPositionModal = false;
+    document.body.style.overflow = 'auto';
+  }
+
+  savePosition() {
+    this.positionError = '';
+    const nombre = this.editingPosition.name.trim();
+
+    if (!nombre) {
+      this.positionError = 'El nombre del puesto es requerido.';
+      return;
+    }
+    if (nombre.length > 200) {
+      this.positionError = 'El nombre del puesto no puede superar los 200 caracteres.';
+      return;
+    }
+
+    const editando = this.editingPosition.id !== 0;
+    const peticion$ = editando
+      ? this.adminService.editarPuesto(this.editingPosition.id, nombre)
+      : this.adminService.crearPuesto(nombre);
+
+    peticion$.subscribe({
+      next: (puesto) => {
+        const idx = this.positions.findIndex(x => x.id === puesto.id);
+        // La respuesta de crear/editar no trae el conteo: se conserva el que ya tenía la fila
+        const vm = { ...this.aPuestoVM(puesto), mismoNombre: idx !== -1 ? this.positions[idx].mismoNombre : 0 };
+        if (idx !== -1) {
+          this.positions[idx] = vm;
+        } else {
+          this.positions.unshift(vm);
+        }
+        this.showToast(editando ? 'Puesto actualizado' : 'Puesto creado', 'success');
+        this.closePositionModal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.positionError = this.mensajeError(err, 'No se pudo guardar el puesto.');
+      }
+    });
+  }
 
   togglePositionStatus(p: PositionViewModel) {
     const accion$ = p.active
@@ -733,10 +812,8 @@ export class CreoAdminSkillsComponent implements OnInit {
 
     accion$.subscribe({
       next: (puesto) => {
-        const vm = this.aPuestoVM(puesto);
-        p.active = vm.active;
-        p.pending = vm.pending;
-        this.showToast(`Puesto ${vm.active ? 'activado' : 'desactivado'}`, 'success');
+        p.active = puesto.activo;
+        this.showToast(`Puesto ${puesto.activo ? 'activado' : 'desactivado'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {
         this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado del puesto.'), 'error');

@@ -2,7 +2,8 @@ import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CatalogosService } from '../../../../core/api/catalogos.service';
-import { ItemCatalogo, Organizacion } from '../../../../core/api/models/catalogos.model';
+import { CandidatosService } from '../../../../core/api/candidatos.service';
+import { ItemCatalogo, Organizacion, PuestoSeleccionable } from '../../../../core/api/models/catalogos.model';
 import { aId } from '../../../../core/api/mappers/registro-candidato.mapper';
 
 const MAX_DESCRIPCION_CARACTERES = 300;
@@ -31,7 +32,14 @@ export interface ExperienceEntry {
 })
 export class ExperienceListComponent implements OnInit {
   private catalogos = inject(CatalogosService);
+  private candidatos = inject(CandidatosService);
 
+  /**
+   * De dónde salen las sugerencias de puesto:
+   * 'catalogo' (registro, aún sin cuenta) = GET /puestos;
+   * 'candidato' (perfil) = GET /candidatos/me/puestos, que suma sus puestos personalizados.
+   */
+  @Input() fuentePuestos: 'catalogo' | 'candidato' = 'catalogo';
   @Input() experiences: ExperienceEntry[] = [];
   @Input() maxExperiences: number = 5;
   @Output() experiencesChange = new EventEmitter<ExperienceEntry[]>();
@@ -46,7 +54,7 @@ export class ExperienceListComponent implements OnInit {
   anos = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   private catalogoPaises: ItemCatalogo[] = [];
-  private catalogoPuestos: ItemCatalogo[] = [];
+  private catalogoPuestos: PuestoSeleccionable[] = [];
   private catalogoOrganizaciones: Organizacion[] = [];
 
   currentExp: ExperienceEntry = this.getEmptyExp();
@@ -55,11 +63,17 @@ export class ExperienceListComponent implements OnInit {
   showPuestos = false;
 
   ngOnInit() {
+    this.recargarCatalogos();
+  }
+
+  /** Pide las listas actuales. El registro la vuelve a llamar si la API rechaza algo que el admin desactivó */
+  recargarCatalogos() {
     this.catalogos.paises().subscribe(lista => {
       this.catalogoPaises = lista;
       this.paises = lista.map(p => p.nombre);
     });
-    this.catalogos.puestos().subscribe(lista => this.catalogoPuestos = lista);
+    const puestos$ = this.fuentePuestos === 'candidato' ? this.candidatos.misPuestos() : this.catalogos.puestos();
+    puestos$.subscribe(lista => this.catalogoPuestos = lista);
     this.catalogos.organizaciones().subscribe(lista => this.catalogoOrganizaciones = lista);
   }
 
@@ -99,6 +113,11 @@ export class ExperienceListComponent implements OnInit {
     setTimeout(() => {
       this.showEmpresas = false;
     }, 200);
+  }
+
+  /** Puesto escrito antes por el mismo candidato (se marca como "Tuyo" en las sugerencias) */
+  esPuestoPropio(nombre: string): boolean {
+    return this.catalogoPuestos.some(p => p.nombre === nombre && p.personalizado);
   }
 
   onPuestoChange(val: string) {

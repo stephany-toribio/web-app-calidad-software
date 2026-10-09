@@ -182,11 +182,25 @@ export class AdminService {
       .pipe(map(res => res.data));
   }
 
-  // --- Puestos (solo listar y activar/desactivar) ---
+  // --- Puestos ---
 
   listarPuestos(): Observable<PuestoAdmin[]> {
     return this.http
       .get<ApiResponse<PuestoAdmin[]>>(`${this.baseUrl}/puestos`)
+      .pipe(map(res => res.data));
+  }
+
+  /** Crea un puesto del catálogo global. */
+  crearPuesto(nombre: string): Observable<PuestoAdmin> {
+    return this.http
+      .post<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo puestos globales: un personalizado responde 409 (pertenece al candidato). */
+  editarPuesto(id: number, nombre: string): Observable<PuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos/${id}`, { nombre })
       .pipe(map(res => res.data));
   }
 
@@ -196,7 +210,7 @@ export class AdminService {
       .pipe(map(res => res.data));
   }
 
-  /** Activar un puesto propuesto por un candidato también lo aprueba. */
+  /** Solo lo habilita: un personalizado sigue siendo del candidato y no pasa al catálogo global. */
   reactivarPuesto(id: number): Observable<PuestoAdmin> {
     return this.http
       .patch<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos/${id}/reactivar`, {})

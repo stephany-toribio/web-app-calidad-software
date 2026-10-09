@@ -72,6 +72,11 @@ export class StudyListComponent implements OnInit {
   errors: Record<string, string> = {};
 
   ngOnInit() {
+    this.recargarCatalogos();
+  }
+
+  /** Pide las listas actuales. El registro la vuelve a llamar si la API rechaza algo que el admin desactivó */
+  recargarCatalogos() {
     this.catalogos.paises().subscribe(lista => {
       this.catalogoPaises = lista;
       this.paises = lista.map(p => p.nombre);

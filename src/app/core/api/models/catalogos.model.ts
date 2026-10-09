@@ -5,6 +5,11 @@ export interface ItemCatalogo {
     nombre: string;
 }
 
+/** GET /candidatos/me/puestos — personalizado: true => lo escribió el propio candidato (solo él lo ve) */
+export interface PuestoSeleccionable extends ItemCatalogo {
+    personalizado?: boolean;
+}
+
 /** GET /tipos-estudio — requiere_carrera: true => el estudio lleva institución y carrera */
 export interface TipoEstudio extends ItemCatalogo {
     requiere_carrera: boolean;

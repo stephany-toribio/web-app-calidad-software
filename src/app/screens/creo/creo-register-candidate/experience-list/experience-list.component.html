@@ -80,8 +80,9 @@
           <ul *ngIf="showPuestos && filteredPuestos.length > 0" 
               class="absolute left-0 right-0 top-[72px] bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 py-1" style="font-family: Inter, system-ui, sans-serif;">
             <li *ngFor="let p of filteredPuestos" (mousedown)="selectPuesto(p)"
-                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors">
+                class="px-4 py-2.5 text-sm text-[#111111] hover:bg-[#2563EB] hover:text-white cursor-pointer transition-colors flex items-center justify-between gap-2">
               {{ p }}
+              <span *ngIf="esPuestoPropio(p)" class="px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #F1F5F9; color: #475569;">Tuyo</span>
             </li>
           </ul>
         </div>

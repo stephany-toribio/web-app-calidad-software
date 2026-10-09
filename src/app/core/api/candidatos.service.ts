@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse } from './models/api-response.model';
 import { CandidatoRegistrado, RegistroCandidatoPayload } from './models/registro-candidato.model';
 import { CandidatoPerfil } from './models/candidato-perfil.model';
+import { PuestoSeleccionable } from './models/catalogos.model';
 
 @Injectable({ providedIn: 'root' })
 export class CandidatosService {
@@ -31,6 +32,13 @@ export class CandidatosService {
     obtenerMiPerfil(): Observable<CandidatoPerfil> {
         return this.http
             .get<ApiResponse<CandidatoPerfil>>(`${this.url}/me`)
+            .pipe(map(respuesta => respuesta.data));
+    }
+
+    /** Puestos que puede elegir el candidato autenticado: catálogo global + sus personalizados habilitados */
+    misPuestos(): Observable<PuestoSeleccionable[]> {
+        return this.http
+            .get<ApiResponse<PuestoSeleccionable[]>>(`${this.url}/me/puestos`)
             .pipe(map(respuesta => respuesta.data));
     }
 

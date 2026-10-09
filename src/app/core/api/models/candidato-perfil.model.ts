@@ -6,6 +6,12 @@ export interface ItemPropuesto extends ItemCatalogo {
     estado_catalogo: string;
 }
 
+// personalizado: lo escribió el candidato. activo = false: el admin lo deshabilitó (lo conserva, pero no puede volver a elegirlo)
+export interface PuestoPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
+}
+
 export interface EstudioPerfil {
     id: number;
     tipo_estudio: ItemCatalogo;
@@ -28,7 +34,7 @@ export interface IdiomaPerfil {
 
 export interface ExperienciaPerfil {
     id: number;
-    puesto: ItemPropuesto;
+    puesto: PuestoPerfil;
     organizacion: ItemPropuesto;
     pais: ItemCatalogo;
     nivel: NivelExperiencia;

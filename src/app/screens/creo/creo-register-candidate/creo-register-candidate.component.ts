@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -40,6 +40,10 @@ const PASO_DE_ERROR: Record<string, number> = {
   skills: 3,
 };
 
+// Campos que vienen de un catálogo que el admin puede desactivar. Si la API los rechaza, se recarga la lista
+const CAMPOS_CATALOGO_ESTUDIO = ['area_estudio_id', 'pais_id', 'institucion_id', 'carrera_id'];
+const CAMPOS_CATALOGO_EXPERIENCIA = ['puesto_id', 'puesto_nombre', 'organizacion_id', 'pais_id'];
+
 @Component({
   selector: 'app-creo-register-candidate',
   standalone: true,
@@ -56,6 +60,10 @@ export class CreoRegisterCandidateComponent implements OnInit {
   private catalogosService = inject(CatalogosService);
   private candidatosService = inject(CandidatosService);
   private authService = inject(AuthService);
+
+  // Solo existen mientras se muestra su paso (están dentro de un *ngIf)
+  @ViewChild(StudyListComponent) private studyList?: StudyListComponent;
+  @ViewChild(ExperienceListComponent) private experienceList?: ExperienceListComponent;
 
   steps = STEPS;
   genderOptions = GENDER_OPTIONS;
@@ -120,7 +128,11 @@ export class CreoRegisterCandidateComponent implements OnInit {
   errors: Record<string, string> = {};
 
   ngOnInit() {
-    // Los catálogos fijos se piden una sola vez (CatalogosService los reutiliza con shareReplay)
+    this.recargarCatalogos();
+  }
+
+  /** Catálogos fijos (para convertir nombres en ids). Se piden al abrir el registro y tras un rechazo por catálogo */
+  private recargarCatalogos() {
     forkJoin({
       paises: this.catalogosService.paises(),
       tiposEstudio: this.catalogosService.tiposEstudio(),
@@ -388,6 +400,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.enviando = false;
         this.errors = erroresDesdeApi(err);
+        this.corregirCatalogosRechazados(err);
         const pasoConError = Object.keys(this.errors)
           .map(clave => PASO_DE_ERROR[clave])
           .filter(p => p !== undefined)
@@ -395,6 +408,78 @@ export class CreoRegisterCandidateComponent implements OnInit {
         if (pasoConError !== undefined && pasoConError < this.step) this.goToStep(pasoConError);
       },
     });
+  }
+
+  /**
+   * Si la API rechazó un valor de catálogo (p. ej. un puesto que el admin desactivó mientras se llenaba el formulario),
+   * vuelve a pedir los catálogos y vacía ese campo para que el candidato lo elija de nuevo de la lista actualizada.
+   */
+  private corregirCatalogosRechazados(err: HttpErrorResponse) {
+    if (err.status !== 422) return;
+
+    const campos = Object.keys((err.error as { errors?: Record<string, string[]> } | null)?.errors ?? {});
+    let estudios = false;
+    let experiencias = false;
+    let habilidades = false;
+
+    for (const campo of campos) {
+      const [lista, indice, atributo] = campo.split('.');
+      const i = Number(indice);
+
+      if (lista === 'estudios' && CAMPOS_CATALOGO_ESTUDIO.includes(atributo)) {
+        this.vaciarCampoEstudio(i, atributo);
+        estudios = true;
+      } else if (lista === 'experiencias' && CAMPOS_CATALOGO_EXPERIENCIA.includes(atributo)) {
+        this.vaciarCampoExperiencia(i, atributo);
+        experiencias = true;
+      } else if (lista === 'habilidades') {
+        habilidades = true;
+      }
+    }
+
+    if (!estudios && !experiencias && !habilidades) return;
+
+    const aviso = ' Actualizamos la lista: vuelve a elegirlo.';
+    this.recargarCatalogos();
+    if (estudios) {
+      this.studyList?.recargarCatalogos();
+      if (this.errors['carreras']) this.errors['carreras'] += aviso;
+    }
+    if (experiencias) {
+      this.experienceList?.recargarCatalogos();
+      if (this.errors['experiencia']) this.errors['experiencia'] += aviso;
+    }
+    if (habilidades) {
+      this.cargarHabilidades();                     // también quita de lo seleccionado las que ya no están
+    }
+  }
+
+  private vaciarCampoEstudio(i: number, atributo: string) {
+    const enCarreras = i < this._carreras.length;
+    const lista = enCarreras ? [...this._carreras] : [...this._educacionSuperior];
+    const j = enCarreras ? i : i - this._carreras.length;
+    if (!lista[j]) return;
+
+    const estudio = { ...lista[j] };
+    if (atributo === 'area_estudio_id') estudio.areaEstudio = '';
+    if (atributo === 'pais_id') { estudio.pais = ''; estudio.institucion = ''; estudio.institucionId = null; }
+    if (atributo === 'institucion_id') { estudio.institucion = ''; estudio.institucionId = null; }
+    if (atributo === 'carrera_id') { estudio.titulo = ''; estudio.carreraId = null; }
+    lista[j] = estudio;
+
+    if (enCarreras) this._carreras = lista; else this._educacionSuperior = lista;
+  }
+
+  private vaciarCampoExperiencia(i: number, atributo: string) {
+    if (!this.experiencias[i]) return;
+
+    const experiencia = { ...this.experiencias[i] };
+    // Se borra también el nombre: si no, se reenviaría como puesto escrito y volvería a ser rechazado
+    if (atributo === 'puesto_id' || atributo === 'puesto_nombre') { experiencia.puesto = ''; experiencia.puestoId = null; }
+    if (atributo === 'organizacion_id') { experiencia.empresa = ''; experiencia.organizacionId = null; }
+    if (atributo === 'pais_id') experiencia.pais = '';
+
+    this.experiencias = this.experiencias.map((e, k) => k === i ? experiencia : e);
   }
 
   goToLogin() {

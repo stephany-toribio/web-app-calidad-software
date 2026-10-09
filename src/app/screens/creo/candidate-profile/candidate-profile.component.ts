@@ -81,7 +81,7 @@ export class CandidateProfileComponent implements OnInit {
       tiposEstudio: this.catalogosService.tiposEstudio(),
       areasEstudio: this.catalogosService.areasEstudio(),
       idiomas: this.catalogosService.idiomas(),
-      puestos: this.catalogosService.puestos(),
+      puestos: this.candidatosService.misPuestos(),   // globales + sus personalizados: el mapper los convierte en id
     }).subscribe({
       next: ({ perfil, ...catalogos }) => {
         this.catalogos = { ...catalogos, habilidades: this.catalogos.habilidades };
