@@ -108,6 +108,11 @@ export class CandidateProfileComponent implements OnInit {
     });
   }
 
+  /** "Sin estudios formales" (solo_area del catálogo): la línea de tiempo muestra solo el área */
+  esSoloArea(tipo: string): boolean {
+    return this.catalogos.tiposEstudio.find(t => t.nombre === tipo)?.solo_area ?? false;
+  }
+
   private aplicarPerfil(perfil: CandidatoPerfil) {
     this.candidate = perfilDesdeApi(perfil);
     this.habilidadesActuales = perfil.habilidades;

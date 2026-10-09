@@ -20,6 +20,8 @@ export interface NivelPuestoSeleccionable extends ItemCatalogo {
 /** GET /tipos-estudio — requiere_carrera: true => el estudio lleva institución y carrera */
 export interface TipoEstudio extends ItemCatalogo {
     requiere_carrera: boolean;
+    /** true: solo se pide el área de estudio ("Sin estudios formales"); es exclusivo con los demás tipos */
+    solo_area: boolean;
 }
 
 /** GET /areas-estudio */

@@ -152,6 +152,16 @@ function mapearEstudio(e: EstudioFormulario, c: CatalogosRegistro): EstudioPaylo
     const llevaCarrera = tipo?.requiere_carrera ?? false;
     const estado = ESTADOS[e.estado];
 
+    // "Sin estudios formales": solo el área (el backend rechaza cualquier otro dato)
+    if (tipo?.solo_area) {
+        return {
+            tipo_estudio_id: tipo.id,
+            area_estudio_id: aId(c.areasEstudio, e.areaEstudio) as number,
+            pais_id: null, institucion_id: null, carrera_id: null,
+            estado: null, ciclo_actual: null, fecha_inicio: null, fecha_fin: null,
+        };
+    }
+
     return {
         tipo_estudio_id: tipo?.id as number,
         area_estudio_id: aId(c.areasEstudio, e.areaEstudio) as number,

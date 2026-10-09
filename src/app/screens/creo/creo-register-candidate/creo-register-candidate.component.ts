@@ -143,6 +143,11 @@ export class CreoRegisterCandidateComponent implements OnInit {
     });
   }
 
+  /** "Sin estudios formales" (solo_area del catálogo): el resumen muestra solo el área */
+  esSoloArea(tipo: string): boolean {
+    return this.catalogos.tiposEstudio.find(t => t.nombre === tipo)?.solo_area ?? false;
+  }
+
   // ---------------------------------------------------------------- Habilidades (paso 3)
 
   /** Técnicas de las áreas de los estudios (regla C) */

@@ -428,7 +428,10 @@
               <div *ngIf="carreras.length > 0">
                 <p class="font-semibold text-xs text-slate-500 mb-1">CARRERAS</p>
                 <ul class="list-disc list-inside">
-                  <li *ngFor="let c of carreras">{{ c.titulo }} ({{ c.institucion }}) - {{ c.estado }}</li>
+                  <li *ngFor="let c of carreras">
+                    <ng-container *ngIf="esSoloArea(c.tipoEstudio); else estudioFormal">{{ c.tipoEstudio }} — Área: {{ c.areaEstudio }}</ng-container>
+                    <ng-template #estudioFormal>{{ c.titulo }} ({{ c.institucion }}) - {{ c.estado }}</ng-template>
+                  </li>
                 </ul>
               </div>
               <div *ngIf="educacionSuperior.length > 0">

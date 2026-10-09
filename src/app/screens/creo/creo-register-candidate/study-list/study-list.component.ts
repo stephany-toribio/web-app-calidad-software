@@ -34,6 +34,7 @@ const LIMITES_POR_GRUPO = [
   { tipos: ['Posgrado', 'Master', 'Doctorado'], maximo: 5, descripcion: 'posgrados (posgrado, maestría y doctorado)' },
   { tipos: ['Terciario'], maximo: 1, descripcion: 'estudio terciario' },
   { tipos: ['Secundario'], maximo: 1, descripcion: 'estudio secundario' },
+  { tipos: ['Sin estudios formales'], maximo: 3, descripcion: 'áreas sin estudios formales' },
 ];
 
 @Component({
@@ -94,6 +95,40 @@ export class StudyListComponent implements OnInit {
     return this.catalogoTipos.find(t => t.nombre === this.currentStudy.tipoEstudio)?.requiere_carrera ?? false;
   }
 
+  /** "Sin estudios formales" (lo decide el backend con solo_area): el estudio solo lleva el área */
+  get soloArea(): boolean {
+    return this.esTipoSoloArea(this.currentStudy.tipoEstudio);
+  }
+
+  esTipoSoloArea(tipo: string): boolean {
+    return this.catalogoTipos.find(t => t.nombre === tipo)?.solo_area ?? false;
+  }
+
+  /** Estudios ya cargados, sin contar el que se está editando (-1 al agregar uno nuevo) */
+  private otrosEstudios(excluir = this.editingIndex): StudyEntry[] {
+    return this.studies.filter((_, i) => i !== excluir);
+  }
+
+  /** "Sin estudios formales" es exclusivo: no se combina con los tipos formales (y al revés) */
+  tipoIncompatible(tipo: string, excluir = this.editingIndex): boolean {
+    const soloArea = this.esTipoSoloArea(tipo);
+    return this.otrosEstudios(excluir).some(s => this.esTipoSoloArea(s.tipoEstudio) !== soloArea);
+  }
+
+  tipoDeshabilitado(tipo: string): boolean {
+    return this.tipoLleno(tipo) || this.tipoIncompatible(tipo);
+  }
+
+  motivoTipoDeshabilitado(tipo: string): string {
+    if (this.tipoIncompatible(tipo)) return ' (no se combina con otros estudios)';
+    return this.tipoLleno(tipo) ? ' (máximo alcanzado)' : '';
+  }
+
+  /** En "Sin estudios formales" cada estudio debe tener un área distinta */
+  areaUsada(area: string): boolean {
+    return this.soloArea && this.otrosEstudios().some(s => this.esTipoSoloArea(s.tipoEstudio) && s.areaEstudio === area);
+  }
+
   onEstadoChange() {
     if (this.currentStudy.estado === 'En curso') {
       this.currentStudy.fechaFinMes = '';
@@ -110,6 +145,16 @@ export class StudyListComponent implements OnInit {
       delete this.errors['institucion'];
       delete this.errors['titulo'];
     }
+
+    // Solo área: se limpian los campos que se ocultan para que no se envíen
+    if (this.soloArea) {
+      Object.assign(this.currentStudy, {
+        pais: '', estado: '', fechaInicioMes: '', fechaInicioAno: '', fechaFinMes: '', fechaFinAno: '', alPresente: false,
+      });
+      if (this.areaUsada(this.currentStudy.areaEstudio)) this.currentStudy.areaEstudio = '';
+      ['pais', 'estado', 'fechaInicio', 'fechaFin'].forEach(campo => delete this.errors[campo]);
+    }
+
     this.onFiltrosCarreraChange();
   }
 
@@ -157,9 +202,12 @@ export class StudyListComponent implements OnInit {
     return !!grupo && this.cantidadEnGrupo(tipo) >= grupo.maximo;
   }
 
-  /** Queda cupo en algún grupo: controla el botón "Agregar" */
+  /** Queda algún tipo que se pueda agregar (cupo y exclusividad): controla el botón "Agregar" */
   get hayCupo(): boolean {
-    return LIMITES_POR_GRUPO.some(g => this.studies.filter(s => g.tipos.includes(s.tipoEstudio)).length < g.maximo);
+    return LIMITES_POR_GRUPO.some(g =>
+      this.studies.filter(s => g.tipos.includes(s.tipoEstudio)).length < g.maximo
+      && g.tipos.some(tipo => !this.tipoIncompatible(tipo, -1))
+    );
   }
 
   showInstituciones = false;
@@ -266,6 +314,11 @@ export class StudyListComponent implements OnInit {
   }
 
   saveStudy() {
+    if (this.soloArea) {
+      this.guardarSoloArea();
+      return;
+    }
+
     this.errors = {};
     if (!this.currentStudy.tipoEstudio) this.errors['tipoEstudio'] = 'Requerido';
     if (!this.currentStudy.pais) this.errors['pais'] = 'Requerido';
@@ -295,6 +348,11 @@ export class StudyListComponent implements OnInit {
 
     if (Object.keys(this.errors).length === 0) {
       // Límite por grupo de tipos (igual que el backend); el error se muestra bajo el select de tipo
+      if (this.tipoIncompatible(this.currentStudy.tipoEstudio)) {
+        this.errors['tipoEstudio'] = 'No se combina con "Sin estudios formales".';
+        return;
+      }
+
       if (this.tipoLleno(this.currentStudy.tipoEstudio)) {
         const grupo = this.grupoDe(this.currentStudy.tipoEstudio)!;
         this.errors['tipoEstudio'] = `Puedes registrar como máximo ${grupo.maximo} ${grupo.descripcion}.`;
@@ -331,5 +389,37 @@ export class StudyListComponent implements OnInit {
       this.studiesChange.emit(updated);
       this.closeModal();
     }
+  }
+
+  /** "Sin estudios formales": solo tipo y área (área distinta a la de los otros de este tipo, máximo 3) */
+  private guardarSoloArea() {
+    this.errors = {};
+    if (!this.currentStudy.areaEstudio) this.errors['areaEstudio'] = 'Requerido';
+    else if (this.areaUsada(this.currentStudy.areaEstudio)) this.errors['areaEstudio'] = 'Ya registraste esta área de estudio.';
+
+    if (this.tipoDeshabilitado(this.currentStudy.tipoEstudio)) {
+      const grupo = this.grupoDe(this.currentStudy.tipoEstudio)!;
+      this.errors['tipoEstudio'] = this.tipoIncompatible(this.currentStudy.tipoEstudio)
+        ? 'No se combina con otros tipos de estudio.'
+        : `Puedes registrar como máximo ${grupo.maximo} ${grupo.descripcion}.`;
+    }
+
+    if (Object.keys(this.errors).length > 0) return;
+
+    const estudio: StudyEntry = {
+      ...this.getEmptyStudy(),
+      tipoEstudio: this.currentStudy.tipoEstudio,
+      areaEstudio: this.currentStudy.areaEstudio,
+    };
+
+    const updated = [...this.studies];
+    if (this.editingIndex === -1) {
+      updated.push(estudio);
+    } else {
+      updated[this.editingIndex] = estudio;
+    }
+
+    this.studiesChange.emit(updated);
+    this.closeModal();
   }
 }

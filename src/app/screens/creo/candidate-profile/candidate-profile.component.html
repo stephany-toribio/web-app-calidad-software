@@ -116,8 +116,10 @@
               <div class="flex flex-col pt-1">
                 <!-- Secundario/Terciario no tienen carrera ni institución: se muestra el tipo de estudio -->
                 <h3 class="text-base font-bold" style="color: #111111;">{{ edu.titulo || edu.tipoEstudio }}</h3>
-                <p class="text-[15px] font-medium mt-0.5" style="color: #475569;">{{ edu.institucion }} <span class="text-slate-400 font-normal">({{ edu.pais }})</span></p>
-                <div class="flex items-center gap-3 mt-1">
+                <!-- "Sin estudios formales": solo el área (sin institución, país, fechas ni estado) -->
+                <p *ngIf="esSoloArea(edu.tipoEstudio)" class="text-[15px] font-medium mt-0.5" style="color: #475569;">Área: {{ edu.areaEstudio }}</p>
+                <p *ngIf="!esSoloArea(edu.tipoEstudio)" class="text-[15px] font-medium mt-0.5" style="color: #475569;">{{ edu.institucion }} <span class="text-slate-400 font-normal">({{ edu.pais }})</span></p>
+                <div *ngIf="!esSoloArea(edu.tipoEstudio)" class="flex items-center gap-3 mt-1">
                   <p class="text-xs font-medium" style="color: #94A3B8;">{{ edu.fechaInicioMes | slice:0:3 }} {{ edu.fechaInicioAno }} — {{ edu.alPresente ? 'Presente' : ((edu.fechaFinMes | slice:0:3) + ' ' + edu.fechaFinAno) }}</p>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                   <span class="text-xs font-semibold px-2 py-0.5 rounded-md" style="background-color: #F1F5F9; color: #475569;">{{ edu.estado }}</span>

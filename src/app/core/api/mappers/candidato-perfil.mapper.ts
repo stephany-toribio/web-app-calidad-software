@@ -81,10 +81,11 @@ function estudioDesdeApi(e: EstudioPerfil): EstudioFormulario {
         titulo: e.carrera?.nombre ?? '',
         institucionId: e.institucion?.id ?? null,
         carreraId: e.carrera?.id ?? null,
-        estado: ESTADO_TEXTO[e.estado] ?? e.estado,
+        estado: e.estado ? (ESTADO_TEXTO[e.estado] ?? e.estado) : '',
         fechaInicioMes: inicio.mes, fechaInicioAno: inicio.anio,
         fechaFinMes: fin.mes, fechaFinAno: fin.anio,
-        alPresente: e.fecha_fin === null,
+        // "Sin estudios formales" no tiene fechas: no es "al presente"
+        alPresente: e.fecha_inicio !== null && e.fecha_fin === null,
     };
 }
 

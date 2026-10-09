@@ -20,7 +20,13 @@
     <div *ngFor="let study of studies; let i = index" (click)="openModal(i)"
       class="p-4 rounded-xl border flex justify-between items-center bg-white cursor-pointer transition-all hover:border-slate-300 relative group"
       style="border-color: #E2E8F0;">
-      <div class="pr-12 w-full space-y-1">
+      <!-- "Sin estudios formales": solo tipo y área -->
+      <div *ngIf="esTipoSoloArea(study.tipoEstudio)" class="pr-12 w-full space-y-1">
+        <p class="text-base font-bold text-slate-800 mb-2">{{ study.tipoEstudio }}</p>
+        <p class="text-sm text-slate-600"><span class="font-semibold text-slate-700">Área de estudio:</span> {{
+          study.areaEstudio }}</p>
+      </div>
+      <div *ngIf="!esTipoSoloArea(study.tipoEstudio)" class="pr-12 w-full space-y-1">
         <p class="text-base font-bold text-slate-800 mb-2">{{ study.titulo }}</p>
         <p class="text-sm text-slate-600"><span class="font-semibold text-slate-700">Área de estudio:</span> {{
           study.areaEstudio }}</p>
@@ -83,15 +89,15 @@
               class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
               [ngStyle]="{'border-color': errors['tipoEstudio'] ? '#E5140D' : '#E2E8F0'}">
               <option value="" class="text-[#111111]">Elige una opción</option>
-              <option *ngFor="let t of tiposEstudio" [value]="t" [disabled]="tipoLleno(t)" class="text-[#111111]">
-                {{ t }}{{ tipoLleno(t) ? ' (máximo alcanzado)' : '' }}
+              <option *ngFor="let t of tiposEstudio" [value]="t" [disabled]="tipoDeshabilitado(t)" class="text-[#111111]">
+                {{ t }}{{ motivoTipoDeshabilitado(t) }}
               </option>
             </select>
             <p *ngIf="errors['tipoEstudio']" class="text-xs text-red-500 mt-1">{{ errors['tipoEstudio'] }}</p>
           </div>
 
           <!-- Título / Carrera -->
-          <div class="sm:col-span-1 relative">
+          <div *ngIf="!soloArea" class="sm:col-span-1 relative">
             <app-creo-field [label]="'Título / Carrera'" [required]="tituloEnabled" [value]="currentStudy.titulo"
               (valueChange)="onCarreraChange($event)" (fieldFocus)="showCarreras = true" (fieldBlur)="onCarreraBlur()"
               placeholder="Ingresa tu título o carrera" [disabled]="!tituloEnabled"
@@ -109,7 +115,7 @@
           </div>
 
           <!-- País -->
-          <div class="sm:col-span-1">
+          <div *ngIf="!soloArea" class="sm:col-span-1">
             <label class="block text-sm font-medium mb-1.5" style="color: #111111;">País <span
                 class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <select [(ngModel)]="currentStudy.pais" (ngModelChange)="onPaisChange()"
@@ -123,7 +129,7 @@
           </div>
 
           <!-- Institución (depende del país) -->
-          <div class="sm:col-span-1 relative">
+          <div *ngIf="!soloArea" class="sm:col-span-1 relative">
             <app-creo-field label="Institución" [required]="tituloEnabled" [disabled]="!tituloEnabled"
               [value]="currentStudy.institucion" (valueChange)="onInstitucionChange($event)"
               (fieldFocus)="showInstituciones = true" (fieldBlur)="onInstitucionBlur()"
@@ -147,13 +153,19 @@
               class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
               [ngStyle]="{'border-color': errors['areaEstudio'] ? '#E5140D' : '#E2E8F0'}">
               <option value="" class="text-[#111111]">Elige una opción</option>
-              <option *ngFor="let a of areasEstudio" [value]="a" class="text-[#111111]">{{ a }}</option>
+              <option *ngFor="let a of areasEstudio" [value]="a" [disabled]="areaUsada(a)" class="text-[#111111]">
+                {{ a }}{{ areaUsada(a) ? ' (ya registrada)' : '' }}
+              </option>
             </select>
             <p *ngIf="errors['areaEstudio']" class="text-xs text-red-500 mt-1">{{ errors['areaEstudio'] }}</p>
           </div>
 
+          <p *ngIf="soloArea" class="sm:col-span-2 text-xs text-slate-500 -mt-1">
+            Elige el área de tus cursos externos: de ella dependen las habilidades técnicas que podrás seleccionar.
+          </p>
+
           <!-- Estado -->
-          <div class="sm:col-span-1">
+          <div *ngIf="!soloArea" class="sm:col-span-1">
             <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Estado <span
                 class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <select [(ngModel)]="currentStudy.estado" (ngModelChange)="onEstadoChange()"
@@ -167,7 +179,7 @@
           </div>
 
           <!-- Fecha de inicio -->
-          <div class="sm:col-span-1">
+          <div *ngIf="!soloArea" class="sm:col-span-1">
             <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Fecha de inicio <span
                 class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <div class="flex gap-2">
@@ -190,7 +202,7 @@
           </div>
 
           <!-- Fecha de finalización -->
-          <div class="sm:col-span-1">
+          <div *ngIf="!soloArea" class="sm:col-span-1">
             <label class="block text-sm font-medium mb-1.5" style="color: #111111;"
               [class.opacity-50]="currentStudy.alPresente">Fecha de finalización <span class="text-xs font-semibold"
                 style="color: #F2B705;">*</span></label>

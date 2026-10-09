@@ -24,12 +24,12 @@ export interface EstudioPerfil {
     id: number;
     tipo_estudio: ItemCatalogo;
     area_estudio: ItemCatalogo;
-    pais: ItemCatalogo;
-    institucion: ItemCatalogo | null;   // null en Secundario y Terciario
+    pais: ItemCatalogo | null;          // null en "Sin estudios formales" (solo lleva el área)
+    institucion: ItemCatalogo | null;   // null en Secundario, Terciario y "Sin estudios formales"
     carrera: ItemCatalogo | null;
-    estado: EstadoEstudio;
+    estado: EstadoEstudio | null;       // null en "Sin estudios formales"
     ciclo_actual: number | null;
-    fecha_inicio: string;               // 'YYYY-MM-DD'
+    fecha_inicio: string | null;        // 'YYYY-MM-DD'; null en "Sin estudios formales"
     fecha_fin: string | null;
 }
 
