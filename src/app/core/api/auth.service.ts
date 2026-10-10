@@ -9,12 +9,22 @@ import {
   SesionUsuario
 } from './models/auth.model';
 
+/**
+ * La sesión vive en sessionStorage: cada pestaña tiene la suya, así cerrar sesión
+ * o entrar con otro rol en una pestaña no afecta a las demás.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
 
   private loginUrl = `${environment.apiUrl}/auth/login`;
   private logoutUrl = `${environment.apiUrl}/auth/logout`;
+
+  constructor() {
+    // Restos de la versión anterior, que guardaba la sesión compartida en localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('creo_user');
+  }
 
   login(payload: LoginPayload): Observable<SesionUsuario> {
     return this.http
@@ -33,7 +43,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return sessionStorage.getItem('token');
   }
 
   getUser(): {
@@ -41,7 +51,7 @@ export class AuthService {
     correo: string;
     rol: string;
   } | null {
-    const rawUser = localStorage.getItem('creo_user');
+    const rawUser = sessionStorage.getItem('creo_user');
 
     if (!rawUser) {
       return null;
@@ -65,9 +75,9 @@ export class AuthService {
   }
 
   saveSession(session: SesionUsuario): void {
-    localStorage.setItem('token', session.token);
+    sessionStorage.setItem('token', session.token);
 
-    localStorage.setItem(
+    sessionStorage.setItem(
       'creo_user',
       JSON.stringify({
         usuario_id: session.usuario_id,
@@ -78,8 +88,8 @@ export class AuthService {
   }
 
   clearSession(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('creo_user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('creo_user');
   }
 
   isAdmin(): boolean {

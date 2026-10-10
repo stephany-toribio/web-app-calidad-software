@@ -101,10 +101,6 @@ export const routes: Routes = [
         loadComponent: () => import('./screens/creo/creo-choose-role/creo-choose-role.component').then(m => m.CreoChooseRoleComponent)
       },
       {
-        path: 'admin-login',
-        loadComponent: () => import('./screens/creo/creo-admin-login/creo-admin-login.component').then(m => m.CreoAdminLoginComponent)
-      },
-      {
         path: 'admin-skills',
         canActivate: [adminGuard],
         loadComponent: () =>

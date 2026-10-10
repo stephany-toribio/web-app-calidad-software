@@ -397,16 +397,7 @@ export class CreoRegisterCompanyComponent {
       next: (sesion) => {
         this.isSubmitting = false;
 
-        localStorage.setItem('token', sesion.token);
-
-        localStorage.setItem(
-          'creo_user',
-          JSON.stringify({
-            usuario_id: sesion.usuario_id,
-            correo: sesion.correo,
-            rol: sesion.rol
-          })
-        );
+        this.authService.saveSession(sesion);
 
         this.router.navigate(
           ['/creo/success/company'],
