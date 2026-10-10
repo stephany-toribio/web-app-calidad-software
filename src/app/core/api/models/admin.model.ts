@@ -156,6 +156,22 @@ export interface NivelPuestoPayload {
   orden?: number;
 }
 
+/** Carrera / título del catálogo. Solo de tipos que llevan carrera; el tipo no se puede cambiar. */
+export interface CarreraAdmin {
+  id: number;
+  nombre: string;
+  tipo_estudio_id: number;
+  tipo_estudio?: { id: number; nombre: string };
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CrearCarreraPayload {
+  nombre: string;
+  tipo_estudio_id: number;
+}
+
 export interface CrearInstitucionPayload {
   nombre: string;
   pais_id: number;

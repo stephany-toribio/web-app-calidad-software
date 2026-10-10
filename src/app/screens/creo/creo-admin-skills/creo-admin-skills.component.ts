@@ -5,8 +5,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
 import { AdminService } from '../../../core/api/admin.service';
 import {
-  AreaEstudio, Habilidad, PaisAdmin, InstitucionAdmin, PuestoAdmin, OrganizacionAdmin, NivelPuestoAdmin, NivelPuestoPayload
+  AreaEstudio, Habilidad, PaisAdmin, InstitucionAdmin, PuestoAdmin, OrganizacionAdmin, NivelPuestoAdmin, NivelPuestoPayload,
+  CarreraAdmin
 } from '../../../core/api/models/admin.model';
+import { CatalogosService } from '../../../core/api/catalogos.service';
+import { TipoEstudio } from '../../../core/api/models/catalogos.model';
 import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
 
 export type SkillStatus = 'active' | 'inactive';
@@ -54,6 +57,14 @@ export interface PositionViewModel {
   mismoNombre: number;
 }
 
+export interface CareerViewModel {
+  id: number;
+  name: string;
+  tipoEstudioId: number;
+  tipoEstudio: string;
+  active: boolean;
+}
+
 export interface LevelViewModel {
   id: number;
   name: string;
@@ -97,11 +108,12 @@ interface Toast {
 })
 export class CreoAdminSkillsComponent implements OnInit {
   private adminService = inject(AdminService);
+  private catalogosService = inject(CatalogosService);
 
   query = '';
   categoryFilter = 'Todas';
   statusFilter: 'all' | SkillStatus = 'all';
-  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'puestos' | 'niveles' | 'organizaciones' = 'estudios';
+  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'carreras' | 'puestos' | 'niveles' | 'organizaciones' = 'estudios';
 
   loadingHabilidades = false;
   loadingAreas = false;
@@ -110,6 +122,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   loadingPositions = false;
   loadingOrganizations = false;
   loadingLevels = false;
+  loadingCareers = false;
 
   skills: SkillItemViewModel[] = [];
   studyAreas: StudyAreaViewModel[] = [];
@@ -119,6 +132,9 @@ export class CreoAdminSkillsComponent implements OnInit {
   positions: PositionViewModel[] = [];
   organizations: OrganizationViewModel[] = [];
   levels: LevelViewModel[] = [];
+  careers: CareerViewModel[] = [];
+  /** Tipos de estudio que llevan carrera (requiere_carrera del catálogo): Universitario, Posgrado, Master, Doctorado */
+  careerStudyTypes: TipoEstudio[] = [];
 
   /** Países activos: únicos que se pueden elegir al crear una institución */
   get activeCountries() {
@@ -178,6 +194,15 @@ export class CreoAdminSkillsComponent implements OnInit {
   editingPosition: { id: number; name: string } = { id: 0, name: '' };
   positionError = '';
 
+  // Carreras: filtros en el cliente (nombre, tipo de estudio, estado)
+  careerQuery = '';
+  careerTypeFilter: number | null = null;
+  careerStatusFilter: 'all' | SkillStatus = 'all';
+
+  showCareerModal = false;
+  editingCareer: { id: number; name: string; tipoEstudioId: number | null } = { id: 0, name: '', tipoEstudioId: null };
+  careerError = '';
+
   // Niveles del puesto: mismos filtros que puestos; la tabla respeta el orden jerárquico del backend
   levelQuery = '';
   levelTypeFilter: 'all' | 'global' | 'personalizado' = 'all';
@@ -205,6 +230,10 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.cargarPuestos();
     this.cargarOrganizaciones();
     this.cargarNiveles();
+    this.cargarCarreras();
+    this.catalogosService.tiposEstudio().subscribe({
+      next: tipos => this.careerStudyTypes = tipos.filter(t => t.requiere_carrera),
+    });
   }
 
   /** Primer mensaje de error de la API (422 con detalle, 409 de negocio, sin conexión...) */
@@ -805,6 +834,113 @@ export class CreoAdminSkillsComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado de la institución.'), 'error');
+      }
+    });
+  }
+
+  // --- Carreras / títulos: catálogo sin valores personalizados (el candidato no escribe carreras) ---
+
+  private aCarreraVM(c: CarreraAdmin): CareerViewModel {
+    return {
+      id: c.id,
+      name: c.nombre,
+      tipoEstudioId: c.tipo_estudio_id,
+      tipoEstudio: c.tipo_estudio?.nombre ?? '',
+      active: c.activo
+    };
+  }
+
+  cargarCarreras() {
+    this.loadingCareers = true;
+    this.adminService.listarCarreras().subscribe({
+      next: (carreras) => {
+        this.loadingCareers = false;
+        this.careers = carreras.map(c => this.aCarreraVM(c));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingCareers = false;
+        this.showToast(this.mensajeError(err, 'No se pudieron cargar las carreras.'), 'error');
+      }
+    });
+  }
+
+  get filteredCareers() {
+    const q = this.careerQuery.trim().toLowerCase();
+    return this.careers.filter(c => {
+      const matchQ = c.name.toLowerCase().includes(q);
+      const matchTipo = this.careerTypeFilter === null || c.tipoEstudioId === this.careerTypeFilter;
+      const matchEstado = this.careerStatusFilter === 'all'
+        || (this.careerStatusFilter === 'active') === c.active;
+      return matchQ && matchTipo && matchEstado;
+    });
+  }
+
+  openCareerModal(c?: CareerViewModel) {
+    this.editingCareer = c
+      ? { id: c.id, name: c.name, tipoEstudioId: c.tipoEstudioId }
+      : { id: 0, name: '', tipoEstudioId: null };
+    this.careerError = '';
+    this.showCareerModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeCareerModal() {
+    this.showCareerModal = false;
+    document.body.style.overflow = 'auto';
+  }
+
+  saveCareer() {
+    this.careerError = '';
+    const nombre = this.editingCareer.name.trim();
+    const editando = this.editingCareer.id !== 0;
+
+    if (!nombre) {
+      this.careerError = 'El nombre de la carrera es requerido.';
+      return;
+    }
+    if (nombre.length > 255) {
+      this.careerError = 'El nombre de la carrera no puede superar los 255 caracteres.';
+      return;
+    }
+    if (!editando && !this.editingCareer.tipoEstudioId) {
+      this.careerError = 'Debes seleccionar un tipo de estudio.';
+      return;
+    }
+
+    const peticion$ = editando
+      ? this.adminService.editarCarrera(this.editingCareer.id, nombre)
+      : this.adminService.crearCarrera({ nombre, tipo_estudio_id: Number(this.editingCareer.tipoEstudioId) });
+
+    peticion$.subscribe({
+      next: (carrera) => {
+        const vm = this.aCarreraVM(carrera);
+        const idx = this.careers.findIndex(x => x.id === vm.id);
+        if (idx !== -1) {
+          this.careers[idx] = vm;
+        } else {
+          this.careers.unshift(vm);
+        }
+        this.showToast(editando ? 'Carrera actualizada' : 'Carrera creada', 'success');
+        this.closeCareerModal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.careerError = this.mensajeError(err, 'No se pudo guardar la carrera.');
+      }
+    });
+  }
+
+  toggleCareerStatus(c: CareerViewModel) {
+    const accion$ = c.active
+      ? this.adminService.desactivarCarrera(c.id)
+      : this.adminService.reactivarCarrera(c.id);
+
+    accion$.subscribe({
+      next: (carrera) => {
+        c.active = carrera.activo;
+        this.showToast(`Carrera ${carrera.activo ? 'activada' : 'desactivada'}`, 'success');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado de la carrera.'), 'error');
       }
     });
   }

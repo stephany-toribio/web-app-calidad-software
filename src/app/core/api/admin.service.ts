@@ -16,7 +16,9 @@ import {
   OrganizacionAdmin,
   CrearOrganizacionPayload,
   NivelPuestoAdmin,
-  NivelPuestoPayload
+  NivelPuestoPayload,
+  CarreraAdmin,
+  CrearCarreraPayload
 } from './models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -182,6 +184,41 @@ export class AdminService {
   reactivarInstitucion(id: number): Observable<InstitucionAdmin> {
     return this.http
       .patch<ApiResponse<InstitucionAdmin>>(`${this.baseUrl}/instituciones/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Carreras / títulos ---
+
+  /** Todas (activas e inactivas), con su tipo de estudio */
+  listarCarreras(): Observable<CarreraAdmin[]> {
+    return this.http
+      .get<ApiResponse<CarreraAdmin[]>>(`${this.baseUrl}/carreras`)
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo para tipos que llevan carrera (Universitario, Posgrado, Master, Doctorado) */
+  crearCarrera(payload: CrearCarreraPayload): Observable<CarreraAdmin> {
+    return this.http
+      .post<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo se puede renombrar: el tipo de estudio de una carrera no cambia. */
+  editarCarrera(id: number, nombre: string): Observable<CarreraAdmin> {
+    return this.http
+      .patch<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras/${id}`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  desactivarCarrera(id: number): Observable<CarreraAdmin> {
+    return this.http
+      .patch<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  reactivarCarrera(id: number): Observable<CarreraAdmin> {
+    return this.http
+      .patch<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras/${id}/reactivar`, {})
       .pipe(map(res => res.data));
   }
 
