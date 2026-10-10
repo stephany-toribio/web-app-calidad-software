@@ -83,7 +83,7 @@ export class CreoAdminLoginComponent {
         this.isSubmitting = false;
 
         if (sesion.rol !== 'admin') {
-          this.clearSession();
+          this.authService.clearSession();
 
           this.errors = {
             auth: 'Esta cuenta no tiene permisos de administrador.'
@@ -92,12 +92,7 @@ export class CreoAdminLoginComponent {
           return;
         }
 
-        this.saveSession(
-          sesion.token,
-          sesion.usuario_id,
-          sesion.correo,
-          sesion.rol
-        );
+        this.authService.saveSession(sesion);
 
         this.router.navigate(['/creo/admin-skills']);
       },
@@ -168,28 +163,5 @@ export class CreoAdminLoginComponent {
 
   goToLanding(): void {
     this.router.navigate(['/creo/landing']);
-  }
-
-  private saveSession(
-    token: string,
-    usuarioId: number,
-    correo: string,
-    rol: string
-  ): void {
-    localStorage.setItem('token', token);
-
-    localStorage.setItem(
-      'creo_user',
-      JSON.stringify({
-        usuario_id: usuarioId,
-        correo,
-        rol
-      })
-    );
-  }
-
-  private clearSession(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('creo_user');
   }
 }

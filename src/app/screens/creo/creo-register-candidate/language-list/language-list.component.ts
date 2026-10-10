@@ -10,6 +10,8 @@ export interface LanguageEntry {
   idioma: string;
   nivelEscrito: string;
   nivelOral: string;
+  // id del catálogo: permite conservar un idioma que el admin desactivó después (ya no viene en la lista)
+  idiomaId?: number | null;
 }
 
 const NIVELES = ['Básico', 'Intermedio', 'Avanzado', 'Nativo'];
@@ -40,6 +42,11 @@ export class LanguageListComponent implements OnInit {
   showIdiomas = false;
 
   ngOnInit() {
+    this.recargarCatalogos();
+  }
+
+  /** Pide la lista actual. El registro y el perfil la vuelven a llamar si la API rechaza un idioma desactivado */
+  recargarCatalogos() {
     this.catalogos.idiomas().subscribe(lista => {
       this.catalogoIdiomas = lista;
       this.idiomas = lista.map(i => i.nombre);
@@ -60,11 +67,13 @@ export class LanguageListComponent implements OnInit {
 
   onIdiomaChange(val: string) {
     this.currentLang.idioma = val;
+    this.currentLang.idiomaId = null;            // escrito a mano: hay que elegirlo de la lista
     this.showIdiomas = true;
   }
 
   selectIdioma(idioma: string) {
     this.currentLang.idioma = idioma;
+    this.currentLang.idiomaId = aId(this.catalogoIdiomas, idioma);
     this.showIdiomas = false;
   }
 
@@ -85,12 +94,13 @@ export class LanguageListComponent implements OnInit {
   }
 
   getEmptyLang(): LanguageEntry {
-    return { idioma: '', nivelEscrito: '', nivelOral: '' };
+    return { idioma: '', nivelEscrito: '', nivelOral: '', idiomaId: null };
   }
 
   openModal(index = -1) {
     this.errors = {};
     this.editingIndex = index;
+    this.recargarCatalogos();
     if (index === -1) {
       this.currentLang = this.getEmptyLang();
     } else {
@@ -113,8 +123,8 @@ export class LanguageListComponent implements OnInit {
   saveLanguage() {
     this.errors = {};
     if (!this.currentLang.idioma.trim()) this.errors['idioma'] = 'Requerido';
-    // Solo idiomas del catálogo: el backend necesita su id
-    else if (aId(this.catalogoIdiomas, this.currentLang.idioma) === null) this.errors['idioma'] = 'Elige un idioma de la lista';
+    // Solo idiomas del catálogo: el backend necesita su id. Con idiomaId se conserva uno que ya tenía (aunque esté desactivado)
+    else if (!this.currentLang.idiomaId && aId(this.catalogoIdiomas, this.currentLang.idioma) === null) this.errors['idioma'] = 'Elige un idioma de la lista';
     if (!this.currentLang.nivelEscrito) this.errors['nivelEscrito'] = 'Requerido';
     if (!this.currentLang.nivelOral) this.errors['nivelOral'] = 'Requerido';
 

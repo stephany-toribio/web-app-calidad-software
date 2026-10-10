@@ -5,9 +5,23 @@ export interface ItemCatalogo {
     nombre: string;
 }
 
+/** GET /candidatos/me/puestos — personalizado: true => lo escribió el propio candidato (solo él lo ve) */
+export interface PuestoSeleccionable extends ItemCatalogo {
+    personalizado?: boolean;
+}
+
+/**
+ * GET /niveles-puesto (globales, en orden jerárquico) y GET /candidatos/me/niveles-puesto (+ los suyos, con personalizado)
+ */
+export interface NivelPuestoSeleccionable extends ItemCatalogo {
+    personalizado?: boolean;
+}
+
 /** GET /tipos-estudio — requiere_carrera: true => el estudio lleva institución y carrera */
 export interface TipoEstudio extends ItemCatalogo {
     requiere_carrera: boolean;
+    /** true: solo se pide el área de estudio ("Sin estudios formales"); es exclusivo con los demás tipos */
+    solo_area: boolean;
 }
 
 /** GET /areas-estudio */
@@ -20,9 +34,10 @@ export interface Institucion extends ItemCatalogo {
     pais_id: number;
 }
 
-/** GET /organizaciones?pais_id= */
+/** GET /organizaciones?pais_id= y GET /candidatos/me/organizaciones (este último trae personalizado) */
 export interface Organizacion extends ItemCatalogo {
     pais_id: number;
+    personalizado?: boolean;
 }
 
 /** GET /carreras?tipo_estudio_id= (carreras globales, iguales en todos los países) */

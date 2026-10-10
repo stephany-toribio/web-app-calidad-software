@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map, shareReplay } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from './models/api-response.model';
 import {
-    AreaEstudio, Carrera, Habilidad, Institucion, ItemCatalogo, Organizacion, TipoEstudio,
+    AreaEstudio, Carrera, Habilidad, Institucion, ItemCatalogo, NivelPuestoSeleccionable, Organizacion, TipoEstudio,
 } from './models/catalogos.model';
 
 @Injectable({ providedIn: 'root' })
@@ -12,18 +12,15 @@ export class CatalogosService {
     private http = inject(HttpClient);
     private url = environment.apiUrl;
 
-    // Catálogos fijos
-    private paises$ = this.lista<ItemCatalogo>('paises').pipe(shareReplay(1));
-    private tiposEstudio$ = this.lista<TipoEstudio>('tipos-estudio').pipe(shareReplay(1));
-    private areasEstudio$ = this.lista<AreaEstudio>('areas-estudio').pipe(shareReplay(1));
-    private idiomas$ = this.lista<ItemCatalogo>('idiomas').pipe(shareReplay(1));
-    private puestos$ = this.lista<ItemCatalogo>('puestos').pipe(shareReplay(1));
-
-    paises(): Observable<ItemCatalogo[]> { return this.paises$; }
-    tiposEstudio(): Observable<TipoEstudio[]> { return this.tiposEstudio$; }
-    areasEstudio(): Observable<AreaEstudio[]> { return this.areasEstudio$; }
-    idiomas(): Observable<ItemCatalogo[]> { return this.idiomas$; }
-    puestos(): Observable<ItemCatalogo[]> { return this.puestos$; }
+    // Sin caché: cada llamada pide la lista actual. El admin puede desactivar elementos en cualquier momento
+    // y una lista guardada para toda la sesión seguiría mostrándolos hasta recargar la página.
+    paises(): Observable<ItemCatalogo[]> { return this.lista<ItemCatalogo>('paises'); }
+    tiposEstudio(): Observable<TipoEstudio[]> { return this.lista<TipoEstudio>('tipos-estudio'); }
+    areasEstudio(): Observable<AreaEstudio[]> { return this.lista<AreaEstudio>('areas-estudio'); }
+    idiomas(): Observable<ItemCatalogo[]> { return this.lista<ItemCatalogo>('idiomas'); }
+    puestos(): Observable<ItemCatalogo[]> { return this.lista<ItemCatalogo>('puestos'); }
+    /** En orden jerárquico (Practicante → Gerente), tal como lo devuelve el backend */
+    nivelesPuesto(): Observable<NivelPuestoSeleccionable[]> { return this.lista<NivelPuestoSeleccionable>('niveles-puesto'); }
 
     // Catálogos que dependen de lo elegido en el formulario
     instituciones(paisId?: number): Observable<Institucion[]> {

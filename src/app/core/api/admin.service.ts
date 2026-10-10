@@ -12,7 +12,14 @@ import {
   PaisAdmin,
   InstitucionAdmin,
   PuestoAdmin,
-  CrearInstitucionPayload
+  CrearInstitucionPayload,
+  OrganizacionAdmin,
+  CrearOrganizacionPayload,
+  NivelPuestoAdmin,
+  NivelPuestoPayload,
+  CarreraAdmin,
+  CrearCarreraPayload,
+  IdiomaAdmin
 } from './models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -80,7 +87,6 @@ export class AdminService {
       .pipe(map(res => res.data));
   }
 
-  // --- Habilidades (ADM-09 a ADM-13) ---
 
   /** ADM-09: Listar todas las habilidades (activas e inactivas) */
   listarHabilidades(): Observable<Habilidad[]> {
@@ -182,11 +188,93 @@ export class AdminService {
       .pipe(map(res => res.data));
   }
 
-  // --- Puestos (solo listar y activar/desactivar) ---
+  // --- Carreras / títulos ---
+
+  /** Todas (activas e inactivas), con su tipo de estudio */
+  listarCarreras(): Observable<CarreraAdmin[]> {
+    return this.http
+      .get<ApiResponse<CarreraAdmin[]>>(`${this.baseUrl}/carreras`)
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo para tipos que llevan carrera (Universitario, Posgrado, Master, Doctorado) */
+  crearCarrera(payload: CrearCarreraPayload): Observable<CarreraAdmin> {
+    return this.http
+      .post<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo se puede renombrar: el tipo de estudio de una carrera no cambia. */
+  editarCarrera(id: number, nombre: string): Observable<CarreraAdmin> {
+    return this.http
+      .patch<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras/${id}`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  desactivarCarrera(id: number): Observable<CarreraAdmin> {
+    return this.http
+      .patch<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  reactivarCarrera(id: number): Observable<CarreraAdmin> {
+    return this.http
+      .patch<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Idiomas ---
+
+  /** Todos (activos e inactivos) */
+  listarIdiomas(): Observable<IdiomaAdmin[]> {
+    return this.http
+      .get<ApiResponse<IdiomaAdmin[]>>(`${this.baseUrl}/idiomas`)
+      .pipe(map(res => res.data));
+  }
+
+  crearIdioma(nombre: string): Observable<IdiomaAdmin> {
+    return this.http
+      .post<ApiResponse<IdiomaAdmin>>(`${this.baseUrl}/idiomas`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  editarIdioma(id: number, nombre: string): Observable<IdiomaAdmin> {
+    return this.http
+      .patch<ApiResponse<IdiomaAdmin>>(`${this.baseUrl}/idiomas/${id}`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  desactivarIdioma(id: number): Observable<IdiomaAdmin> {
+    return this.http
+      .patch<ApiResponse<IdiomaAdmin>>(`${this.baseUrl}/idiomas/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  reactivarIdioma(id: number): Observable<IdiomaAdmin> {
+    return this.http
+      .patch<ApiResponse<IdiomaAdmin>>(`${this.baseUrl}/idiomas/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Puestos ---
 
   listarPuestos(): Observable<PuestoAdmin[]> {
     return this.http
       .get<ApiResponse<PuestoAdmin[]>>(`${this.baseUrl}/puestos`)
+      .pipe(map(res => res.data));
+  }
+
+  /** Crea un puesto del catálogo global. */
+  crearPuesto(nombre: string): Observable<PuestoAdmin> {
+    return this.http
+      .post<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo puestos globales: un personalizado responde 409 (pertenece al candidato). */
+  editarPuesto(id: number, nombre: string): Observable<PuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos/${id}`, { nombre })
       .pipe(map(res => res.data));
   }
 
@@ -196,10 +284,81 @@ export class AdminService {
       .pipe(map(res => res.data));
   }
 
-  /** Activar un puesto propuesto por un candidato también lo aprueba. */
+  /** Solo lo habilita: un personalizado sigue siendo del candidato y no pasa al catálogo global. */
   reactivarPuesto(id: number): Observable<PuestoAdmin> {
     return this.http
       .patch<ApiResponse<PuestoAdmin>>(`${this.baseUrl}/puestos/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Niveles del puesto ---
+
+  /** Globales en su orden jerárquico y después los personalizados */
+  listarNivelesPuesto(): Observable<NivelPuestoAdmin[]> {
+    return this.http
+      .get<ApiResponse<NivelPuestoAdmin[]>>(`${this.baseUrl}/niveles-puesto`)
+      .pipe(map(res => res.data));
+  }
+
+  /** Crea un nivel global. Sin orden, va al final de la jerarquía */
+  crearNivelPuesto(payload: NivelPuestoPayload): Observable<NivelPuestoAdmin> {
+    return this.http
+      .post<ApiResponse<NivelPuestoAdmin>>(`${this.baseUrl}/niveles-puesto`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  /** Nombre y/u orden, solo globales: un personalizado responde 409 */
+  editarNivelPuesto(id: number, payload: NivelPuestoPayload): Observable<NivelPuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<NivelPuestoAdmin>>(`${this.baseUrl}/niveles-puesto/${id}`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  desactivarNivelPuesto(id: number): Observable<NivelPuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<NivelPuestoAdmin>>(`${this.baseUrl}/niveles-puesto/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo lo habilita: un personalizado sigue siendo del candidato y no pasa al catálogo global */
+  reactivarNivelPuesto(id: number): Observable<NivelPuestoAdmin> {
+    return this.http
+      .patch<ApiResponse<NivelPuestoAdmin>>(`${this.baseUrl}/niveles-puesto/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Organizaciones (lugares de trabajo de la experiencia laboral) ---
+
+  listarOrganizaciones(): Observable<OrganizacionAdmin[]> {
+    return this.http
+      .get<ApiResponse<OrganizacionAdmin[]>>(`${this.baseUrl}/organizaciones`)
+      .pipe(map(res => res.data));
+  }
+
+  /** Crea una organización del catálogo global en un país activo. */
+  crearOrganizacion(payload: CrearOrganizacionPayload): Observable<OrganizacionAdmin> {
+    return this.http
+      .post<ApiResponse<OrganizacionAdmin>>(`${this.baseUrl}/organizaciones`, payload)
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo el nombre y solo globales: el país no cambia y una personalizada responde 409. */
+  editarOrganizacion(id: number, nombre: string): Observable<OrganizacionAdmin> {
+    return this.http
+      .patch<ApiResponse<OrganizacionAdmin>>(`${this.baseUrl}/organizaciones/${id}`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  desactivarOrganizacion(id: number): Observable<OrganizacionAdmin> {
+    return this.http
+      .patch<ApiResponse<OrganizacionAdmin>>(`${this.baseUrl}/organizaciones/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  /** Solo la habilita (409 si su país está inactivo): una personalizada no pasa al catálogo global. */
+  reactivarOrganizacion(id: number): Observable<OrganizacionAdmin> {
+    return this.http
+      .patch<ApiResponse<OrganizacionAdmin>>(`${this.baseUrl}/organizaciones/${id}/reactivar`, {})
       .pipe(map(res => res.data));
   }
 }

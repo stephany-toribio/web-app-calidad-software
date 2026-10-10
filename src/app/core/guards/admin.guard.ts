@@ -13,5 +13,5 @@ export const adminGuard: CanActivateFn = () => {
 
   authService.clearSession();
 
-  return router.createUrlTree(['/creo/admin-login']);
+  return router.createUrlTree(['/creo/landing']);
 };

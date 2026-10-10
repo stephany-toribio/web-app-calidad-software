@@ -1,21 +1,35 @@
 import { Habilidad, ItemCatalogo } from './catalogos.model';
-import { EstadoEstudio, Genero, NivelExperiencia, NivelIdioma } from './registro-candidato.model';
+import { EstadoEstudio, Genero, NivelIdioma } from './registro-candidato.model';
 
 // Respuesta de GET /candidatos/me 
-export interface ItemPropuesto extends ItemCatalogo {
-    estado_catalogo: string;
+// personalizado: lo escribió el candidato. activo = false: el admin lo deshabilitó (lo conserva, pero no puede volver a elegirlo)
+export interface PuestoPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
+}
+
+// Mismo criterio que el puesto
+export interface OrganizacionPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
+}
+
+// Mismo criterio que el puesto (antes el nivel era un código fijo como "junior")
+export interface NivelPuestoPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
 }
 
 export interface EstudioPerfil {
     id: number;
     tipo_estudio: ItemCatalogo;
     area_estudio: ItemCatalogo;
-    pais: ItemCatalogo;
-    institucion: ItemCatalogo | null;   // null en Secundario y Terciario
+    pais: ItemCatalogo | null;          // null en "Sin estudios formales" (solo lleva el área)
+    institucion: ItemCatalogo | null;   // null en Secundario, Terciario y "Sin estudios formales"
     carrera: ItemCatalogo | null;
-    estado: EstadoEstudio;
+    estado: EstadoEstudio | null;       // null en "Sin estudios formales"
     ciclo_actual: number | null;
-    fecha_inicio: string;               // 'YYYY-MM-DD'
+    fecha_inicio: string | null;        // 'YYYY-MM-DD'; null en "Sin estudios formales"
     fecha_fin: string | null;
 }
 
@@ -28,10 +42,10 @@ export interface IdiomaPerfil {
 
 export interface ExperienciaPerfil {
     id: number;
-    puesto: ItemPropuesto;
-    organizacion: ItemPropuesto;
+    puesto: PuestoPerfil;
+    organizacion: OrganizacionPerfil;
     pais: ItemCatalogo;
-    nivel: NivelExperiencia;
+    nivel: NivelPuestoPerfil;
     fecha_inicio: string;
     fecha_fin: string | null;
     descripcion: string | null;

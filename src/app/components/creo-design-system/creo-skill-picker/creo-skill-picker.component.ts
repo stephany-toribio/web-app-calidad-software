@@ -21,8 +21,13 @@ export class CreoSkillPickerComponent {
     @Input() maxSkills?: number;
 
     @Output() toggle = new EventEmitter<string>();
+    @Output() pickerFocus = new EventEmitter<void>();
 
     query = '';
+
+    onFocus() {
+        this.pickerFocus.emit();
+    }
 
     get trimmedQuery(): string {
         return this.query.trim().toLowerCase();
@@ -34,46 +39,23 @@ export class CreoSkillPickerComponent {
             : this.catalog;
     }
 
-    private _lastSections: SkillSection[] = [];
-    private _lastCatalog: string[] = [];
-    private _lastQuery = '';
-    private _cachedRemaining: string[] = [];
-    private _cachedSuggestedSet = new Set<string>();
-
     get suggestedSkillSet(): Set<string> {
-        if (this._lastSections !== this.suggestedSections) {
-            this._lastSections = this.suggestedSections || [];
-            this._cachedSuggestedSet = new Set(this._lastSections.flatMap(s => s.skills));
-        }
-        return this._cachedSuggestedSet;
+        return new Set((this.suggestedSections || []).flatMap(s => s.skills));
     }
 
     get remainingCatalog(): string[] {
-        const fc = this.filteredCatalog;
-        if (this._lastCatalog !== fc || this._lastQuery !== this.trimmedQuery || this._lastSections !== this.suggestedSections) {
-            this._lastCatalog = fc;
-            this._lastQuery = this.trimmedQuery;
-            const set = this.suggestedSkillSet; // triggers update if needed
-            this._cachedRemaining = fc.filter(s => !set.has(s));
-        }
-        return this._cachedRemaining;
+        const set = this.suggestedSkillSet;
+        return this.filteredCatalog.filter(s => !set.has(s));
     }
 
     get atMax(): boolean {
         return this.maxSkills !== undefined && this.selected.length >= this.maxSkills;
     }
 
-    private _sectionSkillsCache = new Map<string, string[]>();
-
     sectionSkills(section: SkillSection): string[] {
-        const key = section.label + '|' + this.trimmedQuery;
-        if (!this._sectionSkillsCache.has(key)) {
-            const filtered = this.trimmedQuery
-                ? section.skills.filter(s => s.toLowerCase().includes(this.trimmedQuery))
-                : section.skills;
-            this._sectionSkillsCache.set(key, filtered);
-        }
-        return this._sectionSkillsCache.get(key)!;
+        return this.trimmedQuery
+            ? section.skills.filter(s => s.toLowerCase().includes(this.trimmedQuery))
+            : section.skills;
     }
 
     // ── Grupos por área de estudio ────────────────────────────────────────────

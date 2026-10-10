@@ -1,9 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CatalogosService } from '../../../../core/api/catalogos.service';
-import { ItemCatalogo, Organizacion } from '../../../../core/api/models/catalogos.model';
-import { aId } from '../../../../core/api/mappers/registro-candidato.mapper';
+import { CandidatosService } from '../../../../core/api/candidatos.service';
+import { ItemCatalogo, NivelPuestoSeleccionable, Organizacion, PuestoSeleccionable } from '../../../../core/api/models/catalogos.model';
+import { aId, esFechaAnteriorANacimiento } from '../../../../core/api/mappers/registro-candidato.mapper';
 
 const MAX_DESCRIPCION_CARACTERES = 300;
 
@@ -18,9 +19,10 @@ export interface ExperienceEntry {
   fechaFinAno: string;
   alPresente: boolean;
   descripcion: string;
-  // id del catálogo si se eligió de la lista; null si se escribió uno nuevo (se envía como propuesta)
+  // id del catálogo si se eligió de la lista; null si se escribió uno nuevo (se envía como valor personalizado)
   puestoId?: number | null;
   organizacionId?: number | null;
+  nivelId?: number | null;
 }
 
 @Component({
@@ -31,9 +33,18 @@ export interface ExperienceEntry {
 })
 export class ExperienceListComponent implements OnInit {
   private catalogos = inject(CatalogosService);
+  private candidatos = inject(CandidatosService);
 
+  /**
+   * De dónde salen las sugerencias de puesto y organización:
+   * 'catalogo' (registro, aún sin cuenta) = GET /puestos y GET /organizaciones;
+   * 'candidato' (perfil) = GET /candidatos/me/puestos y /me/organizaciones, que suman sus valores personalizados.
+   */
+  @Input() fuenteCatalogos: 'catalogo' | 'candidato' = 'catalogo';
   @Input() experiences: ExperienceEntry[] = [];
   @Input() maxExperiences: number = 5;
+  @Input() birthYear?: string | number;
+  @Input() birthMonth?: string;
   @Output() experiencesChange = new EventEmitter<ExperienceEntry[]>();
 
   showModal = false;
@@ -41,26 +52,66 @@ export class ExperienceListComponent implements OnInit {
   errors: Record<string, boolean> = {};
 
   paises: string[] = [];                         // nombres de GET /paises (los usa el HTML)
-  niveles = ['Trainee', 'Junior', 'Semi Senior', 'Senior', 'Jefe / Supervisor', 'Gerente / Director'];
   meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   anos = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   private catalogoPaises: ItemCatalogo[] = [];
-  private catalogoPuestos: ItemCatalogo[] = [];
+  private catalogoPuestos: PuestoSeleccionable[] = [];
   private catalogoOrganizaciones: Organizacion[] = [];
+  private catalogoNiveles: NivelPuestoSeleccionable[] = [];   // ya viene en orden jerárquico
 
   currentExp: ExperienceEntry = this.getEmptyExp();
 
   showEmpresas = false;
   showPuestos = false;
+  showNiveles = false;
 
   ngOnInit() {
+    this.recargarCatalogos();
+  }
+
+  /** Pide las listas actuales. El registro la vuelve a llamar si la API rechaza algo que el admin desactivó */
+  recargarCatalogos() {
     this.catalogos.paises().subscribe(lista => {
       this.catalogoPaises = lista;
       this.paises = lista.map(p => p.nombre);
     });
-    this.catalogos.puestos().subscribe(lista => this.catalogoPuestos = lista);
-    this.catalogos.organizaciones().subscribe(lista => this.catalogoOrganizaciones = lista);
+    const delCandidato = this.fuenteCatalogos === 'candidato';
+    const puestos$ = delCandidato ? this.candidatos.misPuestos() : this.catalogos.puestos();
+    const organizaciones$ = delCandidato ? this.candidatos.misOrganizaciones() : this.catalogos.organizaciones();
+    const niveles$ = delCandidato ? this.candidatos.misNivelesPuesto() : this.catalogos.nivelesPuesto();
+    puestos$.subscribe(lista => this.catalogoPuestos = lista);
+    organizaciones$.subscribe(lista => this.catalogoOrganizaciones = lista);
+    niveles$.subscribe(lista => this.catalogoNiveles = lista);
+  }
+
+  /** Respeta el orden jerárquico del backend (no se ordena alfabéticamente) */
+  get filteredNiveles(): string[] {
+    const val = (this.currentExp.nivel || '').toLowerCase();
+    return this.catalogoNiveles.map(n => n.nombre).filter(n => n.toLowerCase().includes(val));
+  }
+
+  /** Nivel escrito antes por el mismo candidato (se marca como "Tuyo") */
+  esNivelPropio(nombre: string): boolean {
+    return this.catalogoNiveles.some(n => n.nombre === nombre && n.personalizado);
+  }
+
+  onNivelChange(val: string) {
+    this.currentExp.nivel = val;
+    this.currentExp.nivelId = null;              // escrito a mano: se enviará como valor personalizado
+    this.showNiveles = true;
+  }
+
+  selectNivel(nivel: string) {
+    this.currentExp.nivel = nivel;
+    this.currentExp.nivelId = aId(this.catalogoNiveles, nivel);
+    this.showNiveles = false;
+  }
+
+  onNivelBlur() {
+    setTimeout(() => {
+      this.showNiveles = false;
+    }, 200);
   }
 
   private get paisId(): number | null {
@@ -101,6 +152,16 @@ export class ExperienceListComponent implements OnInit {
     }, 200);
   }
 
+  /** Puesto escrito antes por el mismo candidato (se marca como "Tuyo" en las sugerencias) */
+  esPuestoPropio(nombre: string): boolean {
+    return this.catalogoPuestos.some(p => p.nombre === nombre && p.personalizado);
+  }
+
+  /** Organización escrita antes por el mismo candidato en el país elegido (se marca como "Tuya") */
+  esOrganizacionPropia(nombre: string): boolean {
+    return this.organizacionesDelPais.some(o => o.nombre === nombre && o.personalizado);
+  }
+
   onPuestoChange(val: string) {
     this.currentExp.puesto = val;
     this.currentExp.puestoId = null;             // escrito a mano: se enviará como propuesta
@@ -119,11 +180,18 @@ export class ExperienceListComponent implements OnInit {
     }, 200);
   }
 
+  @HostListener('window:focus')
+  onWindowFocus() {
+    if (this.showModal) {
+      this.recargarCatalogos();
+    }
+  }
+
   getEmptyExp(): ExperienceEntry {
     return {
       puesto: '', empresa: '', nivel: '', pais: '',
       fechaInicioMes: '', fechaInicioAno: '', fechaFinMes: '', fechaFinAno: '',
-      alPresente: false, descripcion: '', puestoId: null, organizacionId: null
+      alPresente: false, descripcion: '', puestoId: null, organizacionId: null, nivelId: null
     };
   }
 
@@ -145,6 +213,7 @@ export class ExperienceListComponent implements OnInit {
   openModal(index = -1) {
     this.errors = {};
     this.editingIndex = index;
+    this.recargarCatalogos();
     if (index === -1) {
       this.currentExp = this.getEmptyExp();
     } else {
@@ -159,8 +228,30 @@ export class ExperienceListComponent implements OnInit {
     document.body.style.overflow = '';
   }
 
+  onAlPresenteChange() {
+    if (this.currentExp.alPresente) {
+      this.currentExp.fechaFinMes = '';
+      this.currentExp.fechaFinAno = '';
+      delete this.errors['fechaFin'];
+      delete this.errors['fechaFinError'];
+      delete this.errors['fechaFinNacimiento'];
+    }
+    this.validateDates();
+  }
+
   validateDates() {
     delete this.errors['fechaFinError'];
+    delete this.errors['fechaInicioNacimiento'];
+    delete this.errors['fechaFinNacimiento'];
+
+    if (this.currentExp.fechaInicioAno && esFechaAnteriorANacimiento(this.currentExp.fechaInicioAno, this.currentExp.fechaInicioMes, this.birthYear, this.birthMonth)) {
+      this.errors['fechaInicioNacimiento'] = true;
+    }
+
+    if (!this.currentExp.alPresente && this.currentExp.fechaFinAno && esFechaAnteriorANacimiento(this.currentExp.fechaFinAno, this.currentExp.fechaFinMes, this.birthYear, this.birthMonth)) {
+      this.errors['fechaFinNacimiento'] = true;
+    }
+
     if (!this.currentExp.alPresente && this.currentExp.fechaInicioMes && this.currentExp.fechaInicioAno && this.currentExp.fechaFinMes && this.currentExp.fechaFinAno) {
       const iAno = parseInt(this.currentExp.fechaInicioAno);
       const fAno = parseInt(this.currentExp.fechaFinAno);
@@ -177,7 +268,7 @@ export class ExperienceListComponent implements OnInit {
     const e: Record<string, boolean> = {};
     if (!this.currentExp.puesto.trim()) e['puesto'] = true;
     if (!this.currentExp.empresa.trim()) e['empresa'] = true;
-    if (!this.currentExp.nivel) e['nivel'] = true;
+    if (!this.currentExp.nivel.trim()) e['nivel'] = true;
     if (!this.currentExp.pais) e['pais'] = true;
     if (!this.currentExp.fechaInicioMes || !this.currentExp.fechaInicioAno) e['fechaInicio'] = true;
 
@@ -190,6 +281,8 @@ export class ExperienceListComponent implements OnInit {
     this.errors = e;
     this.validateDates();
     if (this.errors['fechaFinError']) e['fechaFinError'] = true;
+    if (this.errors['fechaInicioNacimiento']) e['fechaInicioNacimiento'] = true;
+    if (this.errors['fechaFinNacimiento']) e['fechaFinNacimiento'] = true;
 
     if (Object.keys(e).length > 0) return;
 

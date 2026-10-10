@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from './models/api-response.model';
 import { CandidatoRegistrado, RegistroCandidatoPayload } from './models/registro-candidato.model';
 import { CandidatoPerfil } from './models/candidato-perfil.model';
+import { NivelPuestoSeleccionable, Organizacion, PuestoSeleccionable } from './models/catalogos.model';
 
 @Injectable({ providedIn: 'root' })
 export class CandidatosService {
@@ -31,6 +32,28 @@ export class CandidatosService {
     obtenerMiPerfil(): Observable<CandidatoPerfil> {
         return this.http
             .get<ApiResponse<CandidatoPerfil>>(`${this.url}/me`)
+            .pipe(map(respuesta => respuesta.data));
+    }
+
+    /** Puestos que puede elegir el candidato autenticado: catálogo global + sus personalizados habilitados */
+    misPuestos(): Observable<PuestoSeleccionable[]> {
+        return this.http
+            .get<ApiResponse<PuestoSeleccionable[]>>(`${this.url}/me/puestos`)
+            .pipe(map(respuesta => respuesta.data));
+    }
+
+    /** Niveles que puede elegir el candidato autenticado: globales (en su orden) + sus personalizados habilitados */
+    misNivelesPuesto(): Observable<NivelPuestoSeleccionable[]> {
+        return this.http
+            .get<ApiResponse<NivelPuestoSeleccionable[]>>(`${this.url}/me/niveles-puesto`)
+            .pipe(map(respuesta => respuesta.data));
+    }
+
+    /** Organizaciones que puede elegir el candidato autenticado: catálogo global + sus personalizadas habilitadas */
+    misOrganizaciones(paisId?: number): Observable<Organizacion[]> {
+        const params = paisId ? new HttpParams().set('pais_id', paisId) : undefined;
+        return this.http
+            .get<ApiResponse<Organizacion[]>>(`${this.url}/me/organizaciones`, { params })
             .pipe(map(respuesta => respuesta.data));
     }
 

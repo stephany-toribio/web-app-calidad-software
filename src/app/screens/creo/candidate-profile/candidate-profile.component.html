@@ -1,4 +1,4 @@
-﻿<app-candidate-shell activeScreen="candidate-profile">
+<app-candidate-shell activeScreen="candidate-profile">
   <!-- Estado de carga / error de GET /candidatos/me -->
   <div *ngIf="cargando" class="max-w-[1100px] mx-auto py-16 text-center text-sm" style="color: #64748B;">
     Cargando tu perfil...
@@ -69,8 +69,27 @@
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 </div>
                 <div class="flex flex-col pt-1">
-                  <h3 class="text-base font-bold" style="color: #111111;">{{ exp.puesto }}</h3>
-                  <p class="text-[15px] font-medium mt-0.5" style="color: #475569;">{{ exp.empresa }}</p>
+                  <h3 class="text-base font-bold flex flex-wrap items-center gap-2" style="color: #111111;">
+                    {{ exp.puesto }}
+                    <span *ngIf="exp.puestoPersonalizado" class="px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #F1F5F9; color: #475569;">Personalizado</span>
+                  </h3>
+                  <p *ngIf="exp.puestoActivo === false" class="text-xs font-medium mt-1" style="color: #B45309;">
+                    Este puesto fue deshabilitado por el administrador. Se conserva en tu perfil, pero no podrás volver a elegirlo.
+                  </p>
+                  <p class="text-[15px] font-medium mt-0.5 flex flex-wrap items-center gap-2" style="color: #475569;">
+                    {{ exp.empresa }}
+                    <span *ngIf="exp.organizacionPersonalizada" class="px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #F1F5F9; color: #475569;">Personalizada</span>
+                  </p>
+                  <p *ngIf="exp.organizacionActiva === false" class="text-xs font-medium mt-1" style="color: #B45309;">
+                    Esta organización fue deshabilitada por el administrador. Se conserva en tu perfil, pero no podrás volver a elegirla.
+                  </p>
+                  <p *ngIf="exp.nivel" class="text-sm mt-1 flex flex-wrap items-center gap-2" style="color: #475569;">
+                    Nivel: {{ exp.nivel }}
+                    <span *ngIf="exp.nivelPersonalizado" class="px-2 py-0.5 text-[10px] font-bold rounded-full" style="background-color: #F1F5F9; color: #475569;">Personalizado</span>
+                  </p>
+                  <p *ngIf="exp.nivelActivo === false" class="text-xs font-medium mt-1" style="color: #B45309;">
+                    Este nivel fue deshabilitado por el administrador. Se conserva en tu perfil, pero no podrás volver a elegirlo.
+                  </p>
                   <p class="text-xs font-medium mt-1" style="color: #94A3B8;">{{ exp.fechaInicioMes | slice:0:3 }} {{ exp.fechaInicioAno }} — {{ exp.alPresente ? 'Presente' : ((exp.fechaFinMes | slice:0:3) + ' ' + exp.fechaFinAno) }}</p>
                   <p class="text-sm mt-3 leading-relaxed" style="color: #475569;">{{ exp.descripcion }}</p>
                 </div>
@@ -97,8 +116,10 @@
               <div class="flex flex-col pt-1">
                 <!-- Secundario/Terciario no tienen carrera ni institución: se muestra el tipo de estudio -->
                 <h3 class="text-base font-bold" style="color: #111111;">{{ edu.titulo || edu.tipoEstudio }}</h3>
-                <p class="text-[15px] font-medium mt-0.5" style="color: #475569;">{{ edu.institucion }} <span class="text-slate-400 font-normal">({{ edu.pais }})</span></p>
-                <div class="flex items-center gap-3 mt-1">
+                <!-- "Sin estudios formales": solo el área (sin institución, país, fechas ni estado) -->
+                <p *ngIf="esSoloArea(edu.tipoEstudio)" class="text-[15px] font-medium mt-0.5" style="color: #475569;">Área: {{ edu.areaEstudio }}</p>
+                <p *ngIf="!esSoloArea(edu.tipoEstudio)" class="text-[15px] font-medium mt-0.5" style="color: #475569;">{{ edu.institucion }} <span class="text-slate-400 font-normal">({{ edu.pais }})</span></p>
+                <div *ngIf="!esSoloArea(edu.tipoEstudio)" class="flex items-center gap-3 mt-1">
                   <p class="text-xs font-medium" style="color: #94A3B8;">{{ edu.fechaInicioMes | slice:0:3 }} {{ edu.fechaInicioAno }} — {{ edu.alPresente ? 'Presente' : ((edu.fechaFinMes | slice:0:3) + ' ' + edu.fechaFinAno) }}</p>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                   <span class="text-xs font-semibold px-2 py-0.5 rounded-md" style="background-color: #F1F5F9; color: #475569;">{{ edu.estado }}</span>
@@ -309,7 +330,7 @@
         <button (click)="closeExpModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
       <div class="flex-1 overflow-y-auto p-0" style="scrollbar-width: thin;">
-        <app-experience-list [(experiences)]="candidate.experience"></app-experience-list>
+        <app-experience-list [(experiences)]="candidate.experience" fuenteCatalogos="candidato"></app-experience-list>
       </div>
       <div class="flex justify-between items-center gap-4 px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">
         <p class="text-xs text-red-500">{{ errores['experiencia'] || errores['api'] }}</p>
@@ -353,11 +374,11 @@
       <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6" style="scrollbar-width: thin;">
         <div>
           <h3 class="text-sm font-bold mb-3" style="color: #111111;">Habilidades Técnicas</h3>
-          <app-creo-skill-picker [catalog]="hardSkillsCatalog" [selected]="candidate.hardSkills" (toggle)="toggleHardSkill($event)" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
+          <app-creo-skill-picker [catalog]="hardSkillsCatalog" [selected]="candidate.hardSkills" (toggle)="toggleHardSkill($event)" (pickerFocus)="recargarHabilidadesPerfil()" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
         </div>
         <div>
           <h3 class="text-sm font-bold mb-3" style="color: #111111;">Habilidades Blandas</h3>
-          <app-creo-skill-picker [catalog]="softSkillsCatalog" [selected]="candidate.softSkills" (toggle)="toggleSoftSkill($event)" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
+          <app-creo-skill-picker [catalog]="softSkillsCatalog" [selected]="candidate.softSkills" (toggle)="toggleSoftSkill($event)" (pickerFocus)="recargarHabilidadesPerfil()" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
         </div>
       </div>
       <div class="flex justify-between items-center gap-4 px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">

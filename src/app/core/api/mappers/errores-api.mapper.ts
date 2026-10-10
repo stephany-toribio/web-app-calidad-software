@@ -7,6 +7,7 @@ export type ErroresFormulario = Record<string, string>;
 // Mensajes de unicidad del backend (RegistrarCandidatoRequest::messages).
 const CORREO_DUPLICADO = 'Este correo ya pertenece a una cuenta registrada.';
 const DNI_DUPLICADO = 'El DNI ya existe en la base de datos.';
+const TELEFONO_DUPLICADO = 'El número de teléfono ya está registrado.';
 const CONFIRMACION_NO_COINCIDE = 'La confirmación de la contraseña no coincide.';
 
 
@@ -63,6 +64,7 @@ function traducirValidacion(errores: Record<string, string[]>): ErroresFormulari
 
         if (campo === 'correo' && mensaje === CORREO_DUPLICADO) { resultado['emailTaken'] = 'duplicate'; continue; }
         if (campo === 'dni' && mensaje === DNI_DUPLICADO) { resultado['dniTaken'] = 'duplicate'; continue; }
+        if (campo === 'celular' && mensaje === TELEFONO_DUPLICADO) { resultado['phoneTaken'] = 'duplicate'; continue; }
         if (campo === 'password' && mensaje === CONFIRMACION_NO_COINCIDE) { resultado['passwordConfirm'] = mensaje; continue; }
 
 

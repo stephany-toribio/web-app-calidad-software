@@ -3,19 +3,16 @@
 export type Genero = 'masculino' | 'femenino' | 'otro' | 'prefiero no decir';
 export type EstadoEstudio = 'finalizado' | 'en_curso' | 'incompleto';
 export type NivelIdioma = 'basico' | 'intermedio' | 'avanzado' | 'nativo';
-export type NivelExperiencia =
-    | 'practicante_pre' | 'practicante_pro' | 'trainee' | 'junior'
-    | 'semi_senior' | 'senior' | 'jefe_supervisor' | 'gerente_director';
 
 export interface EstudioPayload {
     tipo_estudio_id: number;
     area_estudio_id: number;
-    pais_id: number;
-    institucion_id: number | null;   // null en Secundario y Terciario
-    carrera_id: number | null;       // null en Secundario y Terciario
-    estado: EstadoEstudio;
+    pais_id: number | null;          // null solo en "Sin estudios formales" (solo lleva el área)
+    institucion_id: number | null;   // null en Secundario, Terciario y "Sin estudios formales"
+    carrera_id: number | null;       // null en Secundario, Terciario y "Sin estudios formales"
+    estado: EstadoEstudio | null;    // null solo en "Sin estudios formales"
     ciclo_actual: number | null;     // solo si estado = 'en_curso'
-    fecha_inicio: string;            // 'YYYY-MM-DD'
+    fecha_inicio: string | null;     // 'YYYY-MM-DD'; null solo en "Sin estudios formales"
     fecha_fin: string | null;        // null = "al presente"
 }
 
@@ -25,14 +22,15 @@ export interface IdiomaPayload {
     nivel_oral: NivelIdioma;
 }
 
-/** Puesto y organización: el id si existe en el catálogo, o el nombre si es una propuesta nueva */
+/** Puesto, organización y nivel: el id si existe en el catálogo, o el nombre si el candidato lo escribió */
 export interface ExperienciaPayload {
     puesto_id?: number;
     puesto_nombre?: string;
     organizacion_id?: number;
     organizacion_nombre?: string;
+    nivel_puesto_id?: number;
+    nivel_puesto_nombre?: string;
     pais_id: number;
-    nivel: NivelExperiencia;
     fecha_inicio: string;
     fecha_fin: string | null;
     descripcion: string | null;

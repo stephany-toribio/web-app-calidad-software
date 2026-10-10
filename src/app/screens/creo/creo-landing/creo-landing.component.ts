@@ -62,10 +62,10 @@ export class CreoLandingComponent {
   stats = STATS;
 
   constructor() {
-    if (this.route.snapshot.queryParamMap.get('sessionExpired') === 'true') {
-      this.sessionMessage.set(
-        'Tu sesión expiró. Inicia sesión nuevamente.'
-      );
+    if (this.route.snapshot.queryParamMap.get('accountSuspended') === 'true') {
+      this.sessionMessage.set('Tu cuenta ha sido suspendida por la administración.');
+    } else if (this.route.snapshot.queryParamMap.get('sessionExpired') === 'true') {
+      this.sessionMessage.set('Tu sesión expiró. Inicia sesión nuevamente.');
     }
   }
 
@@ -134,12 +134,7 @@ export class CreoLandingComponent {
       next: (sesion) => {
         this.isSubmitting.set(false);
 
-        this.saveSession(
-          sesion.token,
-          sesion.usuario_id,
-          sesion.correo,
-          sesion.rol
-        );
+        this.authService.saveSession(sesion);
 
         const name =
           sesion.correo
@@ -170,7 +165,7 @@ export class CreoLandingComponent {
             break;
 
           default:
-            this.clearSession();
+            this.authService.clearSession();
 
             this.errors.set({
               auth: 'El rol de esta cuenta no tiene acceso al sistema.'
@@ -247,28 +242,5 @@ export class CreoLandingComponent {
     });
 
     this.router.navigate(['/creo', screen]);
-  }
-
-  private saveSession(
-    token: string,
-    usuarioId: number,
-    correo: string,
-    rol: string
-  ): void {
-    localStorage.setItem('token', token);
-
-    localStorage.setItem(
-      'creo_user',
-      JSON.stringify({
-        usuario_id: usuarioId,
-        correo,
-        rol
-      })
-    );
-  }
-
-  private clearSession(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('creo_user');
   }
 }

@@ -1,7 +1,7 @@
 import { AreaEstudio, Habilidad, ItemCatalogo, TipoEstudio } from '../models/catalogos.model';
 import {
     EstadoEstudio, EstudioPayload, ExperienciaPayload, Genero, IdiomaPayload,
-    NivelExperiencia, NivelIdioma, RegistroCandidatoPayload,
+    NivelIdioma, RegistroCandidatoPayload,
 } from '../models/registro-candidato.model';
 // Datos del formulario (misma forma que el componente y sus subcomponentes).
 export interface DatosPersonalesFormulario {
@@ -19,11 +19,18 @@ export interface EstudioFormulario {
     fechaFinMes: string; fechaFinAno: string; alPresente: boolean;
 }
 
-export interface IdiomaFormulario { idioma: string; nivelEscrito: string; nivelOral: string; }
+export interface IdiomaFormulario {
+    idioma: string; nivelEscrito: string; nivelOral: string;
+    idiomaId?: number | null;   // permite conservar un idioma desactivado (ya no está en el catálogo cargado)
+}
 
 export interface ExperienciaFormulario {
     puesto: string; empresa: string; pais: string; nivel: string; descripcion: string;
-    puestoId?: number | null; organizacionId?: number | null;
+    puestoId?: number | null; organizacionId?: number | null; nivelId?: number | null;
+    // Solo lectura, vienen del perfil: escrito por el candidato / deshabilitado por el admin
+    puestoPersonalizado?: boolean; puestoActivo?: boolean;
+    organizacionPersonalizada?: boolean; organizacionActiva?: boolean;
+    nivelPersonalizado?: boolean; nivelActivo?: boolean;
     fechaInicioMes: string; fechaInicioAno: string;
     fechaFinMes: string; fechaFinAno: string; alPresente: boolean;
 }
@@ -35,6 +42,7 @@ export interface CatalogosRegistro {
     areasEstudio: AreaEstudio[];
     idiomas: ItemCatalogo[];
     puestos: ItemCatalogo[];
+    nivelesPuesto: ItemCatalogo[];
     habilidades: Habilidad[];
 }
 
@@ -44,17 +52,49 @@ const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'S
 export const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto',
     'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
+export function mesANumero(mes: string): number {
+    if (!mes) return 0;
+    const m = mes.toLowerCase().trim();
+    const cortos = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const largos = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+    const idxC = cortos.findIndex(x => m.startsWith(x));
+    if (idxC !== -1) return idxC;
+
+    const idxL = largos.findIndex(x => m === x);
+    if (idxL !== -1) return idxL;
+
+    const n = parseInt(mes, 10);
+    return !isNaN(n) ? n - 1 : 0;
+}
+
+export function esFechaAnteriorANacimiento(
+    fechaAno: string,
+    fechaMes: string,
+    birthYear?: string | number,
+    birthMonth?: string
+): boolean {
+    if (!birthYear || !fechaAno) return false;
+    const bYear = parseInt(birthYear.toString(), 10);
+    const fYear = parseInt(fechaAno.toString(), 10);
+    if (isNaN(bYear) || isNaN(fYear)) return false;
+
+    if (fYear < bYear) return true;
+    if (fYear === bYear) {
+        if (!birthMonth || !fechaMes) return true;
+        const bMonth = mesANumero(birthMonth);
+        const fMonth = mesANumero(fechaMes);
+        return fMonth < bMonth;
+    }
+    return false;
+}
+
 export const ESTADOS: Record<string, EstadoEstudio> = {
     'Finalizado': 'finalizado', 'En curso': 'en_curso', 'Incompleto': 'incompleto',
 };
 
 export const NIVELES_IDIOMA: Record<string, NivelIdioma> = {
     'Básico': 'basico', 'Intermedio': 'intermedio', 'Avanzado': 'avanzado', 'Nativo': 'nativo',
-};
-
-export const NIVELES_EXPERIENCIA: Record<string, NivelExperiencia> = {
-    'Trainee': 'trainee', 'Junior': 'junior', 'Semi Senior': 'semi_senior', 'Senior': 'senior',
-    'Jefe / Supervisor': 'jefe_supervisor', 'Gerente / Director': 'gerente_director',
 };
 
 const normalizar = (texto: string) => (texto ?? '').trim().toLowerCase();
@@ -152,6 +192,16 @@ function mapearEstudio(e: EstudioFormulario, c: CatalogosRegistro): EstudioPaylo
     const llevaCarrera = tipo?.requiere_carrera ?? false;
     const estado = ESTADOS[e.estado];
 
+    // "Sin estudios formales": solo el área (el backend rechaza cualquier otro dato)
+    if (tipo?.solo_area) {
+        return {
+            tipo_estudio_id: tipo.id,
+            area_estudio_id: aId(c.areasEstudio, e.areaEstudio) as number,
+            pais_id: null, institucion_id: null, carrera_id: null,
+            estado: null, ciclo_actual: null, fecha_inicio: null, fecha_fin: null,
+        };
+    }
+
     return {
         tipo_estudio_id: tipo?.id as number,
         area_estudio_id: aId(c.areasEstudio, e.areaEstudio) as number,
@@ -168,7 +218,7 @@ function mapearEstudio(e: EstudioFormulario, c: CatalogosRegistro): EstudioPaylo
 
 function mapearIdioma(i: IdiomaFormulario, c: CatalogosRegistro): IdiomaPayload {
     return {
-        idioma_id: aId(c.idiomas, i.idioma) as number,
+        idioma_id: (i.idiomaId ?? aId(c.idiomas, i.idioma)) as number,
         nivel_escrito: NIVELES_IDIOMA[i.nivelEscrito],
         nivel_oral: NIVELES_IDIOMA[i.nivelOral],
     };
@@ -176,13 +226,14 @@ function mapearIdioma(i: IdiomaFormulario, c: CatalogosRegistro): IdiomaPayload 
 
 function mapearExperiencia(e: ExperienciaFormulario, c: CatalogosRegistro): ExperienciaPayload {
     const puestoId = e.puestoId ?? aId(c.puestos, e.puesto);
+    const nivelId = e.nivelId ?? aId(c.nivelesPuesto, e.nivel);
 
     return {
-        // Del catálogo → id. Escrito a mano → nombre (el backend lo crea como propuesta pendiente)
+        // Del catálogo → id. Escrito a mano → nombre (el backend lo guarda como valor personalizado del candidato)
         ...(puestoId ? { puesto_id: puestoId } : { puesto_nombre: e.puesto.trim() }),
         ...(e.organizacionId ? { organizacion_id: e.organizacionId } : { organizacion_nombre: e.empresa.trim() }),
+        ...(nivelId ? { nivel_puesto_id: nivelId } : { nivel_puesto_nombre: e.nivel.trim() }),
         pais_id: aId(c.paises, e.pais) as number,
-        nivel: NIVELES_EXPERIENCIA[e.nivel],
         fecha_inicio: fechaMesAnio(e.fechaInicioMes, e.fechaInicioAno) as string,
         fecha_fin: e.alPresente ? null : fechaMesAnio(e.fechaFinMes, e.fechaFinAno),
         descripcion: e.descripcion?.trim() || null,

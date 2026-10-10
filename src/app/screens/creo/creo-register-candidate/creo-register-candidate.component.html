@@ -254,12 +254,12 @@
             Agrega tu nivel educativo y los idiomas que dominas.
           </p>
 
-          <app-study-list title="ESTUDIOS" [(studies)]="carreras"></app-study-list>
+          <app-study-list title="ESTUDIOS" [(studies)]="carreras" [birthYear]="birthYear" [birthMonth]="birthMonth"></app-study-list>
           <div *ngIf="errors['carreras']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['carreras'] }}</div>
 
           <!-- Lo mantengo Educación Superior hasta que decidan si lo usamos o no -->
           <!-- <app-study-list title="Educación Superior" [(studies)]="educacionSuperior"
-            [disabled]="carreras.length === 0"></app-study-list> -->
+            [disabled]="carreras.length === 0" [birthYear]="birthYear" [birthMonth]="birthMonth"></app-study-list> -->
 
           <app-language-list [(languages)]="idiomas" [maxLanguages]="10"></app-language-list>
           <div *ngIf="errors['idiomas']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['idiomas'] }}</div>
@@ -312,7 +312,7 @@
           <p *ngIf="errors['experiencia']" class="text-xs text-red-500 mt-1">{{ errors['experiencia'] }}</p>
 
           <div *ngIf="hasExperience === true" class="mt-2 border-t pt-6" style="border-color: #F0ECD8;">
-            <app-experience-list [(experiences)]="experiencias" [maxExperiences]="5"></app-experience-list>
+            <app-experience-list [(experiences)]="experiencias" [maxExperiences]="5" [birthYear]="birthYear" [birthMonth]="birthMonth"></app-experience-list>
           </div>
         </div>
 
@@ -348,7 +348,7 @@
               {{ hasAreaFilter ? 'Mostrando solo habilidades técnicas acordes a tu área de estudio. Selecciona hasta
               15.' : 'Selecciona hasta 15 habilidades técnicas.' }}
             </p>
-            <app-creo-skill-picker [catalog]="catalog" [selected]="skills" (toggle)="toggleSkill($event)"
+            <app-creo-skill-picker [catalog]="catalog" [selected]="skills" (toggle)="toggleSkill($event)" (pickerFocus)="cargarHabilidades()"
               [suggestedSections]="[]" [groupedSections]="seccionesTecnicas" [maxSkills]="maxSkills"></app-creo-skill-picker>
           </div>
 
@@ -356,7 +356,7 @@
           <div class="flex flex-col gap-2 mt-4">
             <h4 class="text-sm font-bold" style="color: #111111;">Habilidades Blandas</h4>
             <p class="text-xs text-slate-500">Selecciona hasta 15 habilidades interpersonales.</p>
-            <app-creo-skill-picker [catalog]="softCatalog" [selected]="softSkills" (toggle)="toggleSoftSkill($event)"
+            <app-creo-skill-picker [catalog]="softCatalog" [selected]="softSkills" (toggle)="toggleSoftSkill($event)" (pickerFocus)="cargarHabilidades()"
               [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
           </div>
 
@@ -428,7 +428,10 @@
               <div *ngIf="carreras.length > 0">
                 <p class="font-semibold text-xs text-slate-500 mb-1">CARRERAS</p>
                 <ul class="list-disc list-inside">
-                  <li *ngFor="let c of carreras">{{ c.titulo }} ({{ c.institucion }}) - {{ c.estado }}</li>
+                  <li *ngFor="let c of carreras">
+                    <ng-container *ngIf="esSoloArea(c.tipoEstudio); else estudioFormal">{{ c.tipoEstudio }} — Área: {{ c.areaEstudio }}</ng-container>
+                    <ng-template #estudioFormal>{{ c.titulo }} ({{ c.institucion }}) - {{ c.estado }}</ng-template>
+                  </li>
                 </ul>
               </div>
               <div *ngIf="educacionSuperior.length > 0">

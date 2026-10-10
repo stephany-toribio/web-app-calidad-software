@@ -3,16 +3,19 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
+  const authService = inject(AuthService);
 
   if (!req.url.startsWith(environment.apiUrl)) {
     return next(req);
   }
 
   const isLoginRequest = req.url.includes('/auth/login');
-  const token = localStorage.getItem('token');
+  // Token con el que sale esta petición (puede cambiar antes de que llegue la respuesta)
+  const token = authService.getToken();
 
   const headers: Record<string, string> = {
     Accept: 'application/json'
@@ -24,20 +27,30 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(
     req.clone({
-        setHeaders: headers
+      setHeaders: headers
     })
-    ).pipe(
+  ).pipe(
     catchError((error: HttpErrorResponse) => {
-        if (error.status === 401 && !isLoginRequest) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('creo_user');
+      if (!isLoginRequest) {
+        if (error.status === 401 && token === authService.getToken()) {
+          authService.clearSession();
 
-        router.navigate(['/creo/landing'], {
+          router.navigate(['/creo/landing'], {
             queryParams: { sessionExpired: 'true' }
-        });
-        }
+          });
+        } else if (error.status === 403) {
+          const msg = (error.error?.message || '').toLowerCase();
+          if (msg.includes('suspend') || msg.includes('bloquead')) {
+            authService.clearSession();
 
-        return throwError(() => error);
+            router.navigate(['/creo/landing'], {
+              queryParams: { accountSuspended: 'true' }
+            });
+          }
+        }
+      }
+
+      return throwError(() => error);
     })
-    );
+  );
 };

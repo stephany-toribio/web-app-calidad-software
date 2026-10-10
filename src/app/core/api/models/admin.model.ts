@@ -92,14 +92,93 @@ export interface InstitucionAdmin {
   updated_at?: string;
 }
 
+/**
+ * personalizado = false: catálogo global (lo crea el admin).
+ * personalizado = true: lo escribió un candidato; es solo suyo y el admin solo lo activa o desactiva.
+ */
 export interface PuestoAdmin {
   id: number;
   nombre: string;
+  personalizado: boolean;
+  creado_por: { candidato_id: number; nombre: string; apellidos: string } | null;
+  /** Solo viene en el listado: cuántos candidatos escribieron ese mismo nombre */
+  candidatos_con_mismo_nombre?: number;
   estado: 'activo' | 'inactivo';
-  estado_catalogo: 'aprobado' | 'pendiente' | 'rechazado';
   activo: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+/**
+ * Igual que PuestoAdmin, pero cada organización pertenece a un país (que no se puede cambiar).
+ * personalizado = true: la escribió un candidato; es solo suya y el admin solo la activa o desactiva.
+ */
+export interface OrganizacionAdmin {
+  id: number;
+  nombre: string;
+  pais_id: number;
+  pais?: { id: number; nombre: string; activo: boolean };
+  personalizado: boolean;
+  creado_por: { candidato_id: number; nombre: string; apellidos: string } | null;
+  /** Solo viene en el listado: cuántos candidatos escribieron ese mismo nombre en ese país */
+  candidatos_con_mismo_nombre?: number;
+  estado: 'activo' | 'inactivo';
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CrearOrganizacionPayload {
+  nombre: string;
+  pais_id: number;
+}
+
+/**
+ * Igual que PuestoAdmin, más el orden jerárquico de los globales (los personalizados no tienen orden).
+ */
+export interface NivelPuestoAdmin {
+  id: number;
+  nombre: string;
+  orden: number | null;
+  personalizado: boolean;
+  creado_por: { candidato_id: number; nombre: string; apellidos: string } | null;
+  /** Solo viene en el listado: cuántos candidatos escribieron ese mismo nombre */
+  candidatos_con_mismo_nombre?: number;
+  estado: 'activo' | 'inactivo';
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** orden opcional al crear: si no se envía, el nivel va al final de la jerarquía */
+export interface NivelPuestoPayload {
+  nombre?: string;
+  orden?: number;
+}
+
+/** Carrera / título del catálogo. Solo de tipos que llevan carrera; el tipo no se puede cambiar. */
+export interface CarreraAdmin {
+  id: number;
+  nombre: string;
+  tipo_estudio_id: number;
+  tipo_estudio?: { id: number; nombre: string };
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** Idioma del catálogo (sin valores personalizados) */
+export interface IdiomaAdmin {
+  id: number;
+  nombre: string;
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CrearCarreraPayload {
+  nombre: string;
+  tipo_estudio_id: number;
 }
 
 export interface CrearInstitucionPayload {
