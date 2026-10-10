@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -6,7 +6,7 @@ import { CreoFieldComponent } from '../../../../components/creo-design-system/cr
 import { CreoBtnComponent } from '../../../../components/creo-design-system/creo-btn/creo-btn.component';
 import { CatalogosService } from '../../../../core/api/catalogos.service';
 import { Carrera, Institucion, ItemCatalogo, TipoEstudio } from '../../../../core/api/models/catalogos.model';
-import { aId } from '../../../../core/api/mappers/registro-candidato.mapper';
+import { aId, esFechaAnteriorANacimiento } from '../../../../core/api/mappers/registro-candidato.mapper';
 
 export interface StudyEntry {
   titulo: string;          // nombre de la carrera elegida
@@ -49,6 +49,8 @@ export class StudyListComponent implements OnInit {
   @Input() title: string = '';
   @Input() studies: StudyEntry[] = [];
   @Input() disabled: boolean = false;
+  @Input() birthYear?: string | number;
+  @Input() birthMonth?: string;
   @Output() studiesChange = new EventEmitter<StudyEntry[]>();
 
   showModal = false;
@@ -85,6 +87,9 @@ export class StudyListComponent implements OnInit {
     this.catalogos.tiposEstudio().subscribe(lista => {
       this.catalogoTipos = lista;
       this.tiposEstudio = lista.map(t => t.nombre);
+      if (this.currentStudy.tipoEstudio) {
+        this.cargarCarreras();
+      }
     });
     this.catalogos.areasEstudio().subscribe(lista => this.areasEstudio = lista.map(a => a.nombre));
     this.catalogos.instituciones().subscribe(lista => this.catalogoInstituciones = lista);
@@ -92,7 +97,12 @@ export class StudyListComponent implements OnInit {
 
   /** Institución y carrera solo aplican a los tipos con requiere_carrera (lo decide el backend) */
   get tituloEnabled(): boolean {
-    return this.catalogoTipos.find(t => t.nombre === this.currentStudy.tipoEstudio)?.requiere_carrera ?? false;
+    if (!this.currentStudy.tipoEstudio) return false;
+    if (this.catalogoTipos.length === 0) {
+      return ['Universitario', 'Posgrado', 'Master', 'Doctorado', 'Terciario'].includes(this.currentStudy.tipoEstudio);
+    }
+    const t = this.catalogoTipos.find(tipo => tipo.nombre === this.currentStudy.tipoEstudio);
+    return t ? t.requiere_carrera : true;
   }
 
   /** "Sin estudios formales" (lo decide el backend con solo_area): el estudio solo lleva el área */
@@ -129,13 +139,31 @@ export class StudyListComponent implements OnInit {
     return this.soloArea && this.otrosEstudios().some(s => this.esTipoSoloArea(s.tipoEstudio) && s.areaEstudio === area);
   }
 
-  onEstadoChange() {
-    if (this.currentStudy.estado === 'En curso') {
+  onAlPresenteChange() {
+    if (this.currentStudy.alPresente) {
       this.currentStudy.fechaFinMes = '';
       this.currentStudy.fechaFinAno = '';
-      this.currentStudy.alPresente = true;
+      delete this.errors['fechaFin'];
+    }
+    this.validateDates();
+  }
+
+  onEstadoChange() {
+    if (this.currentStudy.estado === 'Finalizado') {
+      this.currentStudy.alPresente = false;
       delete this.errors['fechaFin'];
       this.validateDates();
+    } else if (this.currentStudy.estado === 'En curso') {
+      this.currentStudy.alPresente = true;
+      this.currentStudy.fechaFinMes = '';
+      this.currentStudy.fechaFinAno = '';
+      delete this.errors['fechaFin'];
+      this.validateDates();
+    } else if (this.currentStudy.estado === 'Incompleto') {
+      this.currentStudy.alPresente = false;
+      this.currentStudy.fechaFinMes = '';
+      this.currentStudy.fechaFinAno = '';
+      delete this.errors['fechaFin'];
     }
   }
 
@@ -171,13 +199,28 @@ export class StudyListComponent implements OnInit {
   }
 
   private cargarCarreras() {
-    this.carrerasSub?.unsubscribe();           // descarta la petición anterior si el usuario cambió rápido
-    this.carreras = [];
+    if (!this.currentStudy.tipoEstudio) {
+      this.carreras = [];
+      return;
+    }
 
-    const tipoId = aId(this.catalogoTipos, this.currentStudy.tipoEstudio);
-    if (!this.tituloEnabled || !tipoId) return;
+    const ejecutarCarga = () => {
+      const tipoId = aId(this.catalogoTipos, this.currentStudy.tipoEstudio);
+      if (!tipoId) return;
 
-    this.carrerasSub = this.catalogos.carreras(tipoId).subscribe(lista => this.carreras = lista);
+      this.carrerasSub?.unsubscribe();           // descarta la petición anterior si el usuario cambió rápido
+      this.carrerasSub = this.catalogos.carreras(tipoId).subscribe(lista => this.carreras = lista);
+    };
+
+    if (this.catalogoTipos.length === 0) {
+      this.catalogos.tiposEstudio().subscribe(lista => {
+        this.catalogoTipos = lista;
+        this.tiposEstudio = lista.map(t => t.nombre);
+        ejecutarCarga();
+      });
+    } else {
+      ejecutarCarga();
+    }
   }
 
   private limpiarInstitucion() {
@@ -233,6 +276,11 @@ export class StudyListComponent implements OnInit {
     this.showInstituciones = true;
   }
 
+  onInstitucionFocus() {
+    this.showInstituciones = true;
+    this.recargarCatalogos();
+  }
+
   selectInstitucion(inst: string) {
     const paisId = aId(this.catalogoPaises, this.currentStudy.pais);
     const institucion = this.catalogoInstituciones.find(i => i.nombre === inst && (!paisId || i.pais_id === paisId));
@@ -244,13 +292,18 @@ export class StudyListComponent implements OnInit {
   onInstitucionBlur() {
     setTimeout(() => {
       this.showInstituciones = false;
-    }, 200);
+    }, 250);
   }
 
   onCarreraChange(val: string) {
     this.currentStudy.titulo = val;
     this.currentStudy.carreraId = null;          // escrita a mano: hay que elegirla de la lista
     this.showCarreras = true;
+  }
+
+  onCarreraFocus() {
+    this.showCarreras = true;
+    this.cargarCarreras();
   }
 
   selectCarrera(carrera: string) {
@@ -262,7 +315,17 @@ export class StudyListComponent implements OnInit {
   onCarreraBlur() {
     setTimeout(() => {
       this.showCarreras = false;
-    }, 200);
+    }, 250);
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus() {
+    if (this.showModal) {
+      this.recargarCatalogos();
+      if (this.currentStudy.tipoEstudio) {
+        this.cargarCarreras();
+      }
+    }
   }
 
   getEmptyStudy(): StudyEntry {
@@ -277,6 +340,7 @@ export class StudyListComponent implements OnInit {
   openModal(index = -1) {
     this.errors = {};
     this.editingIndex = index;
+    this.recargarCatalogos();
     if (index === -1) {
       this.currentStudy = this.getEmptyStudy();
     } else {
@@ -284,6 +348,13 @@ export class StudyListComponent implements OnInit {
     }
     this.cargarCarreras();                       // al editar, la lista de carreras del estudio elegido
     this.showModal = true;
+  }
+
+  @HostListener('window:keydown.escape')
+  handleEsc() {
+    if (this.showModal) {
+      this.closeModal();
+    }
   }
 
   closeModal() {
@@ -301,7 +372,22 @@ export class StudyListComponent implements OnInit {
     if (this.errors['fechaFin'] === 'La fecha de fin no puede ser anterior al inicio') {
       delete this.errors['fechaFin'];
     }
-    if (!this.currentStudy.alPresente && this.currentStudy.fechaInicioMes && this.currentStudy.fechaInicioAno && this.currentStudy.fechaFinMes && this.currentStudy.fechaFinAno) {
+    if (this.errors['fechaInicio'] === 'La fecha de inicio no puede ser anterior a tu fecha de nacimiento') {
+      delete this.errors['fechaInicio'];
+    }
+    if (this.errors['fechaFin'] === 'La fecha de fin no puede ser anterior a tu fecha de nacimiento') {
+      delete this.errors['fechaFin'];
+    }
+
+    if (!this.soloArea && this.currentStudy.fechaInicioAno && esFechaAnteriorANacimiento(this.currentStudy.fechaInicioAno, this.currentStudy.fechaInicioMes, this.birthYear, this.birthMonth)) {
+      this.errors['fechaInicio'] = 'La fecha de inicio no puede ser anterior a tu fecha de nacimiento';
+    }
+
+    if (!this.soloArea && !this.currentStudy.alPresente && this.currentStudy.estado !== 'Incompleto' && this.currentStudy.fechaFinAno && esFechaAnteriorANacimiento(this.currentStudy.fechaFinAno, this.currentStudy.fechaFinMes, this.birthYear, this.birthMonth)) {
+      this.errors['fechaFin'] = 'La fecha de fin no puede ser anterior a tu fecha de nacimiento';
+    }
+
+    if (!this.currentStudy.alPresente && this.currentStudy.estado !== 'Incompleto' && this.currentStudy.fechaInicioMes && this.currentStudy.fechaInicioAno && this.currentStudy.fechaFinMes && this.currentStudy.fechaFinAno) {
       const iAno = parseInt(this.currentStudy.fechaInicioAno);
       const fAno = parseInt(this.currentStudy.fechaFinAno);
       const iMes = this.meses.indexOf(this.currentStudy.fechaInicioMes);
@@ -339,7 +425,15 @@ export class StudyListComponent implements OnInit {
     if (!this.currentStudy.estado) this.errors['estado'] = 'Requerido';
     if (!this.currentStudy.fechaInicioMes || !this.currentStudy.fechaInicioAno) this.errors['fechaInicio'] = 'Requerido';
 
-    if (!this.currentStudy.alPresente) {
+    if (this.currentStudy.estado === 'Finalizado') {
+      this.currentStudy.alPresente = false;
+    } else if (this.currentStudy.estado === 'Incompleto') {
+      this.currentStudy.alPresente = false;
+      this.currentStudy.fechaFinMes = '';
+      this.currentStudy.fechaFinAno = '';
+    }
+
+    if (!this.currentStudy.alPresente && this.currentStudy.estado !== 'Incompleto') {
       if (!this.currentStudy.fechaFinMes || !this.currentStudy.fechaFinAno) {
         this.errors['fechaFin'] = 'Requerido';
       }

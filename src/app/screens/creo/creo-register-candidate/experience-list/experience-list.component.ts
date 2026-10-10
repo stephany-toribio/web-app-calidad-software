@@ -1,10 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CatalogosService } from '../../../../core/api/catalogos.service';
 import { CandidatosService } from '../../../../core/api/candidatos.service';
 import { ItemCatalogo, NivelPuestoSeleccionable, Organizacion, PuestoSeleccionable } from '../../../../core/api/models/catalogos.model';
-import { aId } from '../../../../core/api/mappers/registro-candidato.mapper';
+import { aId, esFechaAnteriorANacimiento } from '../../../../core/api/mappers/registro-candidato.mapper';
 
 const MAX_DESCRIPCION_CARACTERES = 300;
 
@@ -43,6 +43,8 @@ export class ExperienceListComponent implements OnInit {
   @Input() fuenteCatalogos: 'catalogo' | 'candidato' = 'catalogo';
   @Input() experiences: ExperienceEntry[] = [];
   @Input() maxExperiences: number = 5;
+  @Input() birthYear?: string | number;
+  @Input() birthMonth?: string;
   @Output() experiencesChange = new EventEmitter<ExperienceEntry[]>();
 
   showModal = false;
@@ -178,6 +180,13 @@ export class ExperienceListComponent implements OnInit {
     }, 200);
   }
 
+  @HostListener('window:focus')
+  onWindowFocus() {
+    if (this.showModal) {
+      this.recargarCatalogos();
+    }
+  }
+
   getEmptyExp(): ExperienceEntry {
     return {
       puesto: '', empresa: '', nivel: '', pais: '',
@@ -204,6 +213,7 @@ export class ExperienceListComponent implements OnInit {
   openModal(index = -1) {
     this.errors = {};
     this.editingIndex = index;
+    this.recargarCatalogos();
     if (index === -1) {
       this.currentExp = this.getEmptyExp();
     } else {
@@ -218,8 +228,30 @@ export class ExperienceListComponent implements OnInit {
     document.body.style.overflow = '';
   }
 
+  onAlPresenteChange() {
+    if (this.currentExp.alPresente) {
+      this.currentExp.fechaFinMes = '';
+      this.currentExp.fechaFinAno = '';
+      delete this.errors['fechaFin'];
+      delete this.errors['fechaFinError'];
+      delete this.errors['fechaFinNacimiento'];
+    }
+    this.validateDates();
+  }
+
   validateDates() {
     delete this.errors['fechaFinError'];
+    delete this.errors['fechaInicioNacimiento'];
+    delete this.errors['fechaFinNacimiento'];
+
+    if (this.currentExp.fechaInicioAno && esFechaAnteriorANacimiento(this.currentExp.fechaInicioAno, this.currentExp.fechaInicioMes, this.birthYear, this.birthMonth)) {
+      this.errors['fechaInicioNacimiento'] = true;
+    }
+
+    if (!this.currentExp.alPresente && this.currentExp.fechaFinAno && esFechaAnteriorANacimiento(this.currentExp.fechaFinAno, this.currentExp.fechaFinMes, this.birthYear, this.birthMonth)) {
+      this.errors['fechaFinNacimiento'] = true;
+    }
+
     if (!this.currentExp.alPresente && this.currentExp.fechaInicioMes && this.currentExp.fechaInicioAno && this.currentExp.fechaFinMes && this.currentExp.fechaFinAno) {
       const iAno = parseInt(this.currentExp.fechaInicioAno);
       const fAno = parseInt(this.currentExp.fechaFinAno);
@@ -249,6 +281,8 @@ export class ExperienceListComponent implements OnInit {
     this.errors = e;
     this.validateDates();
     if (this.errors['fechaFinError']) e['fechaFinError'] = true;
+    if (this.errors['fechaInicioNacimiento']) e['fechaInicioNacimiento'] = true;
+    if (this.errors['fechaFinNacimiento']) e['fechaFinNacimiento'] = true;
 
     if (Object.keys(e).length > 0) return;
 

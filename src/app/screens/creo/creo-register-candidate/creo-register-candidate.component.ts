@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -24,7 +24,7 @@ import { SkillSection } from '../../../data/creo-skills.data';
 import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
 import { AVISO_LISTA_ACTUALIZADA, corregirCatalogosRechazados } from '../../../core/api/mappers/catalogos-rechazados.mapper';
 import {
-  aId, CatalogosRegistro, payloadCompleto, payloadDatosPersonales, payloadEstudiosIdiomas,
+  aId, CatalogosRegistro, esFechaAnteriorANacimiento, payloadCompleto, payloadDatosPersonales, payloadEstudiosIdiomas,
   payloadExperiencia, payloadHabilidades,
 } from '../../../core/api/mappers/registro-candidato.mapper';
 
@@ -52,7 +52,8 @@ const PASO_DE_ERROR: Record<string, number> = {
   templateUrl: './creo-register-candidate.component.html',
   styleUrl: './creo-register-candidate.component.css'
 })
-export class CreoRegisterCandidateComponent implements OnInit {
+export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
+  private pollInterval: any = null;
   private router = inject(Router);
   private catalogosService = inject(CatalogosService);
   private candidatosService = inject(CandidatosService);
@@ -125,8 +126,38 @@ export class CreoRegisterCandidateComponent implements OnInit {
 
   errors: Record<string, string> = {};
 
+  private readonly DRAFT_KEY = 'creo_candidate_register_draft';
+
   ngOnInit() {
     this.recargarCatalogos();
+    this.cargarBorrador();
+  }
+
+  ngOnDestroy() {
+  }
+
+  @HostListener('window:beforeunload')
+  onBeforeUnload() {
+    this.guardarBorrador();
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus() {
+    this.refrescarSegunPaso();
+  }
+
+  refrescarSegunPaso() {
+    if (this.step === 1) {
+      if (!this.studyList?.showModal) {
+        this.studyList?.recargarCatalogos();
+      }
+    } else if (this.step === 2) {
+      if (!this.experienceList?.showModal) {
+        this.experienceList?.recargarCatalogos();
+      }
+    } else if (this.step === 3) {
+      this.cargarHabilidades(true);
+    }
   }
 
   /** Catálogos fijos (para convertir nombres en ids). Se piden al abrir el registro y tras un rechazo por catálogo */
@@ -182,23 +213,33 @@ export class CreoRegisterCandidateComponent implements OnInit {
     return this.selectedAreas.length > 0;
   }
 
-  /** Al entrar a la pantalla de habilidades: pide las de las áreas estudiadas y quita las que ya no aplican */
-  private cargarHabilidades() {
-    const areaIds = this.selectedAreas
-      .map(nombre => aId(this.catalogos.areasEstudio, nombre))
-      .filter((id): id is number => id !== null);
+  private ultCargaHabilidades = 0;
 
-    this.catalogosService.habilidades(areaIds).subscribe({
-      next: lista => {
-        this.habilidadesDisponibles = lista;
-        this.seccionesTecnicas = this.agruparPorArea(lista);
-        this.catalogos = { ...this.catalogos, habilidades: lista };
-        const tecnicas = new Set(this.catalog);
-        const blandas = new Set(this.softCatalog);
-        this.skills = this.skills.filter(s => tecnicas.has(s));
-        this.softSkills = this.softSkills.filter(s => blandas.has(s));
-      },
-      error: (err: HttpErrorResponse) => this.errors = erroresDesdeApi(err),
+  /** Al entrar a la pantalla de habilidades o al interactuar con el buscador/lista: pide las de las áreas estudiadas y quita las que ya no aplican */
+  cargarHabilidades(force = false) {
+    const ahora = Date.now();
+    if (!force && ahora - this.ultCargaHabilidades < 1000) return;
+    this.ultCargaHabilidades = ahora;
+
+    this.catalogosService.areasEstudio().subscribe(areas => {
+      this.catalogos = { ...this.catalogos, areasEstudio: areas };
+
+      const areaIds = this.selectedAreas
+        .map(nombre => aId(this.catalogos.areasEstudio, nombre))
+        .filter((id): id is number => id !== null);
+
+      this.catalogosService.habilidades(areaIds).subscribe({
+        next: lista => {
+          this.habilidadesDisponibles = lista;
+          this.seccionesTecnicas = this.agruparPorArea(lista);
+          this.catalogos = { ...this.catalogos, habilidades: lista };
+          const tecnicas = new Set(this.catalog);
+          const blandas = new Set(this.softCatalog);
+          this.skills = this.skills.filter(s => tecnicas.has(s));
+          this.softSkills = this.softSkills.filter(s => blandas.has(s));
+        },
+        error: (err: HttpErrorResponse) => this.errors = erroresDesdeApi(err),
+      });
     });
   }
 
@@ -209,19 +250,21 @@ export class CreoRegisterCandidateComponent implements OnInit {
   toggleSkill(s: string) {
     if (this.skills.includes(s)) {
       this.skills = this.skills.filter(x => x !== s);
-      return;
+    } else {
+      if (this.skills.length >= MAX_SKILLS) return;
+      this.skills = [...this.skills, s];
     }
-    if (this.skills.length >= MAX_SKILLS) return;
-    this.skills = [...this.skills, s];
+    this.guardarBorrador();
   }
 
   toggleSoftSkill(s: string) {
     if (this.softSkills.includes(s)) {
       this.softSkills = this.softSkills.filter(x => x !== s);
-      return;
+    } else {
+      if (this.softSkills.length >= MAX_SKILLS) return;
+      this.softSkills = [...this.softSkills, s];
     }
-    if (this.softSkills.length >= MAX_SKILLS) return;
-    this.softSkills = [...this.softSkills, s];
+    this.guardarBorrador();
   }
 
   // ---------------------------------------------------------------- Datos personales (paso 0)
@@ -316,12 +359,18 @@ export class CreoRegisterCandidateComponent implements OnInit {
       case 1: {
         const e: Record<string, string> = {};
         if (this._carreras.length === 0) e['carreras'] = 'Agrega al menos una carrera';
+        else if (this._carreras.some(s => esFechaAnteriorANacimiento(s.fechaInicioAno, s.fechaInicioMes, this.birthYear, this.birthMonth) || (!s.alPresente && s.fechaFinAno && esFechaAnteriorANacimiento(s.fechaFinAno, s.fechaFinMes, this.birthYear, this.birthMonth)))) {
+          e['carreras'] = 'Revisa las fechas de tus estudios: no pueden ser anteriores a tu fecha de nacimiento';
+        }
         if (this.idiomas.length === 0) e['idiomas'] = 'Agrega al menos un idioma';
         return e;
       }
       case 2:
         if (this.hasExperience === null) return { experiencia: 'Selecciona una opción sobre tu experiencia' };
         if (this.hasExperience && this.experiencias.length === 0) return { experiencia: 'Agrega al menos una experiencia laboral' };
+        if (this.hasExperience && this.experiencias.some(x => esFechaAnteriorANacimiento(x.fechaInicioAno, x.fechaInicioMes, this.birthYear, this.birthMonth) || (!x.alPresente && x.fechaFinAno && esFechaAnteriorANacimiento(x.fechaFinAno, x.fechaFinMes, this.birthYear, this.birthMonth)))) {
+          return { experiencia: 'Revisa las fechas de tu experiencia laboral: no pueden ser anteriores a tu fecha de nacimiento' };
+        }
         return {};
       case 3:
         return this.totalHabilidades === 0 ? { skills: 'Selecciona al menos una habilidad (técnica o blanda)' } : {};
@@ -380,6 +429,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
 
   /** Tras el 201 inicia sesión con las mismas credenciales (HU-10). Si falla, la cuenta ya existe y puede entrar desde el landing */
   private iniciarSesion() {
+    this.limpiarBorrador();
     const irAExito = () => this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
 
     this.enviando = true;
@@ -461,7 +511,83 @@ export class CreoRegisterCandidateComponent implements OnInit {
 
   goToStep(step: number) {
     this.step = step;
+    if (step === 1) {
+      this._carreras = [...this._carreras];
+      this._educacionSuperior = [...this._educacionSuperior];
+    }
+    if (step === 3) {
+      this.cargarHabilidades();
+    }
+    this.guardarBorrador();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  guardarBorrador() {
+    try {
+      const draft = {
+        step: this.step,
+        firstName: this.firstName,
+        lastName: this.lastName,
+        birthDay: this.birthDay,
+        birthMonth: this.birthMonth,
+        birthYear: this.birthYear,
+        dni: this.dni,
+        gender: this.gender,
+        email: this.email,
+        phone: this.phone,
+        _carreras: this._carreras,
+        _educacionSuperior: this._educacionSuperior,
+        idiomas: this.idiomas,
+        salary: this.salary,
+        hasExperience: this.hasExperience,
+        experiencias: this.experiencias,
+        skills: this.skills,
+        softSkills: this.softSkills,
+      };
+      localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+    } catch (e) {
+      console.error('Error guardando borrador:', e);
+    }
+  }
+
+  cargarBorrador() {
+    try {
+      const data = localStorage.getItem(this.DRAFT_KEY);
+      if (!data) return;
+      const draft = JSON.parse(data);
+      if (draft) {
+        if (typeof draft.step === 'number') this.step = draft.step;
+        if (draft.firstName) this.firstName = draft.firstName;
+        if (draft.lastName) this.lastName = draft.lastName;
+        if (draft.birthDay) this.birthDay = draft.birthDay;
+        if (draft.birthMonth) this.birthMonth = draft.birthMonth;
+        if (draft.birthYear) this.birthYear = draft.birthYear;
+        if (draft.dni) this.dni = draft.dni;
+        if (draft.gender) this.gender = draft.gender;
+        if (draft.email) this.email = draft.email;
+        if (draft.phone) this.phone = draft.phone;
+        if (Array.isArray(draft._carreras)) this._carreras = draft._carreras;
+        if (Array.isArray(draft._educacionSuperior)) this._educacionSuperior = draft._educacionSuperior;
+        if (Array.isArray(draft.idiomas)) this.idiomas = draft.idiomas;
+        if (draft.salary) this.salary = draft.salary;
+        if (draft.hasExperience !== undefined) this.hasExperience = draft.hasExperience;
+        if (Array.isArray(draft.experiencias)) this.experiencias = draft.experiencias;
+        if (Array.isArray(draft.skills)) this.skills = draft.skills;
+        if (Array.isArray(draft.softSkills)) this.softSkills = draft.softSkills;
+
+        if (this.step >= 3) {
+          this.cargarHabilidades(true);
+        }
+      }
+    } catch (e) {
+      console.error('Error cargando borrador:', e);
+    }
+  }
+
+  limpiarBorrador() {
+    try {
+      localStorage.removeItem(this.DRAFT_KEY);
+    } catch (e) {}
   }
 
   /** Errores de campos (el error general 'api' se muestra aparte) */

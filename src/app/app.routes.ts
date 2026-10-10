@@ -101,6 +101,11 @@ export const routes: Routes = [
         loadComponent: () => import('./screens/creo/creo-choose-role/creo-choose-role.component').then(m => m.CreoChooseRoleComponent)
       },
       {
+        path: 'admin-login',
+        redirectTo: 'landing',
+        pathMatch: 'full'
+      },
+      {
         path: 'admin-skills',
         canActivate: [adminGuard],
         loadComponent: () =>
@@ -109,6 +114,7 @@ export const routes: Routes = [
       },
       {
         path: 'edit-profile',
+        canActivate: [candidatoGuard],
         loadComponent: () => import('./screens/creo/creo-edit-profile/creo-edit-profile.component').then(m => m.CreoEditProfileComponent)
       },
       {

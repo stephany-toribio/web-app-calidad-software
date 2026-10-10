@@ -62,10 +62,10 @@ export class CreoLandingComponent {
   stats = STATS;
 
   constructor() {
-    if (this.route.snapshot.queryParamMap.get('sessionExpired') === 'true') {
-      this.sessionMessage.set(
-        'Tu sesión expiró. Inicia sesión nuevamente.'
-      );
+    if (this.route.snapshot.queryParamMap.get('accountSuspended') === 'true') {
+      this.sessionMessage.set('Tu cuenta ha sido suspendida por la administración.');
+    } else if (this.route.snapshot.queryParamMap.get('sessionExpired') === 'true') {
+      this.sessionMessage.set('Tu sesión expiró. Inicia sesión nuevamente.');
     }
   }
 

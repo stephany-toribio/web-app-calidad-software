@@ -628,6 +628,7 @@ export class CreoAdminSkillsComponent implements OnInit {
                 active: areaEditada.activo,
                 original: areaEditada
               };
+              this.studyAreas = [...this.studyAreas];
             }
 
             this.studyError = '';
@@ -658,12 +659,15 @@ export class CreoAdminSkillsComponent implements OnInit {
       .crearArea(nombre)
       .subscribe({
         next: (nuevaArea) => {
-          this.studyAreas.push({
-            id: nuevaArea.id,
-            name: nuevaArea.nombre,
-            active: nuevaArea.activo,
-            original: nuevaArea
-          });
+          this.studyAreas = [
+            ...this.studyAreas,
+            {
+              id: nuevaArea.id,
+              name: nuevaArea.nombre,
+              active: nuevaArea.activo,
+              original: nuevaArea
+            }
+          ];
 
           this.studyError = '';
 
@@ -695,6 +699,16 @@ export class CreoAdminSkillsComponent implements OnInit {
     accion$.subscribe({
       next: (areaActualizada) => {
         s.active = areaActualizada.activo;
+        const idx = this.studyAreas.findIndex(area => area.id === areaActualizada.id);
+        if (idx !== -1) {
+          this.studyAreas[idx] = {
+            id: areaActualizada.id,
+            name: areaActualizada.nombre,
+            active: areaActualizada.activo,
+            original: areaActualizada
+          };
+          this.studyAreas = [...this.studyAreas];
+        }
         this.showToast(`Área ${areaActualizada.activo ? 'activada' : 'desactivada'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {
@@ -742,6 +756,7 @@ export class CreoAdminSkillsComponent implements OnInit {
         if (editando) {
           const idx = this.countries.findIndex(x => x.id === vm.id);
           if (idx !== -1) this.countries[idx] = vm;
+          this.countries = [...this.countries];
           // El nombre del país se muestra también en las tablas de instituciones y organizaciones
           this.institutions = this.institutions.map(i =>
             i.countryId === vm.id ? { ...i, country: vm.name } : i
@@ -752,6 +767,7 @@ export class CreoAdminSkillsComponent implements OnInit {
         } else {
           this.countries.push(vm);
           this.countries.sort((a, b) => a.name.localeCompare(b.name));
+          this.countries = [...this.countries];
         }
         this.showToast(editando ? 'País actualizado' : 'País creado', 'success');
         this.closeCountryModal();
@@ -770,6 +786,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     accion$.subscribe({
       next: (pais) => {
         c.active = pais.activo;
+        this.countries = [...this.countries];
         this.showToast(`País ${pais.activo ? 'activado' : 'desactivado'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {
@@ -830,6 +847,7 @@ export class CreoAdminSkillsComponent implements OnInit {
         } else {
           this.institutions.unshift(vm);
         }
+        this.institutions = [...this.institutions];
         this.showToast(editando ? 'Institución actualizada' : 'Institución creada', 'success');
         this.closeInstitutionModal();
       },
@@ -847,6 +865,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     accion$.subscribe({
       next: (institucion) => {
         i.active = institucion.activo;
+        this.institutions = [...this.institutions];
         this.showToast(`Institución ${institucion.activo ? 'activada' : 'desactivada'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {
@@ -937,6 +956,7 @@ export class CreoAdminSkillsComponent implements OnInit {
         } else {
           this.careers.unshift(vm);
         }
+        this.careers = [...this.careers];
         this.showToast(editando ? 'Carrera actualizada' : 'Carrera creada', 'success');
         this.closeCareerModal();
       },
@@ -954,6 +974,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     accion$.subscribe({
       next: (carrera) => {
         c.active = carrera.activo;
+        this.careers = [...this.careers];
         this.showToast(`Carrera ${carrera.activo ? 'activada' : 'desactivada'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {
@@ -1032,6 +1053,7 @@ export class CreoAdminSkillsComponent implements OnInit {
           this.languages.push(vm);
           this.languages.sort((a, b) => a.name.localeCompare(b.name));
         }
+        this.languages = [...this.languages];
         this.showToast(editando ? 'Idioma actualizado' : 'Idioma creado', 'success');
         this.closeLanguageModal();
       },
@@ -1049,6 +1071,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     accion$.subscribe({
       next: (idioma) => {
         i.active = idioma.activo;
+        this.languages = [...this.languages];
         this.showToast(`Idioma ${idioma.activo ? 'activado' : 'desactivado'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {
@@ -1102,6 +1125,7 @@ export class CreoAdminSkillsComponent implements OnInit {
         } else {
           this.positions.unshift(vm);
         }
+        this.positions = [...this.positions];
         this.showToast(editando ? 'Puesto actualizado' : 'Puesto creado', 'success');
         this.closePositionModal();
       },
@@ -1119,6 +1143,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     accion$.subscribe({
       next: (puesto) => {
         p.active = puesto.activo;
+        this.positions = [...this.positions];
         this.showToast(`Puesto ${puesto.activo ? 'activado' : 'desactivado'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {
@@ -1227,6 +1252,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     accion$.subscribe({
       next: (nivel) => {
         n.active = nivel.activo;
+        this.levels = [...this.levels];
         this.showToast(`Nivel ${nivel.activo ? 'activado' : 'desactivado'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {
@@ -1331,6 +1357,7 @@ export class CreoAdminSkillsComponent implements OnInit {
         } else {
           this.organizations.unshift(vm);
         }
+        this.organizations = [...this.organizations];
         this.showToast(editando ? 'Organización actualizada' : 'Organización creada', 'success');
         this.closeOrganizationModal();
       },
@@ -1348,6 +1375,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     accion$.subscribe({
       next: (organizacion) => {
         o.active = organizacion.activo;
+        this.organizations = [...this.organizations];
         this.showToast(`Organización ${organizacion.activo ? 'activada' : 'desactivada'}`, 'success');
       },
       error: (err: HttpErrorResponse) => {

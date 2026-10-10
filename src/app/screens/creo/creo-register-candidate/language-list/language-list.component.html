@@ -59,7 +59,7 @@
           <div class="relative">
             <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Idioma <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
             <input type="text" [ngModel]="currentLang.idioma" (ngModelChange)="onIdiomaChange($event)"
-                   (focus)="showIdiomas = true" (blur)="onIdiomaBlur()"
+                   (focus)="showIdiomas = true; recargarCatalogos()" (blur)="onIdiomaBlur()"
                    placeholder="Ej. Inglés"
                    class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white text-[#111111]"
                    [ngStyle]="{'border-color': errors['idioma'] ? '#E5140D' : '#E2E8F0'}" />

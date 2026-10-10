@@ -52,6 +52,43 @@ const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'S
 export const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto',
     'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
+export function mesANumero(mes: string): number {
+    if (!mes) return 0;
+    const m = mes.toLowerCase().trim();
+    const cortos = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const largos = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+    const idxC = cortos.findIndex(x => m.startsWith(x));
+    if (idxC !== -1) return idxC;
+
+    const idxL = largos.findIndex(x => m === x);
+    if (idxL !== -1) return idxL;
+
+    const n = parseInt(mes, 10);
+    return !isNaN(n) ? n - 1 : 0;
+}
+
+export function esFechaAnteriorANacimiento(
+    fechaAno: string,
+    fechaMes: string,
+    birthYear?: string | number,
+    birthMonth?: string
+): boolean {
+    if (!birthYear || !fechaAno) return false;
+    const bYear = parseInt(birthYear.toString(), 10);
+    const fYear = parseInt(fechaAno.toString(), 10);
+    if (isNaN(bYear) || isNaN(fYear)) return false;
+
+    if (fYear < bYear) return true;
+    if (fYear === bYear) {
+        if (!birthMonth || !fechaMes) return true;
+        const bMonth = mesANumero(birthMonth);
+        const fMonth = mesANumero(fechaMes);
+        return fMonth < bMonth;
+    }
+    return false;
+}
+
 export const ESTADOS: Record<string, EstadoEstudio> = {
     'Finalizado': 'finalizado', 'En curso': 'en_curso', 'Incompleto': 'incompleto',
 };

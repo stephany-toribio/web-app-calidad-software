@@ -73,7 +73,7 @@
         <div class="sm:col-span-1 relative">
           <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Puesto / Cargo <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
           <input type="text" [ngModel]="currentExp.puesto" (ngModelChange)="onPuestoChange($event)" 
-                 (focus)="showPuestos = true" (blur)="onPuestoBlur()"
+                 (focus)="showPuestos = true; recargarCatalogos()" (blur)="onPuestoBlur()"
                  placeholder="Ej. Analista Financiero"
                  class="w-full px-3 h-11 rounded-xl border text-sm outline-none text-[#111111]"
                  [ngStyle]="{'border-color': errors['puesto'] ? '#E5140D' : '#E2E8F0'}" />
@@ -91,7 +91,7 @@
         <div class="sm:col-span-1 relative">
           <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Empresa <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
           <input type="text" [ngModel]="currentExp.empresa" (ngModelChange)="onEmpresaChange($event)" 
-                 (focus)="showEmpresas = true" (blur)="onEmpresaBlur()"
+                 (focus)="showEmpresas = true; recargarCatalogos()" (blur)="onEmpresaBlur()"
                  placeholder="Ej. Banco BCP"
                  class="w-full px-3 h-11 rounded-xl border text-sm outline-none text-[#111111]"
                  [ngStyle]="{'border-color': errors['empresa'] ? '#E5140D' : '#E2E8F0'}" />
@@ -109,7 +109,7 @@
         <div class="sm:col-span-1 relative">
           <label class="block text-sm font-medium mb-1.5" style="color: #111111;">Nivel del puesto <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
           <input type="text" [ngModel]="currentExp.nivel" (ngModelChange)="onNivelChange($event)"
-                 (focus)="showNiveles = true" (blur)="onNivelBlur()"
+                 (focus)="showNiveles = true; recargarCatalogos()" (blur)="onNivelBlur()"
                  placeholder="Ej. Junior" maxlength="100"
                  class="w-full px-3 h-11 rounded-xl border text-sm outline-none text-[#111111]"
                  [ngStyle]="{'border-color': errors['nivel'] ? '#E5140D' : '#E2E8F0'}" />
@@ -126,7 +126,7 @@
         <!-- País -->
         <div class="sm:col-span-1">
           <label class="block text-sm font-medium mb-1.5" style="color: #111111;">País <span class="text-xs font-semibold" style="color: #F2B705;">*</span></label>
-          <select [(ngModel)]="currentExp.pais" [style.color]="currentExp.pais ? '#111111' : '#94A3B8'"
+          <select [(ngModel)]="currentExp.pais" (focus)="recargarCatalogos()" [style.color]="currentExp.pais ? '#111111' : '#94A3B8'"
               class="w-full px-3 h-11 rounded-xl border text-sm outline-none bg-white "
                   [ngStyle]="{'border-color': errors['pais'] ? '#E5140D' : '#E2E8F0'}">
             <option value="" class="text-[#111111]">Elige una opción</option>
@@ -140,17 +140,18 @@
           <div class="flex gap-2">
             <select [(ngModel)]="currentExp.fechaInicioMes" (ngModelChange)="validateDates()" [style.color]="currentExp.fechaInicioMes ? '#111111' : '#94A3B8'"
               class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
-                    [ngStyle]="{'border-color': errors['fechaInicio'] ? '#E5140D' : '#E2E8F0'}">
+                    [ngStyle]="{'border-color': errors['fechaInicio'] || errors['fechaInicioNacimiento'] ? '#E5140D' : '#E2E8F0'}">
               <option value="" class="text-[#111111]">Mes</option>
               <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
             </select>
             <select [(ngModel)]="currentExp.fechaInicioAno" (ngModelChange)="validateDates()" [style.color]="currentExp.fechaInicioAno ? '#111111' : '#94A3B8'"
               class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white "
-                    [ngStyle]="{'border-color': errors['fechaInicio'] ? '#E5140D' : '#E2E8F0'}">
+                    [ngStyle]="{'border-color': errors['fechaInicio'] || errors['fechaInicioNacimiento'] ? '#E5140D' : '#E2E8F0'}">
               <option value="" class="text-[#111111]">Año</option>
               <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>
             </select>
           </div>
+          <p *ngIf="errors['fechaInicioNacimiento']" class="text-xs text-red-500 mt-1">La fecha de inicio no puede ser anterior a tu fecha de nacimiento</p>
         </div>
 
         <!-- Fecha de fin -->
@@ -159,20 +160,21 @@
           <div class="flex gap-2 mb-2">
             <select [(ngModel)]="currentExp.fechaFinMes" (ngModelChange)="validateDates()" [disabled]="currentExp.alPresente" [style.color]="currentExp.fechaFinMes ? '#111111' : '#94A3B8'"
               class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100 disabled:text-slate-400"
-                    [ngStyle]="{'border-color': errors['fechaFin'] || errors['fechaFinError'] ? '#E5140D' : '#E2E8F0'}">
+                    [ngStyle]="{'border-color': errors['fechaFin'] || errors['fechaFinError'] || errors['fechaFinNacimiento'] ? '#E5140D' : '#E2E8F0'}">
               <option value="" class="text-[#111111]">Mes</option>
               <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
             </select>
             <select [(ngModel)]="currentExp.fechaFinAno" (ngModelChange)="validateDates()" [disabled]="currentExp.alPresente" [style.color]="currentExp.fechaFinAno ? '#111111' : '#94A3B8'"
               class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white  disabled:bg-slate-100 disabled:text-slate-400"
-                    [ngStyle]="{'border-color': errors['fechaFin'] || errors['fechaFinError'] ? '#E5140D' : '#E2E8F0'}">
+                    [ngStyle]="{'border-color': errors['fechaFin'] || errors['fechaFinError'] || errors['fechaFinNacimiento'] ? '#E5140D' : '#E2E8F0'}">
               <option value="" class="text-[#111111]">Año</option>
               <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>
             </select>
           </div>
           <p *ngIf="errors['fechaFinError']" class="text-xs text-red-500 mt-1 mb-2">La fecha de fin no puede ser anterior al inicio</p>
+          <p *ngIf="errors['fechaFinNacimiento']" class="text-xs text-red-500 mt-1 mb-2">La fecha de fin no puede ser anterior a tu fecha de nacimiento</p>
           <label class="flex items-center gap-2 cursor-pointer w-max">
-            <input type="checkbox" [(ngModel)]="currentExp.alPresente" (ngModelChange)="validateDates()" class="w-4 h-4 rounded border-slate-300 text-yellow-500 focus:ring-yellow-500" />
+            <input type="checkbox" [(ngModel)]="currentExp.alPresente" (ngModelChange)="onAlPresenteChange()" class="w-4 h-4 rounded border-slate-300 text-yellow-500 focus:ring-yellow-500" />
             <span class="text-xs font-medium" style="color: #111111;">Trabajo aquí actualmente</span>
           </label>
         </div>

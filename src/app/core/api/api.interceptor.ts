@@ -27,21 +27,30 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(
     req.clone({
-        setHeaders: headers
+      setHeaders: headers
     })
-    ).pipe(
+  ).pipe(
     catchError((error: HttpErrorResponse) => {
-        // Solo se cierra la sesión si el 401 es del token actual; una respuesta tardía
-        // de un token anterior (logout + nuevo login) no debe borrar la sesión nueva
-        if (error.status === 401 && !isLoginRequest && token === authService.getToken()) {
-        authService.clearSession();
+      if (!isLoginRequest) {
+        if (error.status === 401 && token === authService.getToken()) {
+          authService.clearSession();
 
-        router.navigate(['/creo/landing'], {
+          router.navigate(['/creo/landing'], {
             queryParams: { sessionExpired: 'true' }
-        });
-        }
+          });
+        } else if (error.status === 403) {
+          const msg = (error.error?.message || '').toLowerCase();
+          if (msg.includes('suspend') || msg.includes('bloquead')) {
+            authService.clearSession();
 
-        return throwError(() => error);
+            router.navigate(['/creo/landing'], {
+              queryParams: { accountSuspended: 'true' }
+            });
+          }
+        }
+      }
+
+      return throwError(() => error);
     })
-    );
+  );
 };

@@ -1,4 +1,4 @@
-﻿<app-candidate-shell activeScreen="candidate-profile">
+<app-candidate-shell activeScreen="candidate-profile">
   <!-- Estado de carga / error de GET /candidatos/me -->
   <div *ngIf="cargando" class="max-w-[1100px] mx-auto py-16 text-center text-sm" style="color: #64748B;">
     Cargando tu perfil...
@@ -374,11 +374,11 @@
       <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6" style="scrollbar-width: thin;">
         <div>
           <h3 class="text-sm font-bold mb-3" style="color: #111111;">Habilidades Técnicas</h3>
-          <app-creo-skill-picker [catalog]="hardSkillsCatalog" [selected]="candidate.hardSkills" (toggle)="toggleHardSkill($event)" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
+          <app-creo-skill-picker [catalog]="hardSkillsCatalog" [selected]="candidate.hardSkills" (toggle)="toggleHardSkill($event)" (pickerFocus)="recargarHabilidadesPerfil()" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
         </div>
         <div>
           <h3 class="text-sm font-bold mb-3" style="color: #111111;">Habilidades Blandas</h3>
-          <app-creo-skill-picker [catalog]="softSkillsCatalog" [selected]="candidate.softSkills" (toggle)="toggleSoftSkill($event)" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
+          <app-creo-skill-picker [catalog]="softSkillsCatalog" [selected]="candidate.softSkills" (toggle)="toggleSoftSkill($event)" (pickerFocus)="recargarHabilidadesPerfil()" [suggestedSections]="[]" [maxSkills]="maxSkills"></app-creo-skill-picker>
         </div>
       </div>
       <div class="flex justify-between items-center gap-4 px-6 py-4 border-t" style="border-color: #E2E8F0; background-color: #FFFFFF;">

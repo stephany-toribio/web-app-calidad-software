@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -31,7 +31,8 @@ const MAX_SKILLS = 15;          // por tipo (técnicas y blandas), igual que el 
   ],
   templateUrl: './candidate-profile.component.html',
 })
-export class CandidateProfileComponent implements OnInit {
+export class CandidateProfileComponent implements OnInit, OnDestroy {
+  private pollInterval: any = null;
   private candidatosService = inject(CandidatosService);
   private catalogosService = inject(CatalogosService);
 
@@ -74,6 +75,24 @@ export class CandidateProfileComponent implements OnInit {
 
   ngOnInit() {
     this.cargarPerfil();
+  }
+
+  ngOnDestroy() {
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus() {
+    this.refrescarSegunModal();
+  }
+
+  refrescarSegunModal() {
+    if (this.showSkillsModal) {
+      this.recargarHabilidadesPerfil(true);
+    } else if (this.showEduModal && !this.studyList?.showModal) {
+      this.studyList?.recargarCatalogos();
+    } else if (this.showExpModal && !this.experienceList?.showModal) {
+      this.experienceList?.recargarCatalogos();
+    }
   }
 
   /** GET /candidatos/me + catálogos. Un 401 lo resuelve el interceptor (vuelve al landing) */
@@ -235,8 +254,28 @@ export class CandidateProfileComponent implements OnInit {
     this.guardar(payloadEstudiosIdiomas(this.candidate.education, this.candidate.languages, this.catalogos));
   }
 
+  private ultCargaHabilidades = 0;
+
+  recargarHabilidadesPerfil(force = false) {
+    const ahora = Date.now();
+    if (!force && ahora - this.ultCargaHabilidades < 1000) return;
+    this.ultCargaHabilidades = ahora;
+
+    this.catalogosService.areasEstudio().subscribe(areas => {
+      this.catalogos = { ...this.catalogos, areasEstudio: areas };
+      const areaIds = this.candidate.education
+        .map(e => aId(this.catalogos.areasEstudio, e.areaEstudio))
+        .filter((id): id is number => id !== null);
+      this.cargarHabilidades(areaIds);
+    });
+  }
+
   // Habilidades (técnicas + blandas en una sola lista de IDs)
-  openSkillsModal() { this.abrirModal(); this.showSkillsModal = true; }
+  openSkillsModal() {
+    this.recargarHabilidadesPerfil();
+    this.abrirModal();
+    this.showSkillsModal = true;
+  }
   closeSkillsModal() { this.cerrarModal(); }
   saveSkills() {
     this.guardar(payloadHabilidades([...this.candidate.hardSkills, ...this.candidate.softSkills], this.catalogos));

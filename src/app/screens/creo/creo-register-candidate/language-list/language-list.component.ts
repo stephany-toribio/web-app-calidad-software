@@ -100,6 +100,7 @@ export class LanguageListComponent implements OnInit {
   openModal(index = -1) {
     this.errors = {};
     this.editingIndex = index;
+    this.recargarCatalogos();
     if (index === -1) {
       this.currentLang = this.getEmptyLang();
     } else {
