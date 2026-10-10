@@ -6,7 +6,7 @@ import { AdminShellComponent } from '../../../components/creo-design-system/admi
 import { AdminService } from '../../../core/api/admin.service';
 import {
   AreaEstudio, Habilidad, PaisAdmin, InstitucionAdmin, PuestoAdmin, OrganizacionAdmin, NivelPuestoAdmin, NivelPuestoPayload,
-  CarreraAdmin
+  CarreraAdmin, IdiomaAdmin
 } from '../../../core/api/models/admin.model';
 import { CatalogosService } from '../../../core/api/catalogos.service';
 import { TipoEstudio } from '../../../core/api/models/catalogos.model';
@@ -65,6 +65,12 @@ export interface CareerViewModel {
   active: boolean;
 }
 
+export interface LanguageViewModel {
+  id: number;
+  name: string;
+  active: boolean;
+}
+
 export interface LevelViewModel {
   id: number;
   name: string;
@@ -113,7 +119,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   query = '';
   categoryFilter = 'Todas';
   statusFilter: 'all' | SkillStatus = 'all';
-  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'carreras' | 'puestos' | 'niveles' | 'organizaciones' = 'estudios';
+  activeTab: 'habilidades' | 'estudios' | 'paises' | 'instituciones' | 'carreras' | 'idiomas' | 'puestos' | 'niveles' | 'organizaciones' = 'estudios';
 
   loadingHabilidades = false;
   loadingAreas = false;
@@ -123,6 +129,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   loadingOrganizations = false;
   loadingLevels = false;
   loadingCareers = false;
+  loadingLanguages = false;
 
   skills: SkillItemViewModel[] = [];
   studyAreas: StudyAreaViewModel[] = [];
@@ -133,6 +140,7 @@ export class CreoAdminSkillsComponent implements OnInit {
   organizations: OrganizationViewModel[] = [];
   levels: LevelViewModel[] = [];
   careers: CareerViewModel[] = [];
+  languages: LanguageViewModel[] = [];
   /** Tipos de estudio que llevan carrera (requiere_carrera del catálogo): Universitario, Posgrado, Master, Doctorado */
   careerStudyTypes: TipoEstudio[] = [];
 
@@ -203,6 +211,14 @@ export class CreoAdminSkillsComponent implements OnInit {
   editingCareer: { id: number; name: string; tipoEstudioId: number | null } = { id: 0, name: '', tipoEstudioId: null };
   careerError = '';
 
+  // Idiomas: filtros en el cliente (nombre, estado)
+  languageQuery = '';
+  languageStatusFilter: 'all' | SkillStatus = 'all';
+
+  showLanguageModal = false;
+  editingLanguage: { id: number; name: string } = { id: 0, name: '' };
+  languageError = '';
+
   // Niveles del puesto: mismos filtros que puestos; la tabla respeta el orden jerárquico del backend
   levelQuery = '';
   levelTypeFilter: 'all' | 'global' | 'personalizado' = 'all';
@@ -231,6 +247,7 @@ export class CreoAdminSkillsComponent implements OnInit {
     this.cargarOrganizaciones();
     this.cargarNiveles();
     this.cargarCarreras();
+    this.cargarIdiomas();
     this.catalogosService.tiposEstudio().subscribe({
       next: tipos => this.careerStudyTypes = tipos.filter(t => t.requiere_carrera),
     });
@@ -941,6 +958,101 @@ export class CreoAdminSkillsComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado de la carrera.'), 'error');
+      }
+    });
+  }
+
+  // --- Idiomas: catálogo sin valores personalizados ---
+
+  private aIdiomaVM(i: IdiomaAdmin): LanguageViewModel {
+    return { id: i.id, name: i.nombre, active: i.activo };
+  }
+
+  cargarIdiomas() {
+    this.loadingLanguages = true;
+    this.adminService.listarIdiomas().subscribe({
+      next: (idiomas) => {
+        this.loadingLanguages = false;
+        this.languages = idiomas.map(i => this.aIdiomaVM(i));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingLanguages = false;
+        this.showToast(this.mensajeError(err, 'No se pudieron cargar los idiomas.'), 'error');
+      }
+    });
+  }
+
+  get filteredLanguages() {
+    const q = this.languageQuery.trim().toLowerCase();
+    return this.languages.filter(i => {
+      const matchQ = i.name.toLowerCase().includes(q);
+      const matchEstado = this.languageStatusFilter === 'all'
+        || (this.languageStatusFilter === 'active') === i.active;
+      return matchQ && matchEstado;
+    });
+  }
+
+  openLanguageModal(i?: LanguageViewModel) {
+    this.editingLanguage = i ? { id: i.id, name: i.name } : { id: 0, name: '' };
+    this.languageError = '';
+    this.showLanguageModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeLanguageModal() {
+    this.showLanguageModal = false;
+    document.body.style.overflow = 'auto';
+  }
+
+  saveLanguage() {
+    this.languageError = '';
+    const nombre = this.editingLanguage.name.trim();
+
+    if (!nombre) {
+      this.languageError = 'El nombre del idioma es requerido.';
+      return;
+    }
+    if (nombre.length > 50) {
+      this.languageError = 'El nombre del idioma no puede superar los 50 caracteres.';
+      return;
+    }
+
+    const editando = this.editingLanguage.id !== 0;
+    const peticion$ = editando
+      ? this.adminService.editarIdioma(this.editingLanguage.id, nombre)
+      : this.adminService.crearIdioma(nombre);
+
+    peticion$.subscribe({
+      next: (idioma) => {
+        const vm = this.aIdiomaVM(idioma);
+        const idx = this.languages.findIndex(x => x.id === vm.id);
+        if (idx !== -1) {
+          this.languages[idx] = vm;
+        } else {
+          this.languages.push(vm);
+          this.languages.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        this.showToast(editando ? 'Idioma actualizado' : 'Idioma creado', 'success');
+        this.closeLanguageModal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.languageError = this.mensajeError(err, 'No se pudo guardar el idioma.');
+      }
+    });
+  }
+
+  toggleLanguageStatus(i: LanguageViewModel) {
+    const accion$ = i.active
+      ? this.adminService.desactivarIdioma(i.id)
+      : this.adminService.reactivarIdioma(i.id);
+
+    accion$.subscribe({
+      next: (idioma) => {
+        i.active = idioma.activo;
+        this.showToast(`Idioma ${idioma.activo ? 'activado' : 'desactivado'}`, 'success');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.showToast(this.mensajeError(err, 'No se pudo cambiar el estado del idioma.'), 'error');
       }
     });
   }

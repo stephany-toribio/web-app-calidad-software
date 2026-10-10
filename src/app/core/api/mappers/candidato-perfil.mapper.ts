@@ -92,6 +92,7 @@ function estudioDesdeApi(e: EstudioPerfil): EstudioFormulario {
 function idiomaDesdeApi(i: IdiomaPerfil): IdiomaFormulario {
     return {
         idioma: i.idioma?.nombre ?? '',
+        idiomaId: i.idioma?.id ?? null,
         nivelEscrito: NIVEL_IDIOMA_TEXTO[i.nivel_escrito] ?? i.nivel_escrito,
         nivelOral: NIVEL_IDIOMA_TEXTO[i.nivel_oral] ?? i.nivel_oral,
     };

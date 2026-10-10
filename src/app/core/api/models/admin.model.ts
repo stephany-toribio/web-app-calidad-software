@@ -167,6 +167,15 @@ export interface CarreraAdmin {
   updated_at?: string;
 }
 
+/** Idioma del catálogo (sin valores personalizados) */
+export interface IdiomaAdmin {
+  id: number;
+  nombre: string;
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface CrearCarreraPayload {
   nombre: string;
   tipo_estudio_id: number;

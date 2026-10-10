@@ -61,6 +61,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
   // Solo existen mientras se muestra su paso (están dentro de un *ngIf)
   @ViewChild(StudyListComponent) private studyList?: StudyListComponent;
   @ViewChild(ExperienceListComponent) private experienceList?: ExperienceListComponent;
+  @ViewChild(LanguageListComponent) private languageList?: LanguageListComponent;
 
   steps = STEPS;
   genderOptions = GENDER_OPTIONS;
@@ -418,7 +419,7 @@ export class CreoRegisterCandidateComponent implements OnInit {
    * vuelve a pedir los catálogos y vacía ese campo para que el candidato lo elija de nuevo de la lista actualizada.
    */
   private corregirCatalogosRechazados(err: HttpErrorResponse) {
-    const correccion = corregirCatalogosRechazados(err, this.estudios, this.experiencias);
+    const correccion = corregirCatalogosRechazados(err, this.estudios, this.experiencias, this.idiomas);
     if (!correccion) return;
 
     // estudios = carreras + educación superior (en ese orden, igual que el payload)
@@ -426,11 +427,16 @@ export class CreoRegisterCandidateComponent implements OnInit {
     this._carreras = correccion.estudios.slice(0, enCarreras);
     this._educacionSuperior = correccion.estudios.slice(enCarreras);
     this.experiencias = correccion.experiencias;
+    this.idiomas = correccion.idiomas;
 
     this.recargarCatalogos();
     if (correccion.recargarEstudios) {
       this.studyList?.recargarCatalogos();
       if (this.errors['carreras']) this.errors['carreras'] += AVISO_LISTA_ACTUALIZADA;
+    }
+    if (correccion.recargarIdiomas) {
+      this.languageList?.recargarCatalogos();
+      if (this.errors['idiomas']) this.errors['idiomas'] += AVISO_LISTA_ACTUALIZADA;
     }
     if (correccion.recargarExperiencias) {
       this.experienceList?.recargarCatalogos();

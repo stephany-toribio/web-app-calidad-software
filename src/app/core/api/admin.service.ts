@@ -18,7 +18,8 @@ import {
   NivelPuestoAdmin,
   NivelPuestoPayload,
   CarreraAdmin,
-  CrearCarreraPayload
+  CrearCarreraPayload,
+  IdiomaAdmin
 } from './models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -219,6 +220,39 @@ export class AdminService {
   reactivarCarrera(id: number): Observable<CarreraAdmin> {
     return this.http
       .patch<ApiResponse<CarreraAdmin>>(`${this.baseUrl}/carreras/${id}/reactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  // --- Idiomas ---
+
+  /** Todos (activos e inactivos) */
+  listarIdiomas(): Observable<IdiomaAdmin[]> {
+    return this.http
+      .get<ApiResponse<IdiomaAdmin[]>>(`${this.baseUrl}/idiomas`)
+      .pipe(map(res => res.data));
+  }
+
+  crearIdioma(nombre: string): Observable<IdiomaAdmin> {
+    return this.http
+      .post<ApiResponse<IdiomaAdmin>>(`${this.baseUrl}/idiomas`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  editarIdioma(id: number, nombre: string): Observable<IdiomaAdmin> {
+    return this.http
+      .patch<ApiResponse<IdiomaAdmin>>(`${this.baseUrl}/idiomas/${id}`, { nombre })
+      .pipe(map(res => res.data));
+  }
+
+  desactivarIdioma(id: number): Observable<IdiomaAdmin> {
+    return this.http
+      .patch<ApiResponse<IdiomaAdmin>>(`${this.baseUrl}/idiomas/${id}/desactivar`, {})
+      .pipe(map(res => res.data));
+  }
+
+  reactivarIdioma(id: number): Observable<IdiomaAdmin> {
+    return this.http
+      .patch<ApiResponse<IdiomaAdmin>>(`${this.baseUrl}/idiomas/${id}/reactivar`, {})
       .pipe(map(res => res.data));
   }
 

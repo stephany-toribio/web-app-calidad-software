@@ -19,7 +19,10 @@ export interface EstudioFormulario {
     fechaFinMes: string; fechaFinAno: string; alPresente: boolean;
 }
 
-export interface IdiomaFormulario { idioma: string; nivelEscrito: string; nivelOral: string; }
+export interface IdiomaFormulario {
+    idioma: string; nivelEscrito: string; nivelOral: string;
+    idiomaId?: number | null;   // permite conservar un idioma desactivado (ya no está en el catálogo cargado)
+}
 
 export interface ExperienciaFormulario {
     puesto: string; empresa: string; pais: string; nivel: string; descripcion: string;
@@ -178,7 +181,7 @@ function mapearEstudio(e: EstudioFormulario, c: CatalogosRegistro): EstudioPaylo
 
 function mapearIdioma(i: IdiomaFormulario, c: CatalogosRegistro): IdiomaPayload {
     return {
-        idioma_id: aId(c.idiomas, i.idioma) as number,
+        idioma_id: (i.idiomaId ?? aId(c.idiomas, i.idioma)) as number,
         nivel_escrito: NIVELES_IDIOMA[i.nivelEscrito],
         nivel_oral: NIVELES_IDIOMA[i.nivelOral],
     };

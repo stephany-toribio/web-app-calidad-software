@@ -38,6 +38,7 @@ export class CandidateProfileComponent implements OnInit {
   // Solo existen mientras su modal está abierto (están dentro de un *ngIf)
   @ViewChild(StudyListComponent) private studyList?: StudyListComponent;
   @ViewChild(ExperienceListComponent) private experienceList?: ExperienceListComponent;
+  @ViewChild(LanguageListComponent) private languageList?: LanguageListComponent;
 
   // Se llena con GET /candidatos/me y se refresca con la respuesta de cada PUT
   candidate: PerfilVista = {
@@ -144,15 +145,22 @@ export class CandidateProfileComponent implements OnInit {
    * se vacía ese campo y se vuelven a pedir las listas, para que lo elija de nuevo sin cerrar el modal.
    */
   private corregirCatalogosRechazados(err: HttpErrorResponse) {
-    const correccion = corregirCatalogosRechazados(err, this.candidate.education, this.candidate.experience);
+    const correccion = corregirCatalogosRechazados(err, this.candidate.education, this.candidate.experience, this.candidate.languages);
     if (!correccion) return;
 
-    this.candidate = { ...this.candidate, education: correccion.estudios, experience: correccion.experiencias };
+    this.candidate = {
+      ...this.candidate,
+      education: correccion.estudios, experience: correccion.experiencias, languages: correccion.idiomas,
+    };
 
     this.catalogosFijos().subscribe(catalogos => this.catalogos = { ...catalogos, habilidades: this.catalogos.habilidades });
     if (correccion.recargarEstudios) {
       this.studyList?.recargarCatalogos();
       if (this.errores['carreras']) this.errores['carreras'] += AVISO_LISTA_ACTUALIZADA;
+    }
+    if (correccion.recargarIdiomas) {
+      this.languageList?.recargarCatalogos();
+      if (this.errores['idiomas']) this.errores['idiomas'] += AVISO_LISTA_ACTUALIZADA;
     }
     if (correccion.recargarExperiencias) {
       this.experienceList?.recargarCatalogos();
