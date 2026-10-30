@@ -25,7 +25,7 @@ export class AdminShellComponent {
     { id: "admin-dashboard",  label: "Dashboard" },
     { id: "admin-accounts",   label: "Cuentas" },
     { id: "admin-skills",     label: "Habilitar / Deshabilitar" },
-    { id: "admin-moderation", label: "Moderación" },
+    { id: "admin-moderation", label: "Revisión" },
     { id: "admin-audit",      label: "Auditoría" },
   ];
 

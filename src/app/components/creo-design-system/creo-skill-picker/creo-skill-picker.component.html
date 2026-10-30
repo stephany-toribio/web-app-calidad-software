@@ -26,9 +26,9 @@
         </div>
     </div>
 
-    <div class="min-h-[120px] overflow-y-auto rounded-xl border p-4 flex flex-col gap-4"
+    <div class="skill-scroll min-h-[120px] overflow-y-auto rounded-xl border p-4 flex flex-col gap-4"
         style="background-color: #F8FAFC;" [style.border-color]="error ? '#E5140D' : '#E2E8F0'"
-        [style.max-height]="hasGroups ? '28rem' : '18rem'">
+        [style.max-height]="hasGroups ? 'min(60vh, 32rem)' : '18rem'">
 
         <p *ngIf="(hasGroups ? !hasGroupResults : filteredCatalog.length === 0)"
             class="text-sm text-slate-400 text-center py-4">
@@ -59,7 +59,8 @@
                                 stroke-linejoin="round" />
                         </svg>
                     </button>
-                    <div *ngIf="isGroupOpen(group)" class="p-3.5 flex flex-wrap gap-2 border-t"
+                    <div *ngIf="isGroupOpen(group)"
+                        class="skill-scroll p-3.5 flex flex-wrap gap-2 border-t max-h-60 overflow-y-auto"
                         style="border-color: #F1F5F9;">
                         <app-creo-chip *ngFor="let skill of groupSkills(group)" [label]="skill"
                             [selected]="isSelected(skill)" [disabled]="chipDisabled(skill)"

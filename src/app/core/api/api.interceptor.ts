@@ -39,13 +39,26 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
             queryParams: { sessionExpired: 'true' }
           });
         } else if (error.status === 403) {
-          const msg = (error.error?.message || '').toLowerCase();
-          if (msg.includes('suspend') || msg.includes('bloquead')) {
-            authService.clearSession();
+          // Si el usuario es administrador o la petición pertenece a administración (/admin/),
+          // una respuesta 403 con 'bloquead' o 'suspend' hace referencia a la entidad gestionada,
+          // por lo que NO se debe cerrar la sesión del admin.
+          if (!authService.isAdmin() && !req.url.includes('/admin/')) {
+            const msg = (error.error?.message || '').toLowerCase();
+            const code = (error.error?.error_code || error.error?.code || '').toLowerCase();
+            const isAccountSuspended =
+              code.includes('suspend') ||
+              code.includes('bloquead') ||
+              msg.includes('tu cuenta') ||
+              msg.includes('su cuenta') ||
+              (msg.includes('cuenta') && (msg.includes('suspend') || msg.includes('bloquead')));
 
-            router.navigate(['/creo/landing'], {
-              queryParams: { accountSuspended: 'true' }
-            });
+            if (isAccountSuspended) {
+              authService.clearSession();
+
+              router.navigate(['/creo/landing'], {
+                queryParams: { accountSuspended: 'true' }
+              });
+            }
           }
         }
       }

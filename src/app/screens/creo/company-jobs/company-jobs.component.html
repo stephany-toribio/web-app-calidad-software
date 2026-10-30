@@ -1,6 +1,635 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Vacantes de la Empresa</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Gestión de empleo publicado - Creo Portal</p>
+<app-company-shell activeScreen="company-jobs" [userName]="userName">
+  <!-- Toast feedback -->
+  <div
+    *ngIf="actionToast"
+    class="fixed top-5 right-5 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border bg-white border-[#F2B705] min-w-[280px]"
+  >
+    <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-[#F2B705]">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M2 5l2 2 4-4" stroke="#111111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
+    <p class="text-sm font-medium text-[#111111]">{{ actionToast }}</p>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-24 space-y-6">
+
+    <!-- Page header -->
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-[#111111]">Mis Ofertas</h1>
+        <p class="text-sm mt-0.5 text-[#9A948C]">{{ activeJobsCount }} vacantes publicadas</p>
+      </div>
+
+      <button
+        type="button"
+        (click)="navigate('company-create-job')"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Nueva vacante
+      </button>
+    </div>
+
+    <!-- Filters row -->
+    <div class="flex flex-col sm:flex-row gap-3">
+      <!-- Search -->
+      <div class="relative flex-1">
+        <svg
+          class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9A948C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar por título..."
+          [(ngModel)]="search"
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-white border-[#E8E3D9] text-[#111111]"
+          onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+          onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';"
+        />
+      </div>
+
+      <!-- Status dropdown -->
+      <select
+        [(ngModel)]="statusFilter"
+        class="px-4 py-2.5 rounded-xl border text-sm font-medium outline-none cursor-pointer bg-white border-[#E8E3D9] text-[#111111]"
+      >
+        <option value="all">Todos los estados</option>
+        <option value="active">Activas</option>
+        <option value="pending_review">En Revisión por Moderación</option>
+        <option value="approved_pending_payment">Aprobadas (Pago pendiente)</option>
+        <option value="paused">Pausadas</option>
+        <option value="closed">Finalizadas / Vencidas</option>
+        <option value="rejected_by_moderation">No Aprobadas</option>
+        <option value="inactive">Eliminadas</option>
+      </select>
+    </div>
+
+    <!-- Jobs Table -->
+    <div class="rounded-2xl border border-[#E8E3D9] shadow-sm">
+      <!-- Table Header (Desktop) -->
+      <div
+        class="hidden sm:grid jobs-table-header px-5 py-3 text-xs font-bold uppercase tracking-wide bg-[#F8F7F4] text-[#9A948C] border-b border-[#E8E3D9] rounded-t-2xl"
+      >
+        <span>Vacante</span>
+        <span>Estado</span>
+        <span>Postulantes</span>
+        <span>Publicación</span>
+        <span>Cierre</span>
+        <span></span>
+      </div>
+
+      <!-- Table Body -->
+      <div class="bg-white divide-y divide-[#F5F0E8] rounded-b-2xl">
+        <!-- Cargando -->
+        <div *ngIf="loading" class="py-16 text-center text-sm text-[#9A948C]">Cargando tus vacantes...</div>
+
+        <!-- Error al cargar -->
+        <div *ngIf="!loading && loadError" class="py-12 flex flex-col items-center justify-center gap-3">
+          <p class="text-sm font-medium text-[#DC2626]">{{ loadError }}</p>
+          <button type="button" (click)="cargarMisVacantes()"
+            class="px-4 py-2 rounded-xl text-xs font-bold bg-[#111111] text-white cursor-pointer">Reintentar</button>
+        </div>
+
+        <!-- Empty Results -->
+        <div *ngIf="!loading && !loadError && filteredJobs.length === 0" class="py-16 flex flex-col items-center justify-center gap-2">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C4BDB5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <p class="text-sm font-medium text-[#9A948C]">
+            {{ jobs.length === 0 && statusFilter !== 'inactive' ? 'Aún no has registrado vacantes' : 'Sin resultados para tu búsqueda' }}
+          </p>
+        </div>
+
+        <!-- Job Rows -->
+        <div
+          *ngFor="let job of filteredJobs; let i = index"
+          class="relative jobs-table-row px-5 py-4 hover:bg-[#FAFAF8] transition-colors last:rounded-b-2xl"
+        >
+          <!-- 1. Vacante -->
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-[#111111] line-clamp-2" [title]="job.title">{{ job.title }}</p>
+
+            <!-- Mobile-only status & details -->
+            <div class="sm:hidden flex flex-wrap items-center gap-1.5 mt-1.5">
+              <span
+                class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                [style.backgroundColor]="getStatusConfig(job.status).bg"
+                [style.color]="getStatusConfig(job.status).text"
+              >
+                <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="getStatusConfig(job.status).dotColor"></span>
+                {{ getStatusConfig(job.status).label }}
+              </span>
+
+              <span
+                *ngIf="job.status === 'paused' || job.status === 'closed'"
+                class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEE2E2] text-[#DC2626]"
+              >
+                Recepción bloqueada
+              </span>
+
+              <span
+                *ngIf="esSoloLectura(job)"
+                class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#F1F5F9] text-[#64748B]"
+              >
+                Solo lectura
+              </span>
+
+              <span
+                *ngIf="job.daysLeft <= 0 && job.status === 'closed'"
+                class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309]"
+              >
+                Convocatoria vencida
+              </span>
+
+              <button
+                *ngIf="job.status === 'approved_pending_payment'"
+                type="button"
+                (click)="openPayment(job, $event)"
+                class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#F2B705] text-[#111111]"
+              >
+                Pagar (S/ 100)
+              </button>
+            </div>
+
+            <!-- Mobile row details -->
+            <p class="sm:hidden text-xs mt-1 text-[#9A948C]">
+              {{ rangoPostulaciones(job.applicants) }} · Cierra {{ job.closeDate }}
+            </p>
+          </div>
+
+          <!-- 2. Estado (Desktop) -->
+          <div class="hidden sm:flex flex-col gap-1 items-start min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span
+                class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap"
+                [style.backgroundColor]="getStatusConfig(job.status).bg"
+                [style.color]="getStatusConfig(job.status).text"
+              >
+                <span class="w-1.5 h-1.5 rounded-full shrink-0" [style.backgroundColor]="getStatusConfig(job.status).dotColor"></span>
+                {{ getStatusConfig(job.status).label }}
+              </span>
+
+              <!-- Reception blocked badge -->
+              <span
+                *ngIf="job.status === 'paused' || job.status === 'closed'"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#DC2626] whitespace-nowrap"
+              >
+                Recepción bloqueada
+              </span>
+
+              <span
+                *ngIf="esSoloLectura(job)"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#64748B] whitespace-nowrap"
+              >
+                Solo lectura
+              </span>
+
+              <!-- Vencida badge -->
+              <span
+                *ngIf="job.daysLeft <= 0 && job.status === 'closed'"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] whitespace-nowrap"
+              >
+                Convocatoria vencida
+              </span>
+            </div>
+
+            <!-- Botón Pagar y Publicar si está aprobada con pago pendiente -->
+            <button
+              *ngIf="job.status === 'approved_pending_payment'"
+              type="button"
+              (click)="openPayment(job, $event)"
+              class="mt-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+              </svg>
+              Pagar y Publicar (S/ 100)
+            </button>
+          </div>
+
+          <!-- 3. Postulantes (Desktop) -->
+          <div class="hidden sm:flex items-center">
+            <button
+              type="button"
+              (click)="navigateKanban(job, $event)"
+              class="flex items-center gap-1 font-semibold text-xs cursor-pointer transition-colors text-left text-[#2563EB] hover:opacity-75 whitespace-nowrap"
+            >
+              {{ rangoPostulaciones(job.applicants) }}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- 4. Publicación (Desktop) -->
+          <div class="hidden sm:flex items-center text-xs text-[#9A948C] whitespace-nowrap">
+            {{ job.publishedDate }}
+          </div>
+
+          <!-- 5. Cierre (Desktop) -->
+          <div
+            class="hidden sm:flex items-center text-xs whitespace-nowrap"
+            [style.color]="job.daysLeft <= 3 && job.status === 'active' ? '#DC2626' : '#9A948C'"
+          >
+            {{ job.status === 'closed' ? 'Finalizada' : job.closeDate }}
+            <span *ngIf="job.daysLeft <= 3 && job.status === 'active'" class="ml-1 font-semibold text-[#DC2626]">
+              ({{ job.daysLeft }}d)
+            </span>
+          </div>
+
+          <!-- 6. Acciones (3-dot button) -->
+          <div class="relative flex items-center justify-end">
+            <button
+              type="button"
+              (click)="toggleMenu(job.id, $event)"
+              class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors text-[#9A948C] hover:bg-[#F5F0E8] hover:text-[#111111]"
+              aria-label="Más acciones"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <circle cx="12" cy="5" r="1" fill="currentColor" />
+                <circle cx="12" cy="12" r="1" fill="currentColor" />
+                <circle cx="12" cy="19" r="1" fill="currentColor" />
+              </svg>
+            </button>
+
+            <!-- Action Dropdown Menu -->
+            <div *ngIf="menuOpenId === job.id">
+              <!-- Backdrop -->
+              <div class="fixed inset-0 z-40" (click)="closeMenu()"></div>
+
+              <div
+                class="absolute right-0 w-48 rounded-xl border shadow-lg z-50 overflow-hidden bg-white border-[#E8E3D9]"
+                [class.top-full]="!abrirMenuHaciaArriba(i)"
+                [class.mt-1]="!abrirMenuHaciaArriba(i)"
+                [class.bottom-full]="abrirMenuHaciaArriba(i)"
+                [class.mb-1]="abrirMenuHaciaArriba(i)"
+              >
+                <!-- Kanban -->
+                <button
+                  type="button"
+                  (click)="navigateKanban(job, $event)"
+                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors text-left text-[#333333] hover:bg-[#F5F0E8]"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="6" height="20" rx="1" /><rect x="9" y="6" width="6" height="16" rx="1" /><rect x="16" y="10" width="6" height="12" rx="1" />
+                  </svg>
+                  Ver Kanban
+                </button>
+
+                <!-- Edit -->
+                <button
+                  *ngIf="!esSoloLectura(job)"
+                  type="button"
+                  (click)="editarVacante(job, $event)"
+                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors text-left text-[#333333] hover:bg-[#F5F0E8]"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Editar vacante
+                </button>
+
+                <!-- Pause / Reactivate (Control de Recepción) -->
+                <button
+                  *ngIf="job.status === 'active' || job.status === 'paused'"
+                  type="button"
+                  (click)="togglePause(job.id, $event)"
+                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors text-left text-[#333333] hover:bg-[#F5F0E8]"
+                >
+                  <ng-container *ngIf="job.status === 'paused'">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Reactivar recepción
+                  </ng-container>
+                  <ng-container *ngIf="job.status !== 'paused'">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+                    </svg>
+                    Pausar recepción
+                  </ng-container>
+                </button>
+
+                <!-- Finalizar (Control de Recepción) -->
+                <button
+                  *ngIf="job.status === 'active' || job.status === 'paused'"
+                  type="button"
+                  (click)="finalizeJob(job.id, $event)"
+                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors text-left text-[#D97706] hover:bg-[#FFFBEB]"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" />
+                  </svg>
+                  Finalizar vacante
+                </button>
+
+                <!-- Eliminar (Renombrado de Despublicar) -->
+                <div *ngIf="puedeEliminar(job)" class="border-t border-[#F5F0E8]">
+                  <button
+                    type="button"
+                    (click)="openDeleteConfirm(job, $event)"
+                    class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors text-left text-[#DC2626] hover:bg-[#FEF2F2]"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. Notificaciones y Banners transversales (Span full width) -->
+          <!-- Pending Review Notice -->
+          <div *ngIf="job.status === 'pending_review'" class="jobs-notice-banner col-span-full mt-2 pt-2 border-t border-[#F5F0E8] text-xs text-[#92400E] flex items-center gap-1.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-[#854D0E]">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span>En cola de revisión previa. El administrador debe aprobar la oferta antes de su publicación.</span>
+          </div>
+
+          <!-- Approved pending payment notice -->
+          <div *ngIf="job.status === 'approved_pending_payment'" class="jobs-notice-banner col-span-full mt-2 pt-2 border-t border-[#F5F0E8] text-xs text-[#4338CA] flex items-center gap-1.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-[#4338CA]">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Oferta aprobada por moderación. Haz clic en "Pagar y Publicar" para activarla en el portal.</span>
+          </div>
+
+          <!-- Rejected by Moderation notice -->
+          <div *ngIf="job.status === 'rejected_by_moderation'" class="jobs-notice-banner col-span-full mt-2 p-2.5 rounded-lg bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B]">
+            <p class="font-bold">Motivo de no aprobación por moderación:</p>
+            <p class="mt-0.5">{{ job.moderationReason || 'La vacante no cumple con las políticas de publicación de empleo de la plataforma.' }}</p>
+          </div>
+
+          <!-- Inactive notice -->
+          <p *ngIf="job.status === 'inactive'" class="jobs-notice-banner col-span-full mt-2 text-[11px] text-[#6B7280]">
+            Inactiva / Eliminada — no visible para candidatos
+          </p>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Aviso antes de editar: editar le quita la aprobación a la vacante -->
+  <div
+    *ngIf="editConfirmTarget"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+    (click)="cancelarEdicion()"
+  >
+    <div
+      class="w-full max-w-md rounded-2xl border bg-white border-[#E8E3D9] shadow-2xl overflow-hidden"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="px-6 pt-5 pb-4 flex items-start gap-3">
+        <span class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#FEF9C3]">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <h3 class="text-base font-bold text-[#111111] leading-tight">Editar vacante</h3>
+          <p class="text-xs text-[#9A948C] mt-0.5 truncate">{{ editConfirmTarget.title }}</p>
+        </div>
+      </div>
+
+      <div class="px-6 pb-5">
+        <div class="p-3.5 rounded-xl border bg-[#FFFBEB] border-[#FDE68A]">
+          <p class="text-xs leading-relaxed text-[#92400E]">
+            La vacante ya está aprobada. Si la editas, perderá la aprobación y deberá ser revisada
+            nuevamente por el administrador antes de poder pagarla.
+          </p>
+        </div>
+
+        <p class="text-sm font-semibold text-[#111111] mt-4">¿Está seguro de editar la vacante?</p>
+      </div>
+
+      <div class="px-6 py-4 border-t border-[#F5F0E8] bg-[#FAFAF8] flex gap-2">
+        <button type="button" (click)="confirmarEdicion()"
+          class="flex-1 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all shadow-sm bg-[#16A34A] text-white hover:bg-[#15803D]">
+          Aceptar
+        </button>
+        <button type="button" (click)="cancelarEdicion()"
+          class="flex-1 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all border bg-white border-[#FCA5A5] text-[#DC2626] hover:bg-[#FEF2F2]">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal (Renombrado de Despublicar a Eliminar) -->
+  <div
+    *ngIf="deleteConfirmTarget"
+    class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/45"
+    (click)="cancelDelete()"
+  >
+    <div
+      class="w-full max-w-sm rounded-2xl border p-6 shadow-2xl bg-white border-[#E8E3D9]"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-[#FEE2E2]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+        </svg>
+      </div>
+
+      <h3 class="text-base font-bold mb-1 text-[#111111]">Eliminar oferta laboral</h3>
+      <p class="text-sm mb-5 leading-relaxed text-[#6B6560]">
+        ¿Confirmas que deseas eliminar <strong class="text-[#111111]">{{ deleteConfirmTarget.title }}</strong>?
+        Esta oferta se retirará del portal y se cancelará la recepción de candidatos.
+      </p>
+
+      <div class="flex flex-col gap-2">
+        <button
+          type="button"
+          (click)="confirmDelete()"
+          class="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all bg-[#DC2626] text-white hover:opacity-90 shadow-sm"
+        >
+          Sí, eliminar oferta
+        </button>
+        <button
+          type="button"
+          (click)="cancelDelete()"
+          class="w-full py-2.5 rounded-xl text-sm font-medium border cursor-pointer bg-white border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8]"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Modal de pago: la vacante ya fue aprobada y solo falta activarla -->
+  <div
+    *ngIf="payingJob"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+    (click)="cancelPayment()"
+  >
+    <div
+      class="w-full max-w-md rounded-2xl border bg-white border-[#E8E3D9] shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Cabecera -->
+      <div class="px-6 pt-5 pb-4 border-b border-[#F5F0E8] flex items-start justify-between gap-3">
+        <div class="flex items-start gap-3 min-w-0">
+          <span class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#DCFCE7]">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-[#15803D]">
+              Aprobada por moderación
+            </p>
+            <h3 class="text-base font-bold text-[#111111] leading-tight mt-0.5">Activar vacante</h3>
+          </div>
+        </div>
+        <button type="button" (click)="cancelPayment()" [disabled]="paymentProcessing"
+          class="text-[#9A948C] hover:text-[#111111] p-1 cursor-pointer flex-shrink-0 disabled:opacity-40">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="px-6 py-4 space-y-4 overflow-y-auto">
+        <!-- Qué se está activando -->
+        <div class="p-3.5 rounded-xl border border-[#E8E3D9] bg-[#FAFAF8]">
+          <p class="text-sm font-bold text-[#111111] leading-snug">{{ payingJob.title }}</p>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-[#6B6560]">
+            <span *ngIf="payingJob.location">📍 {{ payingJob.location }}</span>
+            <span>👥 {{ payingJob.hireLimit || 1 }} cupo{{ (payingJob.hireLimit || 1) !== 1 ? 's' : '' }}</span>
+            <span *ngIf="payingJob.closeDate">🗓 Vigente hasta {{ payingJob.closeDate }}</span>
+          </div>
+        </div>
+
+        <!-- Detalle del cobro -->
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-wide text-[#9A948C] mb-2">Detalle del cobro</p>
+          <div class="rounded-xl border border-[#E8E3D9] overflow-hidden">
+            <div class="px-3.5 py-2.5 flex justify-between text-xs text-[#6B6560] bg-white">
+              <span>Publicación de oferta laboral</span>
+              <span>S/ {{ paymentAmount.toFixed(2) }}</span>
+            </div>
+            <div class="px-3.5 py-2.5 flex justify-between text-xs text-[#6B6560] bg-white border-t border-[#F5F0E8]">
+              <span>IGV (incluido)</span>
+              <span>S/ 0.00</span>
+            </div>
+            <div class="px-3.5 py-3 flex items-center justify-between bg-[#F8F7F4] border-t border-[#E8E3D9]">
+              <span class="text-xs font-bold text-[#111111]">Total a pagar</span>
+              <span class="text-lg font-bold text-[#111111] leading-none">S/ {{ paymentAmount.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos de la tarjeta -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-[10px] font-bold uppercase tracking-wide text-[#9A948C]">Datos de la tarjeta</p>
+            <span class="flex items-center gap-1 text-[10px] text-[#9A948C]">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Conexión segura
+            </span>
+          </div>
+
+          <div class="space-y-2.5">
+            <!-- Titular -->
+            <div>
+              <label class="block text-[11px] font-semibold text-[#6B6560] mb-1">Nombre del titular</label>
+              <input type="text" #titular [value]="cardName" (input)="onCardNameInput(titular)"
+                [disabled]="paymentProcessing" placeholder="Como figura en la tarjeta" autocomplete="cc-name"
+                maxlength="40"
+                class="w-full px-3 py-2 rounded-xl border text-sm outline-none transition-all bg-white text-[#111111] placeholder:text-[#C4BDB5] disabled:opacity-60"
+                [style.borderColor]="cardErrors['name'] ? '#E5140D' : '#E8E3D9'" />
+              <p *ngIf="cardErrors['name']" class="text-[11px] mt-1 text-[#E5140D]">{{ cardErrors['name'] }}</p>
+            </div>
+
+            <!-- Número -->
+            <div>
+              <label class="block text-[11px] font-semibold text-[#6B6560] mb-1">Número de tarjeta</label>
+              <div class="relative">
+                <input type="text" inputmode="numeric" #numero [value]="cardNumber"
+                  (input)="onCardNumberInput(numero)" [disabled]="paymentProcessing"
+                  placeholder="1234 5678 9012 3456" autocomplete="cc-number" maxlength="19"
+                  class="w-full pl-3 pr-10 py-2 rounded-xl border text-sm outline-none transition-all bg-white text-[#111111] placeholder:text-[#C4BDB5] font-mono tracking-wide disabled:opacity-60"
+                  [style.borderColor]="cardErrors['number'] ? '#E5140D' : '#E8E3D9'" />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4BDB5" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+              </div>
+              <p *ngIf="cardErrors['number']" class="text-[11px] mt-1 text-[#E5140D]">{{ cardErrors['number'] }}</p>
+            </div>
+
+            <!-- Vencimiento y CVV -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-semibold text-[#6B6560] mb-1">Vencimiento</label>
+                <input type="text" inputmode="numeric" #vence [value]="cardExpiry"
+                  (input)="onCardExpiryInput(vence)" [disabled]="paymentProcessing" placeholder="MM/AA"
+                  autocomplete="cc-exp" maxlength="5"
+                  class="w-full px-3 py-2 rounded-xl border text-sm outline-none transition-all bg-white text-[#111111] placeholder:text-[#C4BDB5] font-mono disabled:opacity-60"
+                  [style.borderColor]="cardErrors['expiry'] ? '#E5140D' : '#E8E3D9'" />
+                <p *ngIf="cardErrors['expiry']" class="text-[11px] mt-1 text-[#E5140D]">{{ cardErrors['expiry'] }}</p>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold text-[#6B6560] mb-1">CVV</label>
+                <input type="password" inputmode="numeric" #cvv [value]="cardCvv" (input)="onCardCvvInput(cvv)"
+                  [disabled]="paymentProcessing" placeholder="123" autocomplete="cc-csc" maxlength="3"
+                  class="w-full px-3 py-2 rounded-xl border text-sm outline-none transition-all bg-white text-[#111111] placeholder:text-[#C4BDB5] font-mono disabled:opacity-60"
+                  [style.borderColor]="cardErrors['cvv'] ? '#E5140D' : '#E8E3D9'" />
+                <p *ngIf="cardErrors['cvv']" class="text-[11px] mt-1 text-[#E5140D]">{{ cardErrors['cvv'] }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Qué ocurre después -->
+        <div class="p-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] flex gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
+            <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+          </svg>
+          <p class="text-[11px] text-[#92400E] leading-snug">
+            Al confirmar, la vacante pasa a <strong>Activa</strong> y queda visible para los candidatos.
+            Si lo dejas para después, seguirá aprobada y podrás pagarla cuando quieras.
+          </p>
+        </div>
+
+        <p class="text-[10px] text-center text-[#9A948C]">Pago simulado · Ambiente de demostración</p>
+      </div>
+
+      <!-- Acciones -->
+      <div class="px-6 py-4 border-t border-[#F5F0E8] bg-[#FAFAF8] flex gap-2">
+        <button type="button" (click)="confirmJobPayment()" [disabled]="paymentProcessing"
+          class="flex-1 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait">
+          <svg *ngIf="paymentProcessing" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="3" stroke-linecap="round" class="animate-spin">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          <span>{{ paymentProcessing ? 'Procesando pago…' : 'Pagar S/ {{ paymentAmount.toFixed(2) }} y publicar' }}</span>
+        </button>
+        <button type="button" (click)="cancelPayment()" [disabled]="paymentProcessing"
+          class="px-4 py-2.5 rounded-xl text-sm font-medium border cursor-pointer border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8] disabled:opacity-40">
+          Después
+        </button>
+      </div>
+    </div>
+  </div>
+</app-company-shell>

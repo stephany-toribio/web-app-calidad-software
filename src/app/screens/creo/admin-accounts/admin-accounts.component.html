@@ -10,7 +10,7 @@
   <!-- Page header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight" style="color: #111111;">Cuentas</h1>
+      <h1 class="text-2xl font-bold tracking-tight" style="color: #111111;">Revisión de Cuentas</h1>
       <p class="text-sm mt-1" style="color: #64748B;">
         {{ accounts.length }} cuentas · {{ activeCount }} activas · {{ suspendedCount }} suspendidas
       </p>
@@ -119,6 +119,17 @@
   <div *ngIf="suspending" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl flex flex-col gap-4">
       <h3 class="text-lg font-bold text-[#111111]">Suspender cuenta</h3>
+      <div *ngIf="suspending.type === 'company'" class="p-3 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B] space-y-1">
+        <p class="font-bold flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-[#991B1B]">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          Impacto inmediato de la suspensión:
+        </p>
+        <p>Todas las ofertas de empleo de esta empresa pasarán a <strong>Inactivo/Oculto</strong> y se bloquearán automáticamente nuevas postulaciones de candidatos.</p>
+      </div>
       <p class="text-sm text-slate-500">
         Estás a punto de suspender la cuenta de <strong>{{ suspending.name }}</strong>. El usuario perderá acceso inmediato a la plataforma.
       </p>

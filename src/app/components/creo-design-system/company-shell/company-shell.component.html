@@ -1,0 +1,169 @@
+<div class="min-h-screen flex flex-col" style="background-color: #F8F7F4; font-family: Inter, system-ui, sans-serif;">
+  <!-- Top nav bar -->
+  <header class="sticky top-0 z-40 border-b bg-white border-[#E8E3D9]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-6">
+      <!-- Logo + Badge -->
+      <div class="flex-shrink-0 flex items-center gap-3">
+        <app-creo-wordmark size="sm"></app-creo-wordmark>
+        <span
+          class="hidden sm:inline text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full"
+          style="background-color: #F2B705; color: #111111;"
+        >
+          Empresa
+        </span>
+      </div>
+
+      <!-- Desktop Nav links -->
+      <nav class="hidden md:flex items-center gap-1 flex-1">
+        <button
+          *ngFor="let item of nav"
+          (click)="navigate(item.id)"
+          class="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+          [style.backgroundColor]="activeScreen === item.id ? '#F2B705' : 'transparent'"
+          [style.color]="activeScreen === item.id ? '#111111' : '#6B6560'"
+        >
+          <!-- Icons -->
+          <svg *ngIf="item.icon === 'home'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          <svg *ngIf="item.icon === 'briefcase'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+          </svg>
+          <svg *ngIf="item.icon === 'kanban'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 6h2 M8 12h2 M8 18h2 M14 6h2 M14 12h2 M3 3h18a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+          </svg>
+          <svg *ngIf="item.icon === 'chart'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 20V10 M12 20V4 M6 20v-6" />
+          </svg>
+          {{ item.label }}
+        </button>
+      </nav>
+
+      <!-- Right items -->
+      <div class="ml-auto flex items-center gap-2">
+        <!-- Notification bell -->
+        <div class="relative hidden sm:block">
+          <button
+            type="button"
+            (click)="toggleNotif()"
+            class="flex w-8 h-8 rounded-lg items-center justify-center transition-colors cursor-pointer relative text-[#6B6560] hover:bg-[#F5F0E8]"
+            aria-label="Notificaciones"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span *ngIf="hasUnread" class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#E5140D]"></span>
+          </button>
+
+          <!-- Notification Dropdown -->
+          <div
+            *ngIf="notifOpen"
+            class="absolute right-0 top-full mt-2 w-80 rounded-2xl border shadow-xl z-50 overflow-hidden bg-white border-[#E8E3D9]"
+          >
+            <div class="flex items-center justify-between px-4 py-3 border-b border-[#E8E3D9]">
+              <p class="text-sm font-bold text-[#111111]">Notificaciones</p>
+              <button
+                *ngIf="hasUnread"
+                (click)="markAllRead()"
+                class="text-xs font-semibold text-[#2563EB] cursor-pointer hover:opacity-75"
+              >
+                Marcar todas como leídas
+              </button>
+            </div>
+            <div class="max-h-80 overflow-y-auto">
+              <button
+                *ngFor="let n of notifications"
+                (click)="navigate(n.target)"
+                class="w-full flex items-start gap-3 px-4 py-3 border-b last:border-0 text-left transition-colors cursor-pointer border-[#F5F0E8]"
+                [style.backgroundColor]="n.unread ? '#FFFDF7' : 'transparent'"
+              >
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-[#EFF6FF]">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs leading-snug text-[#111111]" [class.font-semibold]="n.unread">{{ n.text }}</p>
+                  <p class="text-[11px] mt-1 text-[#9A948C]">{{ n.time }}</p>
+                </div>
+                <span *ngIf="n.unread" class="w-2 h-2 rounded-full flex-shrink-0 mt-1 bg-[#2563EB]"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Avatar menu -->
+        <div class="relative">
+          <button
+            type="button"
+            (click)="toggleAvatar()"
+            class="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors cursor-pointer hover:bg-[#F5F0E8]"
+          >
+            <div
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+              style="background-color: #F2B705; color: #111111;"
+            >
+              {{ initials }}
+            </div>
+            <span class="hidden sm:block text-sm font-medium text-[#111111]">{{ userName }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+
+          <!-- Dropdown -->
+          <div
+            *ngIf="avatarOpen"
+            class="absolute right-0 top-full mt-1 w-52 rounded-xl border shadow-lg z-50 overflow-hidden bg-white border-[#E8E3D9]"
+          >
+            <div class="px-4 py-3 border-b border-[#E8E3D9]">
+              <p class="text-sm font-semibold text-[#111111]">{{ userName }}</p>
+              <p class="text-xs mt-0.5 text-[#9A948C]">Empresa</p>
+            </div>
+            <div class="border-t border-[#E8E3D9]">
+              <button
+                (click)="logout()"
+                class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors cursor-pointer text-[#E5140D] hover:bg-[#FFF5F5]"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9" />
+                </svg>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile hamburger -->
+        <button
+          class="md:hidden w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer"
+          (click)="mobileOpen = !mobileOpen"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div *ngIf="mobileOpen" class="md:hidden border-t px-4 pb-4 pt-2 border-[#E8E3D9]">
+      <nav class="flex flex-col gap-1">
+        <button
+          *ngFor="let item of nav"
+          (click)="navigate(item.id)"
+          class="flex items-center gap-3 text-sm font-medium px-3 py-2.5 rounded-lg transition-all cursor-pointer text-left"
+          [style.backgroundColor]="activeScreen === item.id ? '#F2B705' : 'transparent'"
+          [style.color]="activeScreen === item.id ? '#111111' : '#333333'"
+        >
+          {{ item.label }}
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Page content -->
+  <main class="flex-1">
+    <ng-content></ng-content>
+  </main>
+</div>

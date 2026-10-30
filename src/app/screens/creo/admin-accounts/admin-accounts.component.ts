@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
+import { CreoJobsService } from '../../../services/creo-jobs.service';
 import { AdminService } from '../../../core/api/admin.service';
 import { UsuarioAdmin } from '../../../core/api/models/admin.model';
 import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
@@ -30,6 +31,7 @@ export interface AccountViewModel {
 })
 export class AdminAccountsComponent implements OnInit, OnDestroy {
   private adminService = inject(AdminService);
+  private creoJobsService = inject(CreoJobsService);
 
   accounts: AccountViewModel[] = [];
   loading = false;
@@ -125,11 +127,19 @@ export class AdminAccountsComponent implements OnInit, OnDestroy {
   confirmSuspend() {
     if (!this.suspending) return;
 
-    this.adminService.suspenderUsuario(this.suspending.id, this.suspendReason.trim() || undefined).subscribe({
+    if (!this.suspendReason.trim()) {
+      this.suspendError = 'Debes ingresar un motivo obligatorio para suspender la cuenta';
+      return;
+    }
+
+    this.adminService.suspenderUsuario(this.suspending.id, this.suspendReason.trim()).subscribe({
       next: (usuarioActualizado) => {
         const idx = this.accounts.findIndex(a => a.id === this.suspending!.id);
         if (idx !== -1) {
           this.accounts[idx] = this.mapearAUsuarioViewModel(usuarioActualizado);
+        }
+        if (this.suspending?.type === 'company') {
+          this.creoJobsService.suspendCompanyOffers(this.suspending.name);
         }
         this.suspending = null;
         this.showToast('Cuenta suspendida correctamente.');

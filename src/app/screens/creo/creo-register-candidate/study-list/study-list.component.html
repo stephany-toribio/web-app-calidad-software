@@ -204,30 +204,30 @@
           <!-- Fecha de finalización -->
           <div *ngIf="!soloArea" class="sm:col-span-1">
             <label class="block text-sm font-medium mb-1.5" style="color: #111111;"
-              [class.opacity-50]="currentStudy.alPresente || currentStudy.estado === 'En curso' || currentStudy.estado === 'Incompleto'">Fecha de finalización <span *ngIf="currentStudy.estado !== 'Incompleto' && currentStudy.estado !== 'En curso' && !currentStudy.alPresente" class="text-xs font-semibold"
+              [class.opacity-50]="currentStudy.alPresente || currentStudy.estado === 'Incompleto' || !currentStudy.estado">Fecha de finalización <span *ngIf="currentStudy.estado === 'Finalizado' || (currentStudy.estado === 'En curso' && !currentStudy.alPresente)" class="text-xs font-semibold"
                 style="color: #F2B705;">*</span></label>
             <div class="flex gap-2 mb-2">
               <select [(ngModel)]="currentStudy.fechaFinMes" (ngModelChange)="validateDates()"
-                [disabled]="currentStudy.alPresente || currentStudy.estado === 'En curso' || currentStudy.estado === 'Incompleto'" [style.color]="currentStudy.fechaFinMes ? '#111111' : '#94A3B8'"
+                [disabled]="currentStudy.alPresente || currentStudy.estado === 'Incompleto' || !currentStudy.estado" [style.color]="currentStudy.fechaFinMes ? '#111111' : '#94A3B8'"
                 class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
                 [ngStyle]="{'border-color': errors['fechaFin'] ? '#E5140D' : '#E2E8F0'}">
                 <option value="" class="text-[#111111]">Mes</option>
                 <option *ngFor="let m of meses" [value]="m" class="text-[#111111]">{{ m }}</option>
               </select>
               <select [(ngModel)]="currentStudy.fechaFinAno" (ngModelChange)="validateDates()"
-                [disabled]="currentStudy.alPresente || currentStudy.estado === 'En curso' || currentStudy.estado === 'Incompleto'" [style.color]="currentStudy.fechaFinAno ? '#111111' : '#94A3B8'"
+                [disabled]="currentStudy.alPresente || currentStudy.estado === 'Incompleto' || !currentStudy.estado" [style.color]="currentStudy.fechaFinAno ? '#111111' : '#94A3B8'"
                 class="flex-1 px-3 h-11 rounded-xl border text-sm outline-none bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
                 [ngStyle]="{'border-color': errors['fechaFin'] ? '#E5140D' : '#E2E8F0'}">
                 <option value="" class="text-[#111111]">Año</option>
-                <option *ngFor="let a of anos" [value]="a" class="text-[#111111]">{{ a }}</option>
+                <option *ngFor="let a of anosFin" [value]="a" class="text-[#111111]">{{ a }}</option>
               </select>
             </div>
             <p *ngIf="errors['fechaFin']" class="text-xs text-red-500 mt-1">{{ errors['fechaFin'] }}</p>
             <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer"
-              [class.opacity-50]="currentStudy.estado === 'Finalizado' || currentStudy.estado === 'En curso' || currentStudy.estado === 'Incompleto'"
-              [class.cursor-not-allowed]="currentStudy.estado === 'Finalizado' || currentStudy.estado === 'En curso' || currentStudy.estado === 'Incompleto'">
+              [class.opacity-50]="currentStudy.estado === 'Finalizado' || currentStudy.estado === 'Incompleto' || !currentStudy.estado"
+              [class.cursor-not-allowed]="currentStudy.estado === 'Finalizado' || currentStudy.estado === 'Incompleto' || !currentStudy.estado">
               <input type="checkbox" [(ngModel)]="currentStudy.alPresente" (ngModelChange)="onAlPresenteChange()"
-                [disabled]="currentStudy.estado === 'Finalizado' || currentStudy.estado === 'En curso' || currentStudy.estado === 'Incompleto'"
+                [disabled]="currentStudy.estado === 'Finalizado' || currentStudy.estado === 'Incompleto' || !currentStudy.estado"
                 class="rounded text-yellow-500 focus:ring-yellow-500 disabled:cursor-not-allowed">
               Al presente
             </label>

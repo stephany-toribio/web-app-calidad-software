@@ -97,6 +97,11 @@ export class CreoEditProfileComponent {
   anosNac = Array.from({length: 100}, (_, i) => (new Date().getFullYear() - i).toString());
 
   errors: Record<string, string> = {};
+
+  onSalaryChange(val: string): void {
+    this.salary = val;
+    delete this.errors['salary'];
+  }
   saved = false;
   saving = false;
 
@@ -184,11 +189,43 @@ export class CreoEditProfileComponent {
     this.softSkills = [...this.softSkills, s];
   }
 
+  validateAge(): boolean {
+    if (this.birthDay && this.birthMonth && this.birthYear) {
+      const bd = parseInt(this.birthDay, 10);
+      const bm = this.mesesNac.indexOf(this.birthMonth);
+      const by = parseInt(this.birthYear, 10);
+      const today = new Date();
+      let age = today.getFullYear() - by;
+      if (today.getMonth() < bm || (today.getMonth() === bm && today.getDate() < bd)) {
+        age--;
+      }
+      if (age < 17) {
+        this.errors['birthdate'] = 'Debes tener al menos 17 años para tener perfil en Creo Portal';
+        return false;
+      }
+    }
+    return true;
+  }
+
   validateStep0(): Record<string, string> {
     const e: Record<string, string> = {};
     if (!this.firstName.trim()) e['firstName'] = 'El nombre es obligatorio';
     if (!this.lastName.trim()) e['lastName'] = 'El apellido es obligatorio';
-    if (!this.birthDay || !this.birthMonth || !this.birthYear) e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    if (!this.birthDay || !this.birthMonth || !this.birthYear) {
+      e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    } else {
+      const bd = parseInt(this.birthDay, 10);
+      const bm = this.mesesNac.indexOf(this.birthMonth);
+      const by = parseInt(this.birthYear, 10);
+      const today = new Date();
+      let age = today.getFullYear() - by;
+      if (today.getMonth() < bm || (today.getMonth() === bm && today.getDate() < bd)) {
+        age--;
+      }
+      if (age < 17) {
+        e['birthdate'] = 'Debes tener al menos 17 años para tener perfil en Creo Portal';
+      }
+    }
 
     if (!this.dni.trim()) e['dni'] = 'El DNI es obligatorio';
     else if (this.dni.length !== 8) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
@@ -219,6 +256,11 @@ export class CreoEditProfileComponent {
       const errs: Record<string, string> = {};
       if (this.carreras.length === 0) errs['carreras'] = 'Agrega al menos una carrera';
       if (this.idiomas.length === 0) errs['idiomas'] = 'Agrega al menos un idioma';
+      if (this.salary && Number(this.salary) < 0) {
+        errs['salary'] = 'La expectativa salarial no puede ser negativa';
+      } else if (this.salary && Number(this.salary) > 500000) {
+        errs['salary'] = 'Ingresa un monto mensual válido (máx. S/ 500,000)';
+      }
       
       this.errors = errs;
       if (Object.keys(errs).length === 0) {

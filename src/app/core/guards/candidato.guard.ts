@@ -11,7 +11,5 @@ export const candidatoGuard: CanActivateFn = () => {
     return true;
   }
 
-  authService.clearSession();
-
   return router.createUrlTree(['/creo/landing']);
 };

@@ -212,7 +212,7 @@ function mapearEstudio(e: EstudioFormulario, c: CatalogosRegistro): EstudioPaylo
         estado,
         ciclo_actual: null,                  // el formulario no pide ciclo
         fecha_inicio: fechaMesAnio(e.fechaInicioMes, e.fechaInicioAno) as string,
-        fecha_fin: e.alPresente || estado === 'en_curso' ? null : fechaMesAnio(e.fechaFinMes, e.fechaFinAno),
+        fecha_fin: e.alPresente || estado === 'incompleto' ? null : fechaMesAnio(e.fechaFinMes, e.fechaFinAno),
     };
 }
 

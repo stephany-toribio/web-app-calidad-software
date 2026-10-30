@@ -7,6 +7,19 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+/** Datos del paginador (hoy solo GET /vacantes es paginado) */
+export interface MetaPaginacion {
+  current_page: number; //
+  per_page: number;
+  total: number;
+  last_page: number;
+}
+
+/** Respuesta paginada: { success: true, message, data: [], meta } */
+export interface ApiPaginatedResponse<T> extends ApiResponse<T[]> {
+  meta: MetaPaginacion;
+}
+
 /** Respuesta de error: { success: false, message, error_code, errors? } */
 export interface ApiError {
   success: false;

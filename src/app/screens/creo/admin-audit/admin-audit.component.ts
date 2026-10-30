@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
 
-type ActionType = "suspend" | "reactivate" | "skill" | "job" | "password" | "config";
+export type ActionType = "suspend" | "reactivate" | "skill" | "job" | "password" | "config";
 
-interface AuditEntry {
+export interface AuditEntry {
   id: string;
   actor: string;
   datetime: string;
@@ -41,11 +41,16 @@ export class AdminAuditComponent {
   dateFrom = '';
   dateTo = '';
 
-  get filteredEntries() {
-    return this.entries.filter(e => this.filter === 'all' || e.actionType === this.filter);
+  readonly actionTypes: ActionType[] = ['suspend', 'reactivate', 'skill', 'job', 'password', 'config'];
+
+  get filteredEntries(): AuditEntry[] {
+    return this.entries.filter(e => {
+      const matchType = this.filter === 'all' || e.actionType === this.filter;
+      return matchType;
+    });
   }
 
-  getActionLabel(type: ActionType) {
+  getActionLabel(type: ActionType): string {
     const map: Record<ActionType, string> = {
       suspend:    "Suspensión",
       reactivate: "Reactivación",
@@ -54,10 +59,10 @@ export class AdminAuditComponent {
       password:   "Contraseñas",
       config:     "Configuración",
     };
-    return map[type];
+    return map[type] || type;
   }
 
-  getActionStyle(type: ActionType) {
+  getActionStyle(type: ActionType): { bg: string; text: string } {
     const map: Record<ActionType, { bg: string; text: string }> = {
       suspend:    { bg: "#FEE2E2", text: "#DC2626" },
       reactivate: { bg: "#DCFCE7", text: "#15803D" },
@@ -66,10 +71,15 @@ export class AdminAuditComponent {
       password:   { bg: "#EFF6FF", text: "#1D4ED8" },
       config:     { bg: "#F1F5F9", text: "#475569" },
     };
-    return map[type];
+    return map[type] || { bg: "#F1F5F9", text: "#475569" };
   }
 
-  trackById(index: number, entry: AuditEntry) {
+  clearDates(): void {
+    this.dateFrom = '';
+    this.dateTo = '';
+  }
+
+  trackById(index: number, entry: AuditEntry): string {
     return entry.id;
   }
 }

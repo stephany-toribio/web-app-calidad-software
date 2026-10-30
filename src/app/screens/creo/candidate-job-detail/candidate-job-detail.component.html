@@ -1,6 +1,265 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Detalle de la Vacante</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Vista detallada del empleo - Creo Portal</p>
+<app-candidate-shell activeScreen="candidate-jobs">
+  <!-- Toast -->
+  <div
+    *ngIf="toastMessage"
+    class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl bg-[#111111] text-white"
+  >
+    <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-[#F2B705]">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M2 5l2 2 4-4" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
+    {{ toastMessage }}
+  </div>
+
+  <!-- Cargando / no disponible -->
+  <div *ngIf="!job" class="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
+    <p *ngIf="loading" class="text-sm text-[#9A948C]">Cargando vacante...</p>
+    <ng-container *ngIf="!loading && loadError">
+      <h2 class="text-lg font-bold mb-2 text-[#111111]">Vacante no disponible</h2>
+      <p class="text-sm text-[#6B6560] mb-6">{{ loadError }}</p>
+      <button type="button" (click)="navigateBack()"
+        class="px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer bg-[#F2B705] text-[#111111] hover:opacity-90">
+        Ver otras vacantes
+      </button>
+    </ng-container>
+  </div>
+
+  <div *ngIf="job" class="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24">
+    <!-- Back Button -->
+    <button
+      type="button"
+      (click)="navigateBack()"
+      class="flex items-center gap-1.5 text-sm font-semibold mb-6 cursor-pointer text-[#9A948C] hover:text-[#111111] transition-colors"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7" />
+      </svg>
+      Volver a empleos
+    </button>
+
+    <!-- Historical Read-Only Notice (HU13-T12) -->
+    <div *ngIf="applied" class="rounded-2xl border p-4 mb-6 bg-[#F0FDF4] border-[#86EFAC] text-xs text-[#15803D] flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-2.5">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-[#15803D]">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span *ngIf="!retirada">
+          <strong>Postulación registrada:</strong>
+          Ya has postulado a esta vacante. No es posible postular nuevamente a la misma posición.
+        </span>
+        <span *ngIf="retirada">
+          <strong>Te retiraste de esta postulación:</strong>
+          El retiro es definitivo; no es posible volver a postular a esta vacante.
+        </span>
+      </div>
+      <span class="font-bold px-2.5 py-1 rounded-full bg-[#DCFCE7] text-[#15803D] border border-[#86EFAC]">
+        {{ retirada ? 'RETIRADO' : 'POSTULADO' }}
+      </span>
+    </div>
+
+    <!-- Header Card -->
+    <div class="rounded-3xl border p-6 sm:p-8 bg-white border-[#E8E3D9] shadow-sm mb-6">
+      <div class="flex flex-col sm:flex-row items-start justify-between gap-6">
+        <div class="flex items-start gap-4">
+          <div
+            class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0 text-[#111111]"
+            [style.backgroundColor]="avatarBg"
+          >
+            {{ initial }}
+          </div>
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-[#9A948C]">{{ job.company }}</span>
+            <div class="flex items-center gap-2 flex-wrap mt-1">
+              <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#111111]">{{ job.title }}</h1>
+              <span *ngIf="vacanteRetirada"
+                class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#FEE2E2] text-[#DC2626]">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#DC2626]"></span>
+                {{ etiquetaVacante }}
+              </span>
+            </div>
+            <div class="flex items-center gap-3 mt-3 flex-wrap text-sm text-[#6B6560]">
+              <span class="flex items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                </svg>
+                {{ job.location }}
+              </span>
+              <span>·</span>
+              <span *ngIf="job.remote" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EFF6FF] text-[#1D4ED8]">
+                Remoto
+              </span>
+              <span>·</span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#F3F4F6] text-[#374151]">
+                {{ job.experience }}
+              </span>
+              <span *ngIf="job.area" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FEF9C3] text-[#854D0E]">
+                {{ job.area }}
+              </span>
+              <span>·</span>
+              <!-- Competitive Privacy Range -->
+              <span class="inline-flex items-center gap-1 font-medium text-[#D97706] bg-[#FFFBEB] px-2.5 py-0.5 rounded-full text-xs">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                {{ applicantRange }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2.5 flex-shrink-0">
+          <!-- Bookmark -->
+          <button
+            type="button"
+            (click)="toggleSave()"
+            class="w-11 h-11 rounded-xl border flex items-center justify-center transition-colors cursor-pointer border-[#E8E3D9]"
+            [style.backgroundColor]="saved ? '#FEF9C3' : '#FFFFFF'"
+            [style.color]="saved ? '#F2B705' : '#6B6560'"
+            [attr.aria-label]="saved ? 'Quitar de guardados' : 'Guardar oferta'"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" [attr.fill]="saved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+
+          <!-- Apply Button -->
+          <button
+            *ngIf="!vacanteRetirada"
+            type="button"
+            (click)="openApplyModal()"
+            [disabled]="applied || !puedePostular"
+            class="px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm cursor-pointer disabled:opacity-50"
+            [style.backgroundColor]="applied ? '#DCFCE7' : '#F2B705'"
+            [style.color]="applied ? '#15803D' : '#111111'"
+          >
+            {{ retirada ? 'Te retiraste' : (applied ? 'Ya postulado' : 'Postular ahora') }}
+          </button>
+
+          <span *ngIf="vacanteRetirada"
+            class="px-4 py-2.5 rounded-xl text-xs font-semibold text-center bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]">
+            {{ disponibilidad === 'eliminada'
+                ? 'La empresa eliminó esta vacante. Ya no recibe postulaciones.'
+                : 'Esta vacante ya no recibe postulaciones.' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Salary Bar -->
+      <div class="mt-6 pt-5 border-t border-[#F5F0E8] flex items-center justify-between">
+        <div>
+          <span class="text-xs uppercase tracking-wider font-semibold text-[#9A948C]">Rango salarial estimado</span>
+          <p class="text-xl font-extrabold text-[#111111] mt-0.5">{{ job.salary }}</p>
+        </div>
+        <span class="text-xs text-[#9A948C]">Publicado {{ job.postedAgo }}</span>
       </div>
     </div>
+
+    <!-- Description & Details Section -->
+    <div class="space-y-6">
+      <!-- Description formatted -->
+      <div class="rounded-2xl border p-6 sm:p-8 bg-white border-[#E8E3D9]">
+        <h2 class="text-lg font-bold text-[#111111] mb-3">Descripción del puesto</h2>
+        <div class="text-sm leading-relaxed text-[#333333] space-y-3"
+          [innerHTML]="job.description | markdown"></div>
+      </div>
+
+      <!-- Requirements & Benefits -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Requisitos -->
+        <div class="rounded-2xl border p-6 bg-white border-[#E8E3D9]">
+          <h2 class="text-base font-bold text-[#111111] mb-3">Habilidades y Requisitos</h2>
+          <ul class="space-y-2 text-sm text-[#4A4540]">
+            <li *ngFor="let req of job.requirements" class="flex items-start gap-2">
+              <span class="text-[#F2B705] font-bold">•</span>
+              <span>{{ req }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Beneficios -->
+        <div class="rounded-2xl border p-6 bg-white border-[#E8E3D9]">
+          <h2 class="text-base font-bold text-[#111111] mb-3">Beneficios</h2>
+          <ul *ngIf="job.benefits && job.benefits.length > 0" class="space-y-2 text-sm text-[#4A4540]">
+            <li *ngFor="let ben of job.benefits" class="flex items-start gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#15803D] shrink-0 mt-0.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>{{ ben }}</span>
+            </li>
+          </ul>
+          <p *ngIf="!job.benefits || job.benefits.length === 0" class="text-sm text-[#9A948C] italic">
+            La empresa no detalló beneficios para esta vacante.
+          </p>
+        </div>
+      </div>
+
+      <!-- Sobre la empresa -->
+      <div class="rounded-2xl border p-6 bg-white border-[#E8E3D9]">
+        <h2 class="text-base font-bold text-[#111111] mb-2">Sobre {{ job.company }}</h2>
+        <p class="text-sm leading-relaxed text-[#6B6560]">{{ job.companyDescription }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apply Modal (HU-05: Postulación directa con perfil registrado) -->
+  <div
+    *ngIf="showApplyModal"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+    (click)="closeApplyModal()"
+  >
+    <div
+      class="w-full max-w-md rounded-2xl border p-6 shadow-2xl bg-white border-[#E8E3D9]"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-start justify-between pb-3 border-b border-[#F5F0E8] mb-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">Confirmar postulación</span>
+          <h3 class="text-lg font-bold text-[#111111] mt-0.5">{{ job?.title }}</h3>
+          <p class="text-xs text-[#6B6560]">{{ job?.company }}</p>
+        </div>
+        <button (click)="closeApplyModal()" class="text-[#9A948C] hover:text-[#111111] p-1 cursor-pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="mb-5 space-y-3">
+        <p class="text-sm text-[#4A4540] leading-relaxed">
+          Al postularte, la empresa tendrá acceso a tu perfil profesional registrado (contacto, formación académica, experiencia laboral e idiomas).
+        </p>
+        <div class="p-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#B45309]">
+          Recuerda que una vez enviada tu postulación, no es posible duplicar el envío para esta misma vacante.
+        </div>
+        <p *ngIf="applyError" class="text-xs p-2.5 rounded-lg bg-[#FEF2F2] border border-[#FCA5A5] text-[#DC2626] font-medium">
+          {{ applyError }}
+        </p>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          type="button"
+          (click)="confirmApply()"
+          [disabled]="submittingApply"
+          class="flex-1 py-3 rounded-xl font-bold text-sm bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+        >
+          {{ submittingApply ? 'Enviando postulación...' : 'Confirmar postulación' }}
+        </button>
+        <button
+          type="button"
+          (click)="closeApplyModal()"
+          [disabled]="submittingApply"
+          class="px-5 py-3 rounded-xl font-semibold text-sm border border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8] cursor-pointer"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</app-candidate-shell>

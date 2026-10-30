@@ -28,6 +28,7 @@ export interface StudyEntry {
 const ESTADOS = ['Finalizado', 'En curso', 'Incompleto'];
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const ANOS = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
+const ANOS_FIN = Array.from({ length: 60 }, (_, i) => (new Date().getFullYear() + 10 - i).toString());
 // Igual que el backend (TipoEstudio::MAXIMOS_POR_GRUPO). No hay máximo total.
 const LIMITES_POR_GRUPO = [
   { tipos: ['Universitario'], maximo: 3, descripcion: 'carreras universitarias' },
@@ -62,6 +63,7 @@ export class StudyListComponent implements OnInit {
   estados = ESTADOS;
   meses = MESES;
   anos = ANOS;
+  anosFin = ANOS_FIN;
 
   // Catálogos completos, para obtener ids y requiere_carrera
   private catalogoPaises: ItemCatalogo[] = [];
@@ -91,7 +93,11 @@ export class StudyListComponent implements OnInit {
         this.cargarCarreras();
       }
     });
-    this.catalogos.areasEstudio().subscribe(lista => this.areasEstudio = lista.map(a => a.nombre));
+    this.catalogos.areasEstudio().subscribe(lista => {
+      this.areasEstudio = lista
+        .filter(a => a.activo !== false || a.nombre === this.currentStudy.areaEstudio)
+        .map(a => a.nombre);
+    });
     this.catalogos.instituciones().subscribe(lista => this.catalogoInstituciones = lista);
   }
 
@@ -154,9 +160,9 @@ export class StudyListComponent implements OnInit {
       delete this.errors['fechaFin'];
       this.validateDates();
     } else if (this.currentStudy.estado === 'En curso') {
-      this.currentStudy.alPresente = true;
-      this.currentStudy.fechaFinMes = '';
-      this.currentStudy.fechaFinAno = '';
+      if (!this.currentStudy.fechaFinMes && !this.currentStudy.fechaFinAno) {
+        this.currentStudy.alPresente = true;
+      }
       delete this.errors['fechaFin'];
       this.validateDates();
     } else if (this.currentStudy.estado === 'Incompleto') {
@@ -354,6 +360,7 @@ export class StudyListComponent implements OnInit {
   handleEsc() {
     if (this.showModal) {
       this.closeModal();
+      this.recargarCatalogos();
     }
   }
 

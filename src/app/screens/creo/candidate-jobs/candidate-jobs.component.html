@@ -1,6 +1,335 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Buscar Empleos</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Explorador y buscador de empleos - Creo Portal</p>
+<app-candidate-shell activeScreen="candidate-jobs">
+  <!-- Search + sort bar -->
+  <div class="sticky top-14 z-30 border-b bg-white border-[#E8E3D9]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
+      <!-- Search input -->
+      <div class="relative flex-1">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="15" height="15"
+          viewBox="0 0 24 24" fill="none" stroke="#9A948C" stroke-width="2.2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <path d="M21 21l-4.35-4.35" />
+        </svg>
+        <input type="search" [(ngModel)]="search" (ngModelChange)="onSearchChange()" maxlength="100"
+          placeholder="Buscar por título del puesto…"
+          class="w-full pl-9 pr-4 py-2 rounded-xl border text-sm outline-none transition-all"
+          style="background-color: #F8F7F4; border-color: #E8E3D9; color: #111111; font-family: Inter, system-ui, sans-serif;"
+          onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+          onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
+      </div>
+
+      <!-- Mobile filter toggle button -->
+      <button type="button" (click)="sidebarOpen = !sidebarOpen"
+        class="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium cursor-pointer"
+        [style.borderColor]="hasFilters ? '#F2B705' : '#E8E3D9'"
+        [style.backgroundColor]="hasFilters ? '#FEF9C3' : '#F8F7F4'" style="color: #333333;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+          <line x1="11" y1="18" x2="13" y2="18" />
+        </svg>
+        Filtrossss <span *ngIf="hasFilters">({{ activeFiltersCount }})</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile filter drawer modal -->
+  <div *ngIf="sidebarOpen" class="md:hidden fixed inset-0 z-50 flex" (click)="sidebarOpen = false">
+    <div class="w-full max-w-xs overflow-y-auto px-4 py-6 bg-white shadow-2xl" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-[#E8E3D9]">
+        <h3 class="font-bold text-[#111111]">Filtros</h3>
+        <button (click)="sidebarOpen = false" class="text-gray-500 hover:text-gray-900 p-1 rounded-lg cursor-pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Filters content -->
+      <ng-container *ngTemplateOutlet="filterSidebar"></ng-container>
+    </div>
+    <div class="flex-1 bg-black/40"></div>
+  </div>
+
+  <!-- Content area -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+    <div class="flex items-start gap-6">
+      <!-- Desktop Sidebar -->
+      <aside class="hidden md:block w-56 lg:w-64 flex-shrink-0">
+        <ng-container *ngTemplateOutlet="filterSidebar"></ng-container>
+      </aside>
+
+      <!-- Main Results Column -->
+      <div class="flex-1 min-w-0">
+        <!-- Counter + mobile sort -->
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-sm font-semibold text-[#6B6560]">
+            <ng-container *ngIf="loading">Cargando…</ng-container>
+            <ng-container *ngIf="!loading">
+              {{ totalResultados }} oferta{{ totalResultados !== 1 ? 's' : '' }}
+              <span *ngIf="hasFilters" class="text-[#9A948C]"> · filtradas</span>
+            </ng-container>
+          </p>
+          <p class="text-xs text-[#9A948C]">Más recientes primero</p>
+        </div>
+
+        <!-- Error de la búsqueda -->
+        <div *ngIf="!loading && errorMessage"
+          class="mb-4 p-4 rounded-2xl border bg-[#FEF2F2] border-[#FCA5A5] text-sm text-[#991B1B] flex items-center justify-between gap-3">
+          <span>{{ errorMessage }}</span>
+          <button type="button" (click)="reintentar()"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#111111] text-white cursor-pointer">Reintentar</button>
+        </div>
+
+        <!-- Skeleton loaders -->
+        <div *ngIf="loading" class="grid sm:grid-cols-2 gap-4">
+          <div *ngFor="let n of [1, 2, 3, 4]" class="rounded-2xl border p-5 bg-white border-[#E8E3D9] animate-pulse">
+            <div class="flex items-start gap-3.5 mb-4">
+              <div class="w-11 h-11 rounded-xl bg-gray-200"></div>
+              <div class="flex-1 space-y-2">
+                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+            <div class="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div class="flex gap-2">
+              <div class="h-6 w-16 bg-gray-200 rounded-lg"></div>
+              <div class="h-6 w-16 bg-gray-200 rounded-lg"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Cards Grid -->
+        <div *ngIf="!loading && jobsPagina.length > 0" class="grid sm:grid-cols-2 gap-4">
+          <app-job-card *ngFor="let job of jobsPagina" [job]="job" [saved]="isSaved(job.id)"
+            (toggleSave)="onToggleSave($event)"
+            (viewDetail)="onViewDetail($event)"></app-job-card>
+        </div>
+
+        <!-- Paginación (meta del servidor) -->
+        <div *ngIf="!loading && jobsPagina.length > 0"
+          class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p class="text-xs text-[#9A948C]">
+            Mostrando <strong class="text-[#4A4540]">{{ desdeActual }} - {{ hastaActual }}</strong>
+            de <strong class="text-[#4A4540]">{{ totalResultados }}</strong> ofertas
+          </p>
+
+          <div *ngIf="totalPaginas > 1" class="flex items-center gap-1">
+            <button type="button" (click)="paginaAnterior()" [disabled]="paginaSegura === 1"
+              class="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8] disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Página anterior">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+
+            <ng-container *ngFor="let p of paginasVisibles">
+              <span *ngIf="p === '…'" class="w-8 h-8 flex items-center justify-center text-xs text-[#9A948C]">…</span>
+              <button *ngIf="p !== '…'" type="button" (click)="irAPagina(p)"
+                class="min-w-8 h-8 px-2 rounded-lg border text-xs font-bold transition-colors"
+                [style.backgroundColor]="p === paginaSegura ? '#F2B705' : '#FFFFFF'"
+                [style.borderColor]="p === paginaSegura ? '#F2B705' : '#E8E3D9'"
+                [style.color]="p === paginaSegura ? '#111111' : '#6B6560'">
+                {{ p }}
+              </button>
+            </ng-container>
+
+            <button type="button" (click)="paginaSiguiente()" [disabled]="paginaSegura === totalPaginas"
+              class="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8] disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Página siguiente">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && !errorMessage && jobsPagina.length === 0"
+          class="flex flex-col items-center justify-center py-20 text-center">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 bg-[#F5F0E8]">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C8A84B" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+              <path d="M8 11h6M11 8v6" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2 text-[#111111]">Sin resultados</h3>
+          <p class="text-sm max-w-xs leading-relaxed text-[#9A948C]">
+            No encontramos vacantes con estos filtros. Prueba ajustando tu búsqueda o seleccionando otra área
+            profesional.
+          </p>
+          <button type="button" (click)="clearFilters()"
+            class="mt-6 px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm">
+            Limpiar filtros
+          </button>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Reusable Filter Sidebar Template -->
+  <ng-template #filterSidebar>
+    <div class="rounded-2xl border p-5 sticky top-20 bg-white border-[#E8E3D9]">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-[#111111]">Filtros</h3>
+        <button *ngIf="hasFilters" type="button" (click)="clearFilters()"
+          class="text-xs font-medium cursor-pointer text-[#E5140D] hover:underline">
+          Limpiar
+        </button>
+      </div>
+
+      <!-- Remote Toggle -->
+      <div class="mb-5 pb-4 border-b border-[#F5F0E8]">
+        <label class="flex items-center justify-between cursor-pointer select-none">
+          <span class="text-sm font-semibold text-[#333333]">Solo remoto</span>
+          <button type="button" (click)="toggleRemote()"
+            class="relative w-10 h-5 rounded-full transition-colors cursor-pointer"
+            [style.backgroundColor]="remoteOnly ? '#F2B705' : '#D1CBC3'" role="switch" [attr.aria-checked]="remoteOnly">
+            <span class="absolute top-0.5 w-4 h-4 rounded-full transition-all bg-white"
+              [style.left]="remoteOnly ? 'calc(100% - 18px)' : '2px'"></span>
+          </button>
+        </label>
+      </div>
+
+      <!-- Área profesional / Carrera -->
+      <div class="mb-5 pb-4 border-b border-[#F5F0E8]">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">Área profesional</p>
+          <span *ngIf="selectedAreaId !== null"
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF9C3] text-[#B45309]">
+            Activa
+          </span>
+        </div>
+        <select [(ngModel)]="selectedAreaId" (ngModelChange)="onAreaChange()"
+          class="w-full text-xs rounded-xl border px-3 py-2.5 outline-none cursor-pointer bg-[#F8F7F4] border-[#E8E3D9] text-[#111111] font-medium transition-all">
+          <option [ngValue]="null">Todas las áreas (Global)</option>
+          <option *ngFor="let a of areas" [ngValue]="a.id">{{ a.nombre }}</option>
+        </select>
+      </div>
+
+      <!-- Nivel del puesto (Catálogo Administrador) -->
+      <div class="mb-5 pb-4 border-b border-[#F5F0E8]">
+        <div class="flex items-center justify-between mb-2.5">
+          <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">Nivel del puesto</p>
+          <span *ngIf="selectedLevels.size > 0"
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF9C3] text-[#B45309]">
+            {{ selectedLevels.size }}
+          </span>
+        </div>
+        <div class="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+          <label *ngFor="let l of levels" class="flex items-center gap-2.5 cursor-pointer select-none group">
+            <span class="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors"
+              [style.backgroundColor]="selectedLevels.has(l.id) ? '#F2B705' : '#FFFFFF'"
+              [style.borderColor]="selectedLevels.has(l.id) ? '#F2B705' : '#D1CBC3'">
+              <svg *ngIf="selectedLevels.has(l.id)" width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </span>
+            <span class="text-xs text-[#333333]">{{ l.nombre }}</span>
+            <input type="checkbox" [checked]="selectedLevels.has(l.id)" (change)="toggleLevel(l.id)" class="sr-only" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Habilidades (técnicas y blandas, con su etiqueta) -->
+      <div class="mb-5 pb-4 border-b border-[#F5F0E8]">
+        <div class="flex items-center justify-between mb-2.5">
+          <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">Habilidades</p>
+          <button *ngIf="selectedSkills.size > 0" type="button" (click)="clearSkills()"
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF9C3] text-[#B45309] hover:bg-[#FDE68A] transition-colors">
+            {{ selectedSkills.size }} · Limpiar
+          </button>
+        </div>
+
+        <!-- Habilidades ya elegidas -->
+        <div *ngIf="skillsElegidas.length > 0" class="flex flex-wrap gap-1.5 mb-2.5">
+          <button *ngFor="let o of skillsElegidas" type="button" (click)="toggleSkill(o.id)"
+            title="Quitar habilidad"
+            class="inline-flex items-center gap-1 text-[11px] font-semibold pl-2.5 pr-1.5 py-1 rounded-full border bg-[#F2B705] border-[#F2B705] text-[#111111] hover:opacity-85 transition-opacity">
+            {{ o.label }}
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="none" class="opacity-70">
+              <path d="M2.5 7.5l5-5M7.5 7.5l-5-5" stroke="#111111" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Técnicas / Blandas -->
+        <div class="flex gap-1.5 mb-2.5">
+          <button type="button" (click)="skillTab = 'tecnicas'"
+            class="flex-1 text-[11px] font-bold py-1.5 rounded-lg border transition-all"
+            [style.backgroundColor]="skillTab === 'tecnicas' ? '#111111' : '#FFFFFF'"
+            [style.borderColor]="skillTab === 'tecnicas' ? '#111111' : '#E8E3D9'"
+            [style.color]="skillTab === 'tecnicas' ? '#FFFFFF' : '#6B6560'">
+            Técnicas
+          </button>
+          <button type="button" (click)="skillTab = 'blandas'"
+            class="flex-1 text-[11px] font-bold py-1.5 rounded-lg border transition-all"
+            [style.backgroundColor]="skillTab === 'blandas' ? '#111111' : '#FFFFFF'"
+            [style.borderColor]="skillTab === 'blandas' ? '#111111' : '#E8E3D9'"
+            [style.color]="skillTab === 'blandas' ? '#FFFFFF' : '#6B6560'">
+            Blandas
+          </button>
+        </div>
+
+        <!-- Buscador -->
+        <div class="relative mb-2.5">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"
+            class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9A948C] pointer-events-none">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4" />
+            <path d="M11 11l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+          </svg>
+          <input type="search" [(ngModel)]="skillSearch" name="skillSearch" placeholder="Buscar habilidad..."
+            class="w-full text-xs rounded-xl border pr-3 py-2 outline-none bg-[#F8F7F4] border-[#E8E3D9] text-[#111111] placeholder:text-[#9A948C] transition-all"
+            style="padding-left: 1.85rem;" />
+        </div>
+
+        <!-- Habilidades disponibles -->
+        <div class="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
+          <button *ngFor="let o of skillsVisibles" type="button" (click)="toggleSkill(o.id)"
+            [disabled]="limiteHabilidadesAlcanzado && !isSkillSelected(o.id)"
+            class="text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            [style.backgroundColor]="isSkillSelected(o.id) ? '#F2B705' : '#FFFFFF'"
+            [style.borderColor]="isSkillSelected(o.id) ? '#F2B705' : '#E8E3D9'"
+            [style.color]="isSkillSelected(o.id) ? '#111111' : '#6B6560'">
+            {{ o.label }}
+          </button>
+          <p *ngIf="skillsVisibles.length === 0" class="text-[11px] text-[#9A948C] py-1">
+            {{ skillSearch.trim() ? 'Ninguna habilidad coincide con tu búsqueda.' : 'No hay habilidades de este tipo en el catálogo.' }}
+          </p>
+        </div>
+
+        <p *ngIf="skillLimitMessage" class="text-[10px] text-[#DC2626] mt-2">{{ skillLimitMessage }}</p>
+        <p class="text-[10px] text-[#9A948C] mt-2 leading-snug">
+          Elige hasta <strong class="text-[#6B6560]">{{ maxHabilidades }}</strong>. Se muestran las vacantes que piden
+          <strong class="text-[#6B6560]">al menos una</strong> de ellas.
+        </p>
+      </div>
+
+      <!-- Salario Mínimo -->
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wide mb-2.5 text-[#9A948C]">Salario mínimo</p>
+        <div class="flex flex-col gap-2">
+          <label *ngFor="let r of salaryRanges" class="flex items-center gap-2.5 cursor-pointer select-none">
+            <span class="w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors"
+              [style.borderColor]="salaryMin === r.min ? '#F2B705' : '#D1CBC3'"
+              [style.backgroundColor]="salaryMin === r.min ? '#F2B705' : '#FFFFFF'">
+              <span *ngIf="salaryMin === r.min" class="w-1.5 h-1.5 rounded-full bg-[#111111]"></span>
+            </span>
+            <span class="text-xs text-[#333333]">{{ r.label }}</span>
+            <input type="radio" name="salary" [checked]="salaryMin === r.min" (change)="setSalary(r.min)"
+              class="sr-only" />
+          </label>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</app-candidate-shell>

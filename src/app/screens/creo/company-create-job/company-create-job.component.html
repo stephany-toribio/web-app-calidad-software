@@ -1,6 +1,815 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Publicar Nueva Vacante</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Formulario de creación de vacantes - Creo Portal</p>
+<app-company-shell activeScreen="company-jobs" [userName]="userName">
+  <!-- Success Screen -->
+  <div *ngIf="submitted" class="max-w-lg mx-auto px-4 py-20 flex flex-col items-center text-center">
+    <div
+      class="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-[#FEF9C3] border-[3px] border-[#F2B705]">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <path d="M8 18l7 7 13-13" stroke="#111111" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </div>
+    <span class="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 bg-[#FEF9C3] text-[#A16207]">
+      Enviada a revisión
+    </span>
+    <h2 class="text-2xl font-bold mb-2 text-[#111111]">{{ title }}</h2>
+    <div class="p-4 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-left text-xs text-[#92400E] mb-6 space-y-1">
+      <p class="font-bold">Flujo de Moderación:</p>
+      <p>Tu vacante quedó pendiente de revisión. El administrador debe aprobarla antes de su publicación.</p>
+      <p>Una vez aprobada, podrás activarla desde "Mis Ofertas" con el pago de S/ 100.</p>
+      <p>Límite de contrataciones: <strong>{{ hireLimit }} vacante{{ hireLimit !== 1 ? 's' : '' }}</strong> · Vigencia
+        hasta: <strong>{{ closeDate }}</strong></p>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-3 w-full">
+      <button type="button" (click)="navigate('company-kanban')"
+        class="flex-1 py-2.5 rounded-xl font-semibold text-sm cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm">
+        Ver Kanban
+      </button>
+      <button type="button" (click)="navigate('company-jobs')"
+        class="flex-1 py-2.5 rounded-xl text-sm font-medium border cursor-pointer border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8]">
+        Ir a Mis Ofertas
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Creation Form Screen -->
+  <div *ngIf="!submitted">
+    <!-- Top Back Bar -->
+    <div class="border-b bg-white border-[#E8E3D9]">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-10 flex items-center">
+        <button type="button" (click)="navigate('company-jobs')"
+          class="flex items-center gap-1.5 text-sm cursor-pointer transition-colors text-[#9A948C] hover:text-[#111111]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 5l-7 7 7 7" />
+          </svg>
+          Volver
+        </button>
       </div>
     </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <!-- Title & subtitle -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold tracking-tight text-[#111111]">
+          {{ modoEdicion ? 'Editar vacante' : 'Crear nueva vacante' }}
+        </h1>
+        <p class="text-sm mt-1 text-[#9A948C]">
+          {{ modoEdicion
+          ? 'Modifica los datos y guarda los cambios. No se realiza ningún cobro.'
+          : 'Completa los datos y envíala a revisión. El administrador debe aprobarla antes de publicarse.' }}
+        </p>
+      </div>
+
+      <!-- 2 Columns Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
+        <!-- Form Left Column -->
+        <div class="space-y-5">
+          <!-- Título del puesto -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-sm font-semibold text-[#333333]">
+                Título del puesto <span class="text-[#E5140D]">*</span>
+              </label>
+              <span class="text-xs text-[#9A948C]">{{ title.length }}/100</span>
+            </div>
+            <input type="text" maxlength="100" [(ngModel)]="title" (ngModelChange)="errors['title'] = ''"
+              placeholder="Título del puesto"
+              class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111]"
+              [style.borderColor]="errors['title'] ? '#E5140D' : '#E8E3D9'"
+              onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+              onblur="this.style.boxShadow='none';" />
+            <p *ngIf="errors['title']" class="text-xs mt-1 text-[#E5140D]">{{ errors['title'] }}</p>
+          </div>
+
+          <!-- Descripción -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-sm font-semibold text-[#333333]">
+                Descripción <span class="text-[#E5140D]">*</span>
+              </label>
+              <span class="text-xs font-medium"
+                [ngClass]="description.trim().length < 50 ? 'text-[#E5140D]' : 'text-[#15803D]'">
+                {{ description.trim().length }} / mín. 50 caracteres
+              </span>
+            </div>
+            <textarea [(ngModel)]="description" (ngModelChange)="errors['description'] = ''"
+              placeholder="Describe detalladamente el rol, responsabilidades y contexto del equipo (mínimo 50 caracteres)…"
+              rows="4"
+              class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111] resize-y min-h-[120px]"
+              [style.borderColor]="errors['description'] ? '#E5140D' : '#E8E3D9'"
+              onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+              onblur="this.style.boxShadow='none';"></textarea>
+            <p *ngIf="errors['description']" class="text-xs mt-1 text-[#E5140D]">{{ errors['description'] }}</p>
+            <p class="text-[11px] mt-1.5 text-[#9A948C] leading-snug">
+              Se respetan los saltos de línea. Puedes dar formato con Markdown:
+              <code class="px-1 rounded bg-[#F5F0E8] text-[#6B6560]">## Título</code>,
+              <code class="px-1 rounded bg-[#F5F0E8] text-[#6B6560]">- viñeta</code>,
+              <code class="px-1 rounded bg-[#F5F0E8] text-[#6B6560]">1. numerada</code>,
+              <code class="px-1 rounded bg-[#F5F0E8] text-[#6B6560]">**negrita**</code> y
+              <code class="px-1 rounded bg-[#F5F0E8] text-[#6B6560]">*cursiva*</code>.
+            </p>
+          </div>
+
+          <!-- Área profesional, Nivel y Modalidad -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-semibold mb-1.5 text-[#333333]">
+                Área profesional <span class="text-[#E5140D]">*</span>
+              </label>
+              <select [(ngModel)]="areaProfesionalId" (ngModelChange)="errors['area'] = ''"
+                class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111] cursor-pointer"
+                [style.borderColor]="errors['area'] ? '#E5140D' : '#E8E3D9'">
+                <option [ngValue]="null">Seleccionar…</option>
+                <option *ngFor="let a of studyAreas" [ngValue]="a.id">{{ a.nombre }}</option>
+              </select>
+              <p *ngIf="errors['area']" class="text-xs mt-1 text-[#E5140D]">{{ errors['area'] }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1.5 text-[#333333]">
+                Nivel <span class="text-[#E5140D]">*</span>
+              </label>
+              <select [(ngModel)]="nivelPuestoId" (ngModelChange)="errors['level'] = ''"
+                class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111] cursor-pointer"
+                [style.borderColor]="errors['level'] ? '#E5140D' : '#E8E3D9'">
+                <option [ngValue]="null">Seleccionar…</option>
+                <option *ngFor="let l of nivelesPuestoList" [ngValue]="l.id">{{ l.nombre }}</option>
+              </select>
+              <p *ngIf="errors['level']" class="text-xs mt-1 text-[#E5140D]">{{ errors['level'] }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1.5 text-[#333333]">
+                Modalidad <span class="text-[#E5140D]">*</span>
+              </label>
+              <select [(ngModel)]="modality" (ngModelChange)="onModalityChange()"
+                class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111] cursor-pointer"
+                [style.borderColor]="errors['modality'] ? '#E5140D' : '#E8E3D9'">
+                <option value="">Seleccionar…</option>
+                <option *ngFor="let m of modalities" [value]="m">{{ m }}</option>
+              </select>
+              <p *ngIf="errors['modality']" class="text-xs mt-1 text-[#E5140D]">{{ errors['modality'] }}</p>
+            </div>
+          </div>
+
+          <!-- Ubicación del puesto (Sede física o ciudad base) -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-sm font-semibold text-[#333333]">
+                Ubicación del puesto <span *ngIf="!isRemote" class="text-[#E5140D]">*</span>
+                <span *ngIf="isRemote" class="text-xs font-normal text-[#9A948C]">(opcional en remoto)</span>
+              </label>
+              <span class="text-xs text-[#9A948C]">
+                {{ modality === 'Remoto' ? 'Ciudad/País base o "Remoto"' : 'Distrito y ciudad presencial' }}
+              </span>
+            </div>
+            <div class="relative">
+              <input type="text" [(ngModel)]="location" (ngModelChange)="errors['location'] = ''"
+                [placeholder]="modality === 'Remoto' ? 'Lima, Perú o Remoto (100% deslocalizado)' : 'San Isidro, Lima o Miraflores, Lima'"
+                class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111]"
+                [style.borderColor]="errors['location'] ? '#E5140D' : '#E8E3D9'"
+                onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                onblur="this.style.boxShadow='none';" />
+            </div>
+            <p *ngIf="errors['location']" class="text-xs mt-1 text-[#E5140D]">{{ errors['location'] }}</p>
+
+            <!-- Sugerencias de ubicación rápida -->
+            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+              <span class="text-[11px] text-[#9A948C] mr-1">Sugerencias:</span>
+              <button type="button" (click)="setLocation('Lima, Perú')"
+                class="text-[11px] px-2.5 py-1 rounded-lg border cursor-pointer transition-colors bg-[#F5F0E8] border-[#E8E3D9] text-[#6B6560] hover:bg-[#FEF9C3] hover:text-[#111111]">
+                Lima, Perú
+              </button>
+              <button type="button" (click)="setLocation('San Isidro, Lima')"
+                class="text-[11px] px-2.5 py-1 rounded-lg border cursor-pointer transition-colors bg-[#F5F0E8] border-[#E8E3D9] text-[#6B6560] hover:bg-[#FEF9C3] hover:text-[#111111]">
+                San Isidro, Lima
+              </button>
+              <button type="button" (click)="setLocation('Miraflores, Lima')"
+                class="text-[11px] px-2.5 py-1 rounded-lg border cursor-pointer transition-colors bg-[#F5F0E8] border-[#E8E3D9] text-[#6B6560] hover:bg-[#FEF9C3] hover:text-[#111111]">
+                Miraflores, Lima
+              </button>
+              <button type="button" (click)="setLocation('Remoto')"
+                class="text-[11px] px-2.5 py-1 rounded-lg border cursor-pointer transition-colors bg-[#EFF6FF] border-[#BFDBFE] text-[#1D4ED8] hover:bg-[#DBEAFE] font-medium">
+                Remoto
+              </button>
+              <button type="button" (click)="setLocation('Arequipa, Perú')"
+                class="text-[11px] px-2.5 py-1 rounded-lg border cursor-pointer transition-colors bg-[#F5F0E8] border-[#E8E3D9] text-[#6B6560] hover:bg-[#FEF9C3] hover:text-[#111111]">
+                Arequipa, Perú
+              </button>
+            </div>
+          </div>
+
+          <!-- Salario mínimo y Salario máximo -->
+          <div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold mb-1.5 text-[#333333]">Salario mínimo (S/)</label>
+                <input type="number" [(ngModel)]="salMin" (ngModelChange)="onSalaryChange()" placeholder="Monto mínimo"
+                  min="0" step="1" inputmode="numeric" (keydown)="soloNumerosSalario($event)"
+                  class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111]"
+                  [style.borderColor]="errors['salary'] ? '#E5140D' : '#E8E3D9'"
+                  onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                  onblur="this.style.boxShadow='none';" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold mb-1.5 text-[#333333]">Salario máximo (S/)</label>
+                <input type="number" [(ngModel)]="salMax" (ngModelChange)="onSalaryChange()" placeholder="Monto máximo"
+                  min="0" step="1" inputmode="numeric" (keydown)="soloNumerosSalario($event)"
+                  class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111]"
+                  [style.borderColor]="errors['salary'] ? '#E5140D' : '#E8E3D9'"
+                  onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                  onblur="this.style.boxShadow='none';" />
+              </div>
+            </div>
+            <p *ngIf="errors['salary']" class="text-xs mt-1.5 text-[#E5140D] font-medium">{{ errors['salary'] }}</p>
+          </div>
+
+          <!-- Límites de la Vacante (Cupos máximos y vigencia: inicio y fin, en hora de Lima) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-[#FAFAF8] border border-[#E8E3D9]">
+            <div>
+              <label class="block text-sm font-semibold mb-1.5 text-[#333333]">
+                Límite de contrataciones (Cupos) <span class="text-[#E5140D]">*</span>
+              </label>
+              <input type="number" [(ngModel)]="hireLimit" (ngModelChange)="onHireLimitChange()" min="1"
+                placeholder="Número de cupos"
+                class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none bg-white border-[#E8E3D9] text-[#111111]"
+                [style.borderColor]="errors['hireLimit'] ? '#E5140D' : '#E8E3D9'" />
+              <p *ngIf="errors['hireLimit']" class="text-xs mt-1 text-[#E5140D]">{{ errors['hireLimit'] }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1.5 text-[#333333]">
+                Inicio de vigencia <span class="text-[#E5140D]">*</span>
+              </label>
+              <input type="date" [min]="minDate" [(ngModel)]="fechaInicio" (ngModelChange)="onDateChange()"
+                class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                [style.borderColor]="errors['startDate'] ? '#E5140D' : '#E8E3D9'" />
+              <p *ngIf="errors['startDate']" class="text-xs mt-1 text-[#E5140D] font-medium">{{ errors['startDate'] }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1.5 text-[#333333]">
+                Fin de vigencia (Cierre) <span class="text-[#E5140D]">*</span>
+              </label>
+              <input type="date" [min]="fechaInicio ? sumarDias(fechaInicio, 1) : minDate" [(ngModel)]="closeDate" (ngModelChange)="onDateChange()"
+                class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                [style.borderColor]="errors['closeDate'] ? '#E5140D' : '#E8E3D9'" />
+              <p *ngIf="errors['closeDate']" class="text-xs mt-1 text-[#E5140D] font-medium">{{ errors['closeDate'] }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Selección de Habilidades Requeridas (Dos Módulos: Técnicas por Área de Estudio y Blandas) -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="block text-sm font-semibold text-[#111111]">
+                  Habilidades requeridas para la vacante
+                  <span class="ml-2 text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block"
+                    [ngClass]="skills.length >= 10 ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#F5F0E8] text-[#6B6560]'">
+                    {{ skills.length }}/10 seleccionadas
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- MÓDULO 1: Habilidades Técnicas según Área de Estudio -->
+            <div class="p-5 rounded-2xl bg-white border border-[#E8E3D9] space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#111111]"></span>
+                  <h3 class="text-sm font-bold text-[#111111]">1. Habilidades Técnicas</h3>
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F5F0E8] text-[#4A4540]">
+                    {{ technicalSkills.length }} agregada{{ technicalSkills.length !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+
+                <!-- Selector dinámico de Área de Estudio -->
+                <div class="flex items-center gap-2 shrink-0">
+                  <label for="techAreaSelect" class="text-xs font-semibold text-[#6B6560] whitespace-nowrap">
+                    Área de estudio:
+                  </label>
+                  <div class="relative">
+                    <select id="techAreaSelect" [(ngModel)]="selectedTechAreaId" (ngModelChange)="onTechAreaChange()"
+                      class="appearance-none pl-3 pr-8 py-1.5 rounded-xl border border-[#E8E3D9] bg-[#FAFAF8] text-xs font-semibold text-[#111111] outline-none cursor-pointer hover:border-[#F2B705] transition-colors">
+                      <option *ngFor="let area of studyAreas" [value]="area.id">
+                        {{ area.nombre }}
+                      </option>
+                    </select>
+                    <svg
+                      class="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#6B6560]"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Habilidades técnicas seleccionadas -->
+              <div *ngIf="technicalSkills.length > 0" class="flex flex-wrap gap-2 pt-1">
+                <div *ngFor="let s of technicalSkills"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all shadow-sm"
+                  [style.backgroundColor]="weightConfig[s.weight].bg"
+                  [style.borderColor]="weightConfig[s.weight].border" [style.color]="weightConfig[s.weight].text">
+                  <span class="leading-normal">{{ s.skill }}</span>
+                  <button type="button" (click)="cycleSkillWeight(s)"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer transition-opacity hover:opacity-80 inline-flex items-center justify-center leading-normal"
+                    [style.backgroundColor]="weightConfig[s.weight].text + '22'"
+                    [style.color]="weightConfig[s.weight].text" title="Clic para alternar entre Obligatorio y Deseable">
+                    {{ weightConfig[s.weight].label }}
+                  </button>
+                  <button type="button" (click)="removeSkillObject(s)" title="Eliminar habilidad"
+                    class="w-4 h-4 rounded-full cursor-pointer opacity-60 hover:opacity-100 hover:bg-black/10 flex items-center justify-center transition-all"
+                    [style.color]="weightConfig[s.weight].text">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Buscador con Autocompletado de Habilidades Técnicas -->
+              <div class="relative">
+                <div class="relative w-full">
+                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#9A948C]">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                  </div>
+                  <input type="text" [(ngModel)]="techSkillInput" (focus)="showTechSuggestions = true"
+                    (blur)="onTechSkillInputBlur()"
+                    (keydown.enter)="$event.preventDefault(); selectFirstTechSuggestion()"
+                    [disabled]="skills.length >= 10"
+                    [placeholder]="skills.length >= 10 ? 'Límite total de 10 habilidades alcanzado' : 'Buscar habilidad técnica de ' + currentAreaNombre + '...'"
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111] disabled:opacity-60 disabled:cursor-not-allowed"
+                    onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                    onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
+                </div>
+
+                <!-- Dropdown de autocompletado -->
+                <div *ngIf="showTechSuggestions && skills.length < 10"
+                  class="absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg z-20 overflow-hidden bg-white border-[#E8E3D9] max-h-56 overflow-y-auto">
+                  <div *ngIf="techSuggestions.length === 0" class="px-4 py-3 text-xs text-[#9A948C] text-center italic">
+                    No se encontraron habilidades de {{ currentAreaNombre }}.
+                  </div>
+                  <button *ngFor="let s of techSuggestions" type="button" (mousedown)="addTechSkill(s)"
+                    class="w-full text-left px-4 py-2.5 text-xs font-medium cursor-pointer transition-colors text-[#333333] hover:bg-[#FEF9C3] hover:text-[#111111] border-b border-[#F5F0E8] last:border-b-0">
+                    {{ s }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- MÓDULO 2: Habilidades Blandas e Interpersonales -->
+            <div class="p-5 rounded-2xl bg-white border border-[#E8E3D9] space-y-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#F2B705]"></span>
+                <h3 class="text-sm font-bold text-[#111111]">2. Habilidades Blandas</h3>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F5F0E8] text-[#4A4540]">
+                  {{ softSkills.length }} agregada{{ softSkills.length !== 1 ? 's' : '' }}
+                </span>
+              </div>
+
+              <!-- Habilidades blandas seleccionadas -->
+              <div *ngIf="softSkills.length > 0" class="flex flex-wrap gap-2 pt-1">
+                <div *ngFor="let s of softSkills"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all shadow-sm"
+                  [style.backgroundColor]="weightConfig[s.weight].bg"
+                  [style.borderColor]="weightConfig[s.weight].border" [style.color]="weightConfig[s.weight].text">
+                  <span class="leading-normal">{{ s.skill }}</span>
+                  <button type="button" (click)="cycleSkillWeight(s)"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer transition-opacity hover:opacity-80 inline-flex items-center justify-center leading-normal"
+                    [style.backgroundColor]="weightConfig[s.weight].text + '22'"
+                    [style.color]="weightConfig[s.weight].text" title="Clic para alternar entre Obligatorio y Deseable">
+                    {{ weightConfig[s.weight].label }}
+                  </button>
+                  <button type="button" (click)="removeSkillObject(s)" title="Eliminar habilidad"
+                    class="w-4 h-4 rounded-full cursor-pointer opacity-60 hover:opacity-100 hover:bg-black/10 flex items-center justify-center transition-all"
+                    [style.color]="weightConfig[s.weight].text">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Buscador con Autocompletado de Habilidades Blandas -->
+              <div class="relative">
+                <div class="relative w-full">
+                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#9A948C]">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                  </div>
+                  <input type="text" [(ngModel)]="softSkillInput" (focus)="showSoftSuggestions = true"
+                    (blur)="onSoftSkillInputBlur()"
+                    (keydown.enter)="$event.preventDefault(); selectFirstSoftSuggestion()"
+                    [disabled]="skills.length >= 10" placeholder="Buscar habilidad blanda..."
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111] disabled:opacity-60 disabled:cursor-not-allowed"
+                    onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                    onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
+                </div>
+
+                <!-- Dropdown de autocompletado -->
+                <div *ngIf="showSoftSuggestions && skills.length < 10"
+                  class="absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg z-20 overflow-hidden bg-white border-[#E8E3D9] max-h-56 overflow-y-auto">
+                  <div *ngIf="softSuggestions.length === 0" class="px-4 py-3 text-xs text-[#9A948C] text-center italic">
+                    No se encontraron habilidades blandas.
+                  </div>
+                  <button *ngFor="let s of softSuggestions" type="button" (mousedown)="addSoftSkill(s)"
+                    class="w-full text-left px-4 py-2.5 text-xs font-medium cursor-pointer transition-colors text-[#333333] hover:bg-[#FEF9C3] hover:text-[#111111] border-b border-[#F5F0E8] last:border-b-0">
+                    {{ s }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Leyenda y Validaciones de Habilidades -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              <div class="flex flex-wrap gap-4 text-[11px] font-semibold">
+                <span class="flex items-center gap-1.5 text-[#BE123C]">
+                  <span class="w-2 h-2 rounded-full bg-[#BE123C]"></span>Obligatorio
+                </span>
+                <span class="flex items-center gap-1.5 text-[#B45309]">
+                  <span class="w-2 h-2 rounded-full bg-[#B45309]"></span>Deseable
+                </span>
+              </div>
+              <p *ngIf="errors['skills']" class="text-xs text-[#E5140D] font-medium">{{ errors['skills'] }}</p>
+            </div>
+          </div>
+
+          <!-- Requisitos del puesto -->
+          <div class="p-5 rounded-2xl bg-white border border-[#E8E3D9] space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <label class="block text-sm font-semibold text-[#111111]">
+                  Requisitos del puesto
+                </label>
+              </div>
+
+              <!-- Modificar Cantidad de Requisitos -->
+              <div class="flex items-center gap-2 self-start sm:self-auto">
+                <span class="text-xs font-semibold text-[#6B6560]">Cantidad:</span>
+                <div class="flex items-center rounded-xl border border-[#E8E3D9] bg-[#FAFAF8] p-0.5 shadow-sm">
+                  <button type="button" (click)="setRequirementsCount(requirements.length - 1)"
+                    [disabled]="requirements.length <= 0" title="Disminuir cantidad"
+                    class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold text-[#111111] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                      stroke-linecap="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <input type="number" min="0" [attr.max]="maxItemsLista" [ngModel]="requirements.length"
+                    (ngModelChange)="setRequirementsCount($event)"
+                    class="w-9 text-center text-xs font-bold bg-transparent outline-none text-[#111111] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                  <button type="button" (click)="setRequirementsCount(requirements.length + 1)"
+                    [disabled]="requirements.length >= maxItemsLista" title="Aumentar cantidad"
+                    class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold text-[#111111] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                      stroke-linecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campo principal para escribir y agregar requisito -->
+            <div class="flex gap-2">
+              <input type="text" [(ngModel)]="newReqInput" maxlength="200"
+                (keydown.enter)="$event.preventDefault(); addRequirementFromInput()"
+                placeholder="Escribe un requisito aquí..."
+                class="flex-1 px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111]"
+                onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
+              <button type="button" (click)="addRequirementFromInput()"
+                class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer bg-[#F2B705] text-[#111111] hover:opacity-90 flex items-center gap-1.5 shrink-0 shadow-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Agregar</span>
+              </button>
+            </div>
+            <p *ngIf="errors['requirements']" class="text-xs text-[#E5140D] font-medium">{{ errors['requirements'] }}</p>
+
+            <!-- Lista de requisitos agregados (editables en fila) -->
+            <div *ngIf="requirements.length > 0" class="space-y-2.5 pt-1">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-[#9A948C] block">
+                Lista de requisitos ({{ requirements.length }}):
+              </span>
+              <div *ngFor="let req of requirements; let i = index; trackBy: trackByIndex"
+                class="flex items-center gap-2.5">
+                <span class="w-6 h-10 flex items-center justify-center text-xs font-bold text-[#9A948C] shrink-0">{{ i +
+                  1 }}.</span>
+                <div class="relative flex-1">
+                  <input type="text" [(ngModel)]="requirements[i]" maxlength="200"
+                    (keydown.enter)="$event.preventDefault(); addRequirement()"
+                    placeholder="Escribe o edita el requisito..."
+                    class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111]"
+                    onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                    onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
+                </div>
+                <button type="button" (click)="removeRequirement(i)" title="Eliminar este requisito"
+                  class="w-10 h-10 flex items-center justify-center rounded-xl border border-transparent hover:border-[#FECDD3] hover:bg-[#FFF1F2] text-[#9A948C] hover:text-[#DC2626] cursor-pointer transition-colors shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Beneficios y compensaciones -->
+          <div class="p-5 rounded-2xl bg-white border border-[#E8E3D9] space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <label class="block text-sm font-semibold text-[#111111]">
+                  Beneficios y compensaciones
+                </label>
+              </div>
+
+              <!-- Modificar Cantidad de Beneficios -->
+              <div class="flex items-center gap-2 self-start sm:self-auto">
+                <span class="text-xs font-semibold text-[#6B6560]">Cantidad:</span>
+                <div class="flex items-center rounded-xl border border-[#E8E3D9] bg-[#FAFAF8] p-0.5 shadow-sm">
+                  <button type="button" (click)="setBenefitsCount(benefits.length - 1)"
+                    [disabled]="benefits.length <= 0" title="Disminuir cantidad"
+                    class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold text-[#111111] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                      stroke-linecap="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <input type="number" min="0" [attr.max]="maxItemsLista" [ngModel]="benefits.length"
+                    (ngModelChange)="setBenefitsCount($event)"
+                    class="w-9 text-center text-xs font-bold bg-transparent outline-none text-[#111111] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                  <button type="button" (click)="setBenefitsCount(benefits.length + 1)"
+                    [disabled]="benefits.length >= maxItemsLista" title="Aumentar cantidad"
+                    class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold text-[#111111] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                      stroke-linecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campo principal para escribir y agregar beneficio -->
+            <div class="flex gap-2">
+              <input type="text" [(ngModel)]="newBenInput" maxlength="200"
+                (keydown.enter)="$event.preventDefault(); addBenefitFromInput()"
+                placeholder="Escribe un beneficio aquí..."
+                class="flex-1 px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111]"
+                onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
+              <button type="button" (click)="addBenefitFromInput()"
+                class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer bg-[#F2B705] text-[#111111] hover:opacity-90 flex items-center gap-1.5 shrink-0 shadow-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Agregar</span>
+              </button>
+            </div>
+            <p *ngIf="errors['benefits']" class="text-xs text-[#E5140D] font-medium">{{ errors['benefits'] }}</p>
+
+            <!-- Lista de beneficios agregados (editables en fila) -->
+            <div *ngIf="benefits.length > 0" class="space-y-2.5 pt-1">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-[#9A948C] block">
+                Lista de beneficios ({{ benefits.length }}):
+              </span>
+              <div *ngFor="let ben of benefits; let i = index; trackBy: trackByIndex" class="flex items-center gap-2.5">
+                <div class="w-6 h-10 flex items-center justify-center shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" class="text-[#15803D]">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <div class="relative flex-1">
+                  <input type="text" [(ngModel)]="benefits[i]" maxlength="200" (keydown.enter)="$event.preventDefault(); addBenefit()"
+                    placeholder="Escribe o edita el beneficio..."
+                    class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111]"
+                    onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+                    onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
+                </div>
+                <button type="button" (click)="removeBenefit(i)" title="Eliminar este beneficio"
+                  class="w-10 h-10 flex items-center justify-center rounded-xl border border-transparent hover:border-[#FECDD3] hover:bg-[#FFF1F2] text-[#9A948C] hover:text-[#DC2626] cursor-pointer transition-colors shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error general (409, 403, red o catálogos no disponibles) -->
+          <p *ngIf="errors['general']"
+            class="text-sm p-3 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#991B1B] font-medium">
+            {{ errors['general'] }}
+          </p>
+
+          <!-- Action buttons -->
+          <div class="flex gap-3 pt-2">
+            <button type="button" (click)="modoEdicion ? guardarCambios() : enviarARevision()" [disabled]="!isValid"
+              class="flex-1 py-3 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2"
+              [style.backgroundColor]="isValid ? '#F2B705' : '#F0ECD8'" [style.color]="isValid ? '#111111' : '#C4BDB5'"
+              [style.cursor]="isValid ? 'pointer' : 'not-allowed'">
+              <span>{{ modoEdicion ? 'Guardar cambios' : 'Registrar vacante' }}</span>
+            </button>
+            <button type="button" (click)="navigate('company-jobs')"
+              class="px-6 py-3 rounded-xl text-sm font-semibold border cursor-pointer transition-colors border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8]">
+              Cancelar
+            </button>
+          </div>
+        </div>
+
+        <!-- Real-time Preview Right Column -->
+        <div class="lg:sticky lg:top-20">
+          <p class="text-xs font-bold uppercase tracking-wide mb-3 text-[#9A948C]">
+            Preview en tiempo real
+          </p>
+
+          <div class="rounded-2xl border p-1 bg-[#F8F7F4] border-[#E8E3D9]">
+            <!-- Empty Placeholder -->
+            <div *ngIf="!title.trim()" class="flex flex-col items-center justify-center h-64 text-center">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 bg-[#F5F0E8]">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8A84B" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M3 9h18M9 21V9" />
+                </svg>
+              </div>
+              <p class="text-sm font-semibold text-[#9A948C]">Completa el título</p>
+              <p class="text-xs mt-1 text-[#C4BDB5]">para ver el preview</p>
+            </div>
+
+            <!-- Filled Preview Card -->
+            <div *ngIf="title.trim()" class="rounded-2xl border overflow-hidden bg-white border-[#E8E3D9]">
+              <!-- Card Header -->
+              <div class="p-5 pb-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div
+                      class="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold flex-shrink-0 bg-[#F2B705] text-[#111111]">
+                      {{ companyName[0] }}
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-xs font-semibold text-[#9A948C]">{{ companyName }}</p>
+                      <p class="text-[15px] font-bold leading-snug mt-0.5 text-[#111111] truncate">{{ title }}</p>
+                    </div>
+                  </div>
+                  <span class="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 bg-[#FEF3C7] text-[#B45309]">
+                    Borrador
+                  </span>
+                </div>
+
+                <!-- Ubicación, modalidad remota y nivel (Formato idéntico a tarjetas de ofertas) -->
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                  <!-- Pin icon + location text -->
+                  <span class="flex items-center gap-1 text-xs text-[#9A948C]">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    {{ previewLocation }}
+                  </span>
+
+                  <!-- Remoto badge (Blue pill) -->
+                  <span *ngIf="modality === 'Remoto'"
+                    class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8]">
+                    Remoto
+                  </span>
+
+                  <!-- Híbrido badge -->
+                  <span *ngIf="modality === 'Híbrido'"
+                    class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F0FDF4] text-[#166534]">
+                    Híbrido
+                  </span>
+
+                  <!-- Presencial badge -->
+                  <span *ngIf="modality === 'Presencial'"
+                    class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F3FF] text-[#6D28D9]">
+                    Presencial
+                  </span>
+
+                  <!-- Level tag -->
+                  <span *ngIf="level"
+                    class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[#374151]">
+                    {{ level }}
+                  </span>
+
+                  <!-- Cupos tag -->
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309]">
+                    {{ hireLimit }} cupo{{ hireLimit !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Salary bar -->
+              <div class="px-5 py-2 border-t border-b border-[#F5F0E8]">
+                <p class="text-sm font-bold text-[#111111]">{{ previewSalary }}</p>
+              </div>
+
+              <!-- Descripción con el formato que verá el candidato -->
+              <div *ngIf="description.trim()" class="px-5 py-3 border-b border-[#F5F0E8]">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-[#9A948C] mb-1.5">Descripción</p>
+                <div class="text-xs leading-relaxed text-[#4A4540] max-h-44 overflow-y-auto space-y-2"
+                  [innerHTML]="description | markdown"></div>
+              </div>
+
+              <!-- Skills tags -->
+              <div class="px-5 py-3 flex flex-wrap gap-1.5">
+                <span *ngFor="let s of skills.slice(0, 4)"
+                  class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F5F0E8] text-[#4A4540]">
+                  {{ s.skill }}
+                </span>
+                <span *ngIf="skills.length > 4"
+                  class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F5F0E8] text-[#9A948C]">
+                  +{{ skills.length - 4 }}
+                </span>
+              </div>
+
+              <!-- Requisitos & Beneficios summary preview -->
+              <div class="px-5 py-3 border-t border-[#F5F0E8] space-y-2.5 text-xs">
+                <!-- Requisitos preview -->
+                <div>
+                  <span class="font-bold text-[#111111] flex items-center justify-between">
+                    <span>Requisitos</span>
+                    <span class="text-[10px] font-normal text-[#9A948C]">{{ activeRequirements.length }} definido{{
+                      activeRequirements.length !== 1 ? 's' : '' }}</span>
+                  </span>
+                  <ul *ngIf="activeRequirements.length > 0" class="mt-1 space-y-1 text-[#4A4540]">
+                    <li *ngFor="let req of activeRequirements.slice(0, 2)" class="flex items-center gap-1.5 truncate">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#F2B705] shrink-0"></span>
+                      <span class="truncate">{{ req }}</span>
+                    </li>
+                    <li *ngIf="activeRequirements.length > 2" class="text-[10px] text-[#9A948C] pl-3">
+                      +{{ activeRequirements.length - 2 }} más en la vacante
+                    </li>
+                  </ul>
+                  <p *ngIf="activeRequirements.length === 0" class="text-[11px] text-[#9A948C] italic mt-0.5">
+                    Sin requisitos agregados
+                  </p>
+                </div>
+
+                <!-- Beneficios preview -->
+                <div class="pt-2 border-t border-[#F5F0E8]">
+                  <span class="font-bold text-[#111111] flex items-center justify-between">
+                    <span>Beneficios</span>
+                    <span class="text-[10px] font-normal text-[#9A948C]">{{ activeBenefits.length }} ofrecido{{
+                      activeBenefits.length !== 1 ? 's' : '' }}</span>
+                  </span>
+                  <ul *ngIf="activeBenefits.length > 0" class="mt-1 space-y-1 text-[#4A4540]">
+                    <li *ngFor="let ben of activeBenefits.slice(0, 2)" class="flex items-center gap-1.5 truncate">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-[#15803D] shrink-0">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <span class="truncate">{{ ben }}</span>
+                    </li>
+                    <li *ngIf="activeBenefits.length > 2" class="text-[10px] text-[#9A948C] pl-4">
+                      +{{ activeBenefits.length - 2 }} más en la vacante
+                    </li>
+                  </ul>
+                  <p *ngIf="activeBenefits.length === 0" class="text-[11px] text-[#9A948C] italic mt-0.5">
+                    Sin beneficios agregados
+                  </p>
+                </div>
+              </div>
+
+              <!-- Card Footer -->
+              <div class="px-5 pb-4 flex items-center justify-between">
+                <span class="text-[11px] text-[#9A948C]">Cierra el {{ closeDate }}</span>
+                <span class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#F2B705] text-[#111111]">
+                  Vista previa
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</app-company-shell>
