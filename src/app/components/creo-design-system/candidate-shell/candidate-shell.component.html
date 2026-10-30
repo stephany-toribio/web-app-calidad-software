@@ -74,6 +74,9 @@
               </button>
             </div>
             <div class="max-h-80 overflow-y-auto">
+              <p *ngIf="notifications.length === 0" class="px-4 py-6 text-center text-xs text-[#9A948C]">
+                Sin notificaciones
+              </p>
               <button
                 *ngFor="let n of notifications"
                 (click)="navigate(n.target)"

@@ -2,14 +2,15 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { CompanyShellComponent } from '../../../components/creo-design-system/company-shell/company-shell.component';
-import { CreoJobsService } from '../../../services/creo-jobs.service';
 import { KanbanService } from '../../../core/api/kanban.service';
+import { VacantesService } from '../../../core/api/vacantes.service';
 import { KanbanCandidate, KanbanColumn, ManagedJob, ManagedJobStatus } from '../../../data/creo-data';
-import { AuthService } from '../../../core/api/auth.service';
 import { MotivoRechazo, TableroKanban } from '../../../core/api/models/kanban.model';
 import { PerfilPostulante } from '../../../core/api/models/perfil-postulante.model';
+import { EstadoGeneralVacante } from '../../../core/api/models/vacante-empresa.model';
+import { mapVacanteToManagedJob } from '../../../core/api/mappers/vacante-empresa.mapper';
 
 interface KanbanColumnConfig {
   id: KanbanColumn;
@@ -33,18 +34,24 @@ interface StatusConfig {
   styleUrl: './company-kanban.component.css'
 })
 export class CompanyKanbanComponent implements OnInit, OnDestroy {
-  userName = 'Carlos Mendoza';
-  jobTitle = 'Senior React Developer';
-  hireLimit = 2; // Límite de cupos de contratación definido para la vacante
+  jobTitle = '';
+  hireLimit = 0;
   hiredCountState = 0;
-  cuposDisponibles = 1;
-  requiredSkillsForJob: string[] = ['React', 'TypeScript', 'Next.js', 'GraphQL'];
+  cuposDisponibles = 0;
 
   jobs: ManagedJob[] = [];
-  selectedJobId = 'j1';
+  selectedJobId = '';
   selectedJob: ManagedJob | null = null;
   tableroApi: TableroKanban | null = null;
+  loadingJobs = false;
+  jobsError = '';
   loadingTablero = false;
+  tableroError = '';
+
+  /** Vacantes que pueden tener postulantes: las demás nunca se publicaron */
+  private readonly ESTADOS_CON_POSTULANTES: EstadoGeneralVacante[] = [
+    'publicada', 'por_iniciar', 'pausada', 'finalizada', 'vencida',
+  ];
 
   statusConfig: Record<ManagedJobStatus, StatusConfig> = {
     active:                   { label: 'Activa',                   bg: '#DCFCE7', text: '#15803D', dotColor: '#22C55E' },
@@ -67,12 +74,7 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   // Catálogo dinámico de motivos de rechazo desde la API
   motivosRechazo: MotivoRechazo[] = [];
   selectedMotivoId: number | null = null;
-
-  readonly fallbackRejectReasons: string[] = [
-    'Perfil no se ajusta',
-    'Expectativa salarial alta',
-    'Proceso cerrado'
-  ];
+  motivosError = '';
 
   candidates: KanbanCandidate[] = [];
   draggingId: string | null = null;
@@ -81,13 +83,11 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   selectedCandidate: KanbanCandidate | null = null;
   perfilPostulante: PerfilPostulante | null = null;
   loadingPerfil = false;
+  perfilError = '';
 
   rejectTarget: KanbanCandidate | null = null;
-  rejectReason = '';
-  rejectCustom = '';
   rejectError = '';
 
-  showBreakdown = false;
   messageSent = false;
   autoNotificationToast: string | null = null;
   isReadOnly = false;
@@ -96,20 +96,13 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   private subs = new Subscription();
 
   constructor(
-    private creoJobsService: CreoJobsService,
+    private vacantesService: VacantesService,
     private kanbanService: KanbanService,
-    private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    const user = this.authService.getUser();
-    if (user?.correo) {
-      const prefix = user.correo.split('@')[0];
-      this.userName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    }
-
     // Cargar catálogo oficial de motivos de rechazo (HU-06)
     this.subs.add(
       this.kanbanService.motivosRechazo().subscribe({
@@ -117,53 +110,72 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
           this.motivosRechazo = motivos || [];
           if (this.motivosRechazo.length > 0) {
             this.selectedMotivoId = this.motivosRechazo[0].id;
-            this.rejectReason = this.motivosRechazo[0].motivo;
           }
         },
-        error: () => {
-          // Mantiene catálogo fallback si la API no está disponible
+        error: (err) => {
+          this.motivosError = err.error?.message || 'No fue posible cargar los motivos de rechazo.';
         }
       })
     );
 
-    this.subs.add(
-      this.creoJobsService.managedJobs$.subscribe(jobs => {
-        this.jobs = jobs;
-        this.updateCurrentJob();
-      })
-    );
+    this.cargarVacantes();
+  }
 
+  /**
+   * GET /empresas/me/vacantes + ?id de la URL: cada cambio de vacante en el selector
+   * actualiza la URL y vuelve a pasar por aquí, así la carga sale de un solo lugar.
+   */
+  cargarVacantes(): void {
+    this.loadingJobs = true;
+    this.jobsError = '';
     this.subs.add(
-      this.route.queryParamMap.subscribe(params => {
-        const paramId = params.get('id');
-        if (paramId) {
-          this.selectedJobId = paramId;
-        }
-        this.updateCurrentJob();
-      })
-    );
+      combineLatest([this.vacantesService.misVacantes(), this.route.queryParamMap]).subscribe({
+        next: ([vacantes, params]) => {
+          this.loadingJobs = false;
+          const todas = (vacantes || []).map(v => ({ general: v.estado.general, job: mapVacanteToManagedJob(v) }));
+          const paramId = params.get('id');
 
-    this.subs.add(
-      this.creoJobsService.kanbanCandidates$.subscribe(cands => {
-        if (!this.isNumericId(this.selectedJobId)) {
-          this.candidates = cands;
-          if (this.selectedCandidate) {
-            this.selectedCandidate = cands.find(c => c.id === this.selectedCandidate!.id) || null;
+          // La vacante pedida por URL se muestra aunque aún no esté publicada (p. ej. recién creada)
+          this.jobs = todas
+            .filter(t => this.ESTADOS_CON_POSTULANTES.includes(t.general) || t.job.id === paramId)
+            .map(t => t.job);
+
+          const elegida = this.jobs.find(j => j.id === paramId) || this.jobs[0];
+          if (paramId && elegida?.id !== paramId) {
+            this.showToast('La vacante solicitada no está disponible. Se muestra otra de tus vacantes.');
           }
+
+          if (!elegida) {
+            this.selectedJob = null;
+            this.selectedJobId = '';
+            this.candidates = [];
+            return;
+          }
+
+          const routeReadOnly = params.get('readOnly') === 'true';
+          this.seleccionarVacante(elegida, routeReadOnly);
+        },
+        error: (err) => {
+          this.loadingJobs = false;
+          this.jobs = [];
+          this.jobsError = err.error?.message || 'No fue posible cargar tus vacantes.';
         }
       })
     );
+  }
+
+  private seleccionarVacante(job: ManagedJob, routeReadOnly: boolean): void {
+    this.selectedJob = job;
+    this.selectedJobId = job.id;
+    this.jobTitle = job.title;
+    this.hireLimit = job.hireLimit || 1;
+    this.isReadOnly = this.esSoloConsulta(job) || routeReadOnly;
+    this.cargarTablero(Number(job.id));
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     if (this.toastTimer) clearTimeout(this.toastTimer);
-  }
-
-  private isNumericId(id: string | number | null | undefined): boolean {
-    if (id === null || id === undefined) return false;
-    const num = Number(id);
-    return !isNaN(num) && num > 0;
   }
 
   backendToFrontColumn(codigo: string): KanbanColumn {
@@ -190,6 +202,7 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
 
   cargarTablero(vacanteId: number): void {
     this.loadingTablero = true;
+    this.tableroError = '';
     this.kanbanService.tablero(vacanteId).subscribe({
       next: (tablero) => {
         this.loadingTablero = false;
@@ -224,25 +237,25 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.loadingTablero = false;
-        if (err.status === 409) {
-          this.showToast(err.error?.message || 'La vacante fue eliminada o finalizada.');
-        }
+        this.tableroApi = null;
+        this.candidates = [];
+        this.tableroError = err.error?.message || 'No fue posible cargar el tablero de postulantes.';
       }
     });
   }
 
-  onSelectJob(jobId: string): void {
-    this.selectedJobId = jobId;
-    this.updateCurrentJob();
+  reintentarTablero(): void {
+    if (this.selectedJobId) this.cargarTablero(Number(this.selectedJobId));
+  }
 
-    if (this.selectedJob) {
-      this.isReadOnly = this.esSoloConsulta(this.selectedJob);
-    }
+  /** Solo cambia la URL: cargarVacantes reacciona al nuevo ?id */
+  onSelectJob(jobId: string): void {
+    const job = this.jobs.find(j => j.id === jobId);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
         id: jobId,
-        readOnly: this.selectedJob && this.esSoloConsulta(this.selectedJob) ? 'true' : null
+        readOnly: job && this.esSoloConsulta(job) ? 'true' : null
       },
       queryParamsHandling: 'merge'
     });
@@ -250,24 +263,6 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
 
   private esSoloConsulta(job: ManagedJob): boolean {
     return job.status === 'closed' || job.status === 'inactive' || job.daysLeft <= 0;
-  }
-
-  updateCurrentJob(): void {
-    if (this.isNumericId(this.selectedJobId)) {
-      this.cargarTablero(Number(this.selectedJobId));
-      return;
-    }
-
-    if (!this.jobs.length) return;
-    this.selectedJob = this.jobs.find(j => j.id === this.selectedJobId) || this.jobs[0];
-    if (this.selectedJob) {
-      this.selectedJobId = this.selectedJob.id;
-      this.jobTitle = this.selectedJob.title;
-      this.hireLimit = this.selectedJob.hireLimit || 1;
-      const routeReadOnly = this.route.snapshot.queryParamMap.get('readOnly') === 'true';
-      this.isReadOnly = this.esSoloConsulta(this.selectedJob) || routeReadOnly;
-      this.updateSkillsForJob(this.selectedJob.title);
-    }
   }
 
   private idHabilidad(nombre: string): string {
@@ -284,40 +279,18 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
       .map(s => s.skill);
   }
 
-  get niceToHaveSkills(): string[] {
-    return (this.selectedJob?.skillTags || [])
-      .filter(s => s.weight !== 'required')
-      .map(s => s.skill);
-  }
-
-  candidatoPosee(skill: string): boolean {
-    const registradas = (this.selectedCandidate?.skills || []).map(s => this.idHabilidad(s));
-    return registradas.includes(this.idHabilidad(skill));
-  }
-
-  get mustHaveCubiertas(): string[] {
-    return this.mustHaveSkills.filter(s => this.candidatoPosee(s));
-  }
-
-  get mustHaveFaltantes(): string[] {
-    return this.mustHaveSkills.filter(s => !this.candidatoPosee(s));
-  }
-
-  updateSkillsForJob(title: string): void {
-    this.requiredSkillsForJob = this.mustHaveSkills;
-  }
-
   getStatusConfig(status?: ManagedJobStatus): StatusConfig {
     if (!status) return { label: 'Activa', bg: '#DCFCE7', text: '#15803D', dotColor: '#22C55E' };
     return this.statusConfig[status] || { label: status, bg: '#F1F5F9', text: '#64748B', dotColor: '#94A3B8' };
   }
 
   getCandidateCountForJob(jobId: string): number {
-    return this.candidates.filter(c => (c.jobId || 'j1') === jobId).length;
+    if (jobId === this.selectedJobId && this.tableroApi) return this.jobCandidates.length;
+    return this.jobs.find(j => j.id === jobId)?.applicants ?? 0;
   }
 
   get jobCandidates(): KanbanCandidate[] {
-    return this.candidates.filter(c => (c.jobId || 'j1') === this.selectedJobId);
+    return this.candidates.filter(c => c.jobId === this.selectedJobId);
   }
 
   get totalCandidates(): number {
@@ -343,15 +316,28 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
     return this.columns.find(c => c.id === col)?.label ?? '';
   }
 
+  /**
+   * Movimientos permitidos (una etapa a la vez, nunca hacia atras):
+   *   Recibido    -> En Revision
+   *   En Revision -> Entrevista | Rechazado
+   *   Entrevista  -> Contratado | Rechazado
+   * Contratado y Rechazado son finales. No se contrata desde Recibido ni
+   * desde En Revision: Contratado solo se alcanza desde Entrevista.
+   */
   puedeAvanzarA(cand: KanbanCandidate, destino: KanbanColumn): boolean {
     if (this.isCandidateLocked(cand)) return false;
     if (destino === 'rejected') return this.puedeRechazar(cand);
     return this.posicion(destino) === this.posicion(cand.column) + 1;
   }
 
+  /**
+   * Solo se rechaza a quien ya fue evaluado: desde En Revision o Entrevista.
+   * Desde Recibido no, porque todavia nadie revisó su postulación; primero
+   * tiene que pasar a En Revisión.
+   */
   puedeRechazar(cand: KanbanCandidate): boolean {
     if (this.isCandidateLocked(cand)) return false;
-    return cand.column === 'received' || cand.column === 'review' || cand.column === 'interview';
+    return cand.column === 'review' || cand.column === 'interview';
   }
 
   isCandidateLocked(cand: KanbanCandidate): boolean {
@@ -465,46 +451,30 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
     const numericVacanteId = Number(this.selectedJobId);
     const numericPostulacionId = Number(cand.id);
 
-    if (this.isNumericId(numericVacanteId) && this.isNumericId(numericPostulacionId)) {
-      if (col === 'hired') {
-        if (this.cuposDisponibles <= 0) {
-          this.showToast(`Límite de contratación alcanzado (${this.hiredCount}/${this.hireLimit} cupos). No se pueden contratar más candidatos.`);
-          this.draggingId = null;
-          return;
-        }
-        this.kanbanService.contratar(numericVacanteId, numericPostulacionId).subscribe({
-          next: () => {
-            this.cargarTablero(numericVacanteId);
-            this.showToast(`Candidato contratado. Se notificó al postulante automáticamente.`);
-          },
-          error: (err) => {
-            this.showToast(err.error?.message || 'Error al contratar al postulante.');
-          }
-        });
-      } else {
-        this.kanbanService.avanzar(numericVacanteId, numericPostulacionId).subscribe({
-          next: () => {
-            this.cargarTablero(numericVacanteId);
-          },
-          error: (err) => {
-            this.showToast(err.error?.message || 'Error al avanzar al postulante.');
-          }
-        });
-      }
-      this.draggingId = null;
-      return;
-    }
-
-    // Fallback simulado
-    if (col === 'hired' && this.hiredCount >= this.hireLimit) {
-      this.showToast(`Límite de contratación alcanzado (${this.hiredCount}/${this.hireLimit} cupos). No se pueden contratar más candidatos.`);
-      this.draggingId = null;
-      return;
-    }
-
-    this.creoJobsService.moveKanbanCandidate(this.draggingId, col);
     if (col === 'hired') {
-      this.showToast(`Candidato contratado. Notificación enviada automáticamente a ${cand.email}`);
+      if (this.cuposDisponibles <= 0) {
+        this.showToast(`Límite de contratación alcanzado (${this.hiredCount}/${this.hireLimit} cupos). No se pueden contratar más candidatos.`);
+        this.draggingId = null;
+        return;
+      }
+      this.kanbanService.contratar(numericVacanteId, numericPostulacionId).subscribe({
+        next: () => {
+          this.cargarTablero(numericVacanteId);
+          this.showToast(`Candidato contratado. Se notificó al postulante automáticamente.`);
+        },
+        error: (err) => {
+          this.showToast(err.error?.message || 'Error al contratar al postulante.');
+        }
+      });
+    } else {
+      this.kanbanService.avanzar(numericVacanteId, numericPostulacionId).subscribe({
+        next: () => {
+          this.cargarTablero(numericVacanteId);
+        },
+        error: (err) => {
+          this.showToast(err.error?.message || 'Error al avanzar al postulante.');
+        }
+      });
     }
     this.draggingId = null;
   }
@@ -520,33 +490,32 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
     if (event) event.stopPropagation();
     this.selectedCandidate = cand;
     this.perfilPostulante = null;
-    this.showBreakdown = false;
+    this.perfilError = '';
     this.messageSent = false;
 
-    const numericPostulacionId = Number(cand.id);
-    if (this.isNumericId(numericPostulacionId)) {
-      this.loadingPerfil = true;
-      this.kanbanService.perfilPostulante(numericPostulacionId).subscribe({
-        next: (perfil) => {
-          this.perfilPostulante = perfil;
-          this.loadingPerfil = false;
-        },
-        error: (err) => {
-          this.loadingPerfil = false;
-          if (err.status === 409) {
-            this.showToast(err.error?.message || 'La postulación no está disponible para consulta.');
-            this.closeProfile();
-          }
+    this.loadingPerfil = true;
+    this.kanbanService.perfilPostulante(Number(cand.id)).subscribe({
+      next: (perfil) => {
+        this.perfilPostulante = perfil;
+        this.loadingPerfil = false;
+      },
+      error: (err) => {
+        this.loadingPerfil = false;
+        if (err.status === 409) {
+          this.showToast(err.error?.message || 'La postulación no está disponible para consulta.');
+          this.closeProfile();
+          return;
         }
-      });
-    }
+        this.perfilError = err.error?.message || 'No fue posible cargar el perfil del postulante.';
+      }
+    });
   }
 
   closeProfile(): void {
     this.selectedCandidate = null;
     this.perfilPostulante = null;
     this.loadingPerfil = false;
-    this.showBreakdown = false;
+    this.perfilError = '';
     this.messageSent = false;
   }
 
@@ -561,67 +530,38 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
     }
 
     this.rejectTarget = cand;
-    if (this.motivosRechazo.length > 0) {
-      this.selectedMotivoId = this.motivosRechazo[0].id;
-      this.rejectReason = this.motivosRechazo[0].motivo;
-    } else {
-      this.rejectReason = this.fallbackRejectReasons[0];
-    }
-    this.rejectCustom = '';
-    this.rejectError = '';
+    this.selectedMotivoId = this.motivosRechazo[0]?.id ?? null;
+    this.rejectError = this.motivosError;
   }
 
   closeRejectModal(): void {
     this.rejectTarget = null;
-    this.rejectReason = '';
-    this.rejectCustom = '';
     this.rejectError = '';
   }
 
   confirmReject(): void {
     if (!this.rejectTarget) return;
 
+    if (!this.selectedMotivoId) {
+      this.rejectError = this.motivosError || 'Seleccione un motivo de rechazo válido.';
+      return;
+    }
+
     const numericVacanteId = Number(this.selectedJobId);
-    const numericPostulacionId = Number(this.rejectTarget.id);
-
-    if (this.isNumericId(numericVacanteId) && this.isNumericId(numericPostulacionId)) {
-      if (!this.selectedMotivoId) {
-        this.rejectError = 'Seleccione un motivo de rechazo válido.';
-        return;
-      }
-
-      this.kanbanService.rechazar(numericVacanteId, numericPostulacionId, this.selectedMotivoId).subscribe({
-        next: () => {
-          const name = this.rejectTarget?.name;
-          if (this.selectedCandidate?.id === this.rejectTarget?.id) {
-            this.closeProfile();
-          }
-          this.closeRejectModal();
-          this.cargarTablero(numericVacanteId);
-          this.showToast(`Candidato ${name} rechazado. Notificación enviada automáticamente.`);
-        },
-        error: (err) => {
-          this.rejectError = err.error?.message || 'No fue posible registrar el rechazo.';
+    this.kanbanService.rechazar(numericVacanteId, Number(this.rejectTarget.id), this.selectedMotivoId).subscribe({
+      next: () => {
+        const name = this.rejectTarget?.name;
+        if (this.selectedCandidate?.id === this.rejectTarget?.id) {
+          this.closeProfile();
         }
-      });
-      return;
-    }
-
-    // Fallback simulado
-    const finalReason = this.rejectReason === 'Otro' ? this.rejectCustom.trim() : this.rejectReason;
-    if (!finalReason) {
-      this.rejectError = 'El motivo del rechazo es obligatorio';
-      return;
-    }
-
-    const email = this.rejectTarget.email;
-    const name = this.rejectTarget.name;
-    this.creoJobsService.moveKanbanCandidate(this.rejectTarget.id, 'rejected', finalReason);
-    if (this.selectedCandidate?.id === this.rejectTarget.id) {
-      this.closeProfile();
-    }
-    this.closeRejectModal();
-    this.showToast(`Candidato ${name} rechazado. Notificación enviada automáticamente a ${email}`);
+        this.closeRejectModal();
+        this.cargarTablero(numericVacanteId);
+        this.showToast(`Candidato ${name} rechazado. Notificación enviada automáticamente.`);
+      },
+      error: (err) => {
+        this.rejectError = err.error?.message || 'No fue posible registrar el rechazo.';
+      }
+    });
   }
 
   getNextCol(currentCol: KanbanColumn): KanbanColumn | null {
@@ -649,48 +589,33 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
     const numericVacanteId = Number(this.selectedJobId);
     const numericPostulacionId = Number(cand.id);
 
-    if (this.isNumericId(numericVacanteId) && this.isNumericId(numericPostulacionId)) {
-      if (nextCol === 'hired') {
-        if (this.cuposDisponibles <= 0) {
-          this.showToast(`Límite de contratación alcanzado (${this.hiredCount}/${this.hireLimit} cupos).`);
-          return;
-        }
-        this.kanbanService.contratar(numericVacanteId, numericPostulacionId).subscribe({
-          next: () => {
-            this.closeProfile();
-            this.cargarTablero(numericVacanteId);
-            this.showToast(`Candidato contratado. Notificación enviada automáticamente.`);
-          },
-          error: (err) => {
-            this.showToast(err.error?.message || 'Error al contratar al postulante.');
-          }
-        });
-      } else {
-        this.kanbanService.avanzar(numericVacanteId, numericPostulacionId).subscribe({
-          next: () => {
-            this.closeProfile();
-            this.cargarTablero(numericVacanteId);
-            this.showToast(`Candidato avanzado a ${this.etiquetaColumna(nextCol)}.`);
-          },
-          error: (err) => {
-            this.showToast(err.error?.message || 'Error al avanzar al postulante.');
-          }
-        });
-      }
-      return;
-    }
-
-    // Fallback simulado
-    if (nextCol === 'hired' && this.hiredCount >= this.hireLimit) {
-      this.showToast(`Límite de contratación alcanzado (${this.hiredCount}/${this.hireLimit} cupos).`);
-      return;
-    }
-
-    this.creoJobsService.moveKanbanCandidate(cand.id, nextCol);
     if (nextCol === 'hired') {
-      this.showToast(`Candidato contratado. Notificación enviada automáticamente a ${cand.email}`);
+      if (this.cuposDisponibles <= 0) {
+        this.showToast(`Límite de contratación alcanzado (${this.hiredCount}/${this.hireLimit} cupos).`);
+        return;
+      }
+      this.kanbanService.contratar(numericVacanteId, numericPostulacionId).subscribe({
+        next: () => {
+          this.closeProfile();
+          this.cargarTablero(numericVacanteId);
+          this.showToast(`Candidato contratado. Notificación enviada automáticamente.`);
+        },
+        error: (err) => {
+          this.showToast(err.error?.message || 'Error al contratar al postulante.');
+        }
+      });
+    } else {
+      this.kanbanService.avanzar(numericVacanteId, numericPostulacionId).subscribe({
+        next: () => {
+          this.closeProfile();
+          this.cargarTablero(numericVacanteId);
+          this.showToast(`Candidato avanzado a ${this.etiquetaColumna(nextCol)}.`);
+        },
+        error: (err) => {
+          this.showToast(err.error?.message || 'Error al avanzar al postulante.');
+        }
+      });
     }
-    this.closeProfile();
   }
 
   sendMessage(): void {

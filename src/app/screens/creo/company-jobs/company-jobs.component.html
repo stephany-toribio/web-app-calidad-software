@@ -1,4 +1,4 @@
-<app-company-shell activeScreen="company-jobs" [userName]="userName">
+<app-company-shell activeScreen="company-jobs">
   <!-- Toast feedback -->
   <div
     *ngIf="actionToast"
@@ -617,13 +617,18 @@
 
       <!-- Acciones -->
       <div class="px-6 py-4 border-t border-[#F5F0E8] bg-[#FAFAF8] flex gap-2">
-        <button type="button" (click)="confirmJobPayment()" [disabled]="paymentProcessing"
+        <div *ngIf="pagoAviso" class="w-full mb-2 rounded-xl border px-3.5 py-2.5 text-xs font-medium"
+          style="border-color:#F2B705; background:#FFFBEB; color:#92400E;">
+          {{ pagoAviso }}
+        </div>
+
+        <button type="button" (click)="confirmJobPayment()" [disabled]="paymentProcessing || !puedePagar"
           class="flex-1 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait">
           <svg *ngIf="paymentProcessing" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="3" stroke-linecap="round" class="animate-spin">
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
-          <span>{{ paymentProcessing ? 'Procesando pago…' : 'Pagar S/ {{ paymentAmount.toFixed(2) }} y publicar' }}</span>
+          <span>{{ paymentProcessing ? 'Procesando pago…' : 'Pagar S/ ' + paymentAmount.toFixed(2) + ' y publicar' }}</span>
         </button>
         <button type="button" (click)="cancelPayment()" [disabled]="paymentProcessing"
           class="px-4 py-2.5 rounded-xl text-sm font-medium border cursor-pointer border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8] disabled:opacity-40">

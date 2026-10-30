@@ -1,8 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CreoWordmarkComponent } from '../creo-wordmark/creo-wordmark.component';
 import { AuthService } from '../../../core/api/auth.service';
+import { CandidatosService } from '../../../core/api/candidatos.service';
 
 export type CandidateScreen = "candidate-dashboard" | "candidate-jobs" | "candidate-applications" | "candidate-saved" | "candidate-profile";
 
@@ -27,9 +28,10 @@ interface NotificationItem {
   templateUrl: './candidate-shell.component.html',
   styleUrl: './candidate-shell.component.css'
 })
-export class CandidateShellComponent {
+export class CandidateShellComponent implements OnInit {
   @Input() activeScreen!: CandidateScreen;
-  @Input() userName: string = 'Valeria Rojas';
+
+  displayName = '';
 
   avatarOpen = false;
   notifOpen = false;
@@ -43,53 +45,24 @@ export class CandidateShellComponent {
     { id: "candidate-profile", label: "Mi Perfil", icon: "user" },
   ];
 
-  notifications: NotificationItem[] = [
-    {
-      id: "n1",
-      text: "Tu postulación a Senior React Developer cambió a Entrevista",
-      time: "Hace 2 horas",
-      unread: true,
-      target: "candidate-applications",
-    },
-    {
-      id: "n2",
-      text: "TechCorp SA vio tu perfil",
-      time: "Hace 5 horas",
-      unread: true,
-      target: "candidate-profile",
-    },
-    {
-      id: "n3",
-      text: "Nueva vacante recomendada: DevOps Engineer, 65% match",
-      time: "Hace 1 día",
-      unread: false,
-      target: "candidate-jobs",
-    },
-    {
-      id: "n4",
-      text: "Tu vacante guardada 'Full Stack PHP Developer' cierra en 2 días",
-      time: "Hace 2 días",
-      unread: false,
-      target: "candidate-saved",
-    },
-  ];
+  /** Aún no existe un endpoint de notificaciones para el candidato */
+  notifications: NotificationItem[] = [];
 
-  constructor(private router: Router, private authService: AuthService) { }
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private candidatosService: CandidatosService
+  ) { }
+
+  /** Nombre real del candidato del token */
+  ngOnInit(): void {
+    this.candidatosService.obtenerMiPerfil().subscribe({
+      next: (perfil) => this.displayName = `${perfil.nombre} ${perfil.apellidos}`.trim()
+    });
+  }
 
   get correo(): string {
     return this.authService.getUser()?.correo ?? '';
-  }
-
-  get displayName(): string {
-    if (this.userName && this.userName !== 'Valeria Rojas') {
-      return this.userName;
-    }
-    const user = this.authService.getUser();
-    if (user?.correo) {
-      const prefix = user.correo.split('@')[0];
-      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    }
-    return this.userName;
   }
 
   get initials(): string {
@@ -99,7 +72,7 @@ export class CandidateShellComponent {
       .slice(0, 2)
       .map((w) => w[0])
       .join("")
-      .toUpperCase() || 'VR';
+      .toUpperCase();
   }
 
   get hasUnread(): boolean {

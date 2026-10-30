@@ -1,11 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CompanyShellComponent } from '../../../components/creo-design-system/company-shell/company-shell.component';
-import { CreoJobsService } from '../../../services/creo-jobs.service';
 import { CompanyJob, rangoPostulaciones } from '../../../data/creo-data';
 import { AuthService } from '../../../core/api/auth.service';
+import { EmpresasService } from '../../../core/api/empresas.service';
+import { VacantesService } from '../../../core/api/vacantes.service';
+import { VacanteEmpresa } from '../../../core/api/models/vacante-empresa.model';
 
 interface MetricItem {
   value: string;
@@ -23,20 +25,23 @@ export class CompanyHomeComponent implements OnInit, OnDestroy {
   /** Se muestra un rango aproximado, nunca el número exacto de postulaciones */
   rangoPostulaciones = rangoPostulaciones;
 
-  userName = 'Carlos Mendoza';
-  companyName = 'TechCorp SA';
+  userName = '';
+  companyName = '';
 
   companyJobs: CompanyJob[] = [];
   metrics: MetricItem[] = [
-    { value: '4', label: 'Vacantes activas' },
-    { value: '23', label: 'Postulantes esta semana' },
-    { value: '18d', label: 'Tiempo promedio contratación' },
+    { value: '0', label: 'Vacantes activas' },
+    { value: '0', label: 'Postulantes esta semana' },
   ];
 
+  loading = false;
+  loadError = '';
+
   private subs = new Subscription();
+  private vacantesService = inject(VacantesService);
+  private empresasService = inject(EmpresasService);
 
   constructor(
-    private creoJobsService: CreoJobsService,
     private authService: AuthService,
     private router: Router
   ) {}
@@ -49,17 +54,65 @@ export class CompanyHomeComponent implements OnInit, OnDestroy {
       this.companyName = this.userName;
     }
 
-    this.subs.add(
-      this.creoJobsService.companyJobs$.subscribe((jobs: CompanyJob[]) => {
-        this.companyJobs = jobs;
-        const active = jobs.filter((j: CompanyJob) => j.status === 'active').length;
-        this.metrics[0].value = active.toString();
-      })
-    );
+    this.cargarEmpresa();
+    this.cargarMisVacantes();
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+  }
+
+  /** GET /empresas/me: nombre del encargado y razón social */
+  private cargarEmpresa(): void {
+    this.subs.add(
+      this.empresasService.miEmpresa().subscribe({
+        next: (empresa) => {
+          this.userName = empresa.encargado_empresa || this.userName;
+          this.companyName = empresa.razon_social || this.companyName;
+        }
+      })
+    );
+  }
+
+  /** GET /empresas/me/vacantes: en el inicio solo se listan las publicadas y las pausadas */
+  cargarMisVacantes(): void {
+    this.loading = true;
+    this.loadError = '';
+    this.subs.add(
+      this.vacantesService.misVacantes().subscribe({
+        next: (vacantes) => {
+          this.loading = false;
+          const enCurso = (vacantes || []).filter(v =>
+            ['publicada', 'por_iniciar', 'pausada'].includes(v.estado.general));
+
+          this.companyJobs = enCurso.map(v => this.mapVacanteToCompanyJob(v));
+          this.metrics[0].value = this.activeCount.toString();
+          this.metrics[1].value = enCurso
+            .reduce((total, v) => total + (v.postulaciones_semana_count ?? 0), 0)
+            .toString();
+        },
+        error: (err) => {
+          this.loading = false;
+          this.companyJobs = [];
+          this.loadError = err.error?.message || 'No fue posible cargar tus vacantes.';
+        }
+      })
+    );
+  }
+
+  private mapVacanteToCompanyJob(v: VacanteEmpresa): CompanyJob {
+    const close = new Date(v.fecha_fin_vigencia);
+    const daysLeft = Math.max(0, Math.ceil((close.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+
+    return {
+      id: String(v.id),
+      title: v.titulo,
+      location: v.ubicacion || (v.tipo_empleo === 'remoto' ? 'Remoto' : 'Lima, Perú'),
+      applicants: v.postulaciones_count ?? 0,
+      status: v.estado.general === 'pausada' ? 'paused' : 'active',
+      daysLeft,
+      remote: v.tipo_empleo === 'remoto',
+    };
   }
 
   get firstName(): string {
@@ -72,7 +125,7 @@ export class CompanyHomeComponent implements OnInit, OnDestroy {
       .slice(0, 2)
       .map(w => w[0])
       .join('')
-      .toUpperCase() || 'CM';
+      .toUpperCase();
   }
 
   get greeting(): string {

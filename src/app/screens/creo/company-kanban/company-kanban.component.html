@@ -1,4 +1,4 @@
-<app-company-shell activeScreen="company-kanban" [userName]="userName">
+<app-company-shell activeScreen="company-kanban">
   <!-- Toast Notificación Automática -->
   <div
     *ngIf="autoNotificationToast"
@@ -127,6 +127,8 @@
               (ngModelChange)="onSelectJob($event)"
               class="appearance-none text-sm font-bold text-[#111111] bg-white hover:bg-[#F8F7F4] border border-[#E8E3D9] hover:border-[#D1C9BC] rounded-xl pl-3.5 pr-8 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F2B705] cursor-pointer transition-all max-w-[240px] sm:max-w-xs md:max-w-sm truncate"
             >
+              <option *ngIf="loadingJobs" value="">Cargando vacantes...</option>
+              <option *ngIf="!loadingJobs && jobs.length === 0" value="">Sin vacantes</option>
               <option *ngFor="let j of jobs" [value]="j.id">
                 {{ j.title }} ({{ getCandidateCountForJob(j.id) }} candidatos)
               </option>
@@ -174,8 +176,30 @@
     </div>
   </div>
 
+  <div class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-6" *ngIf="jobsError || tableroError || (!loadingJobs && jobs.length === 0) || loadingTablero">
+    <div *ngIf="jobsError" class="p-4 rounded-xl border bg-[#FEF2F2] border-[#FCA5A5] flex items-center justify-between gap-4">
+      <p class="text-sm text-[#DC2626]">{{ jobsError }}</p>
+      <button type="button" (click)="cargarVacantes()" class="text-sm font-semibold hover:underline text-[#111111] cursor-pointer">
+        Reintentar
+      </button>
+    </div>
+
+    <div *ngIf="!jobsError && !loadingJobs && jobs.length === 0" class="p-4 rounded-xl border bg-white border-[#E8E3D9]">
+      <p class="text-sm text-[#6B6560]">Aún no tienes vacantes publicadas con postulantes.</p>
+    </div>
+
+    <div *ngIf="tableroError" class="p-4 rounded-xl border bg-[#FEF2F2] border-[#FCA5A5] flex items-center justify-between gap-4">
+      <p class="text-sm text-[#DC2626]">{{ tableroError }}</p>
+      <button type="button" (click)="reintentarTablero()" class="text-sm font-semibold hover:underline text-[#111111] cursor-pointer">
+        Reintentar
+      </button>
+    </div>
+
+    <p *ngIf="loadingTablero" class="text-sm text-[#9A948C]">Cargando postulantes...</p>
+  </div>
+
   <!-- Board Columns -->
-  <div class="overflow-x-auto">
+  <div class="overflow-x-auto" *ngIf="selectedJob && !tableroError">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
       <div class="flex gap-4" style="min-width: 900px;">
         <div
@@ -560,285 +584,6 @@
           >
             Rechazar candidato
           </button>
-        </div>
-      </div>
-
-      <!-- Fallback Simulado cuando no hay perfil de API -->
-      <div *ngIf="!perfilPostulante && !loadingPerfil" class="p-6 space-y-6">
-        <!-- Identity -->
-        <div class="flex items-start gap-4">
-          <div
-            class="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0 text-[#111111]"
-            [style.backgroundColor]="avatarBg(selectedCandidate.name)"
-          >
-            {{ initials(selectedCandidate.name) }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <h2 class="text-lg font-bold text-[#111111]">{{ selectedCandidate.name }}</h2>
-            <p class="text-sm mt-0.5 text-[#6B6560]">{{ selectedCandidate.experience }}</p>
-            <p class="text-xs mt-0.5 text-[#9A948C]">{{ selectedCandidate.education }}</p>
-            <div class="mt-2">
-              <span
-                class="text-xs font-bold px-2.5 py-1 rounded-full"
-                [style.backgroundColor]="matchColor(selectedCandidate.match).bg"
-                [style.color]="matchColor(selectedCandidate.match).text"
-              >
-                {{ selectedCandidate.match }}% compatibilidad
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rejection reason banner -->
-        <div
-          *ngIf="selectedCandidate.column === 'rejected' && selectedCandidate.rejectReason"
-          class="rounded-xl border p-4 bg-[#FEF2F2] border-[#FCA5A5]"
-        >
-          <p class="text-[11px] font-bold uppercase tracking-wide mb-1 text-[#DC2626]">Motivo del rechazo</p>
-          <p class="text-sm text-[#7F1D1D]">{{ selectedCandidate.rejectReason }}</p>
-        </div>
-
-        <!-- Contact Box (Private data warning) -->
-        <div class="rounded-xl border p-4 space-y-3 bg-[#FFFBEB] border-[#FDE68A]">
-          <div class="flex items-center gap-2 mb-1">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <p class="text-[11px] font-bold uppercase tracking-wide text-[#D97706]">
-              Datos privados — solo visibles para la empresa
-            </p>
-          </div>
-          <p class="text-[11px] leading-relaxed text-[#92400E]">
-            Esta información de contacto nunca es visible en las vistas públicas del portal, solo en este panel privado de reclutamiento.
-          </p>
-          <div class="space-y-2 pt-1">
-            <div class="flex items-center gap-3">
-              <span class="w-6 h-6 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#D97706]">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
-              </span>
-              <div>
-                <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9A948C]">Correo</p>
-                <p class="text-sm font-medium text-[#111111]">{{ selectedCandidate.email }}</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <span class="w-6 h-6 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#D97706]">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
-              </span>
-              <div>
-                <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9A948C]">Teléfono</p>
-                <p class="text-sm font-medium text-[#111111]">{{ selectedCandidate.phone }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bio -->
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Sobre el candidato</p>
-          <p class="text-sm leading-relaxed text-[#4A4540]">{{ selectedCandidate.bio }}</p>
-        </div>
-
-        <!-- Requisitos obligatorios de la vacante (Must-Have) -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">Requisitos obligatorios de la vacante</p>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#64748B]">
-              {{ mustHaveCubiertas.length }} de {{ mustHaveSkills.length }}
-            </span>
-          </div>
-
-          <div *ngIf="mustHaveSkills.length > 0; else sinObligatorias" class="space-y-1.5">
-            <!-- Las que el candidato sí registró -->
-            <div *ngFor="let s of mustHaveCubiertas"
-              class="flex items-center justify-between px-3 py-2 rounded-xl text-xs bg-[#DCFCE7]/60 border border-[#86EFAC]">
-              <span class="font-medium text-[#111111]">{{ s }}</span>
-              <span class="text-[11px] font-bold text-[#15803D] flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Lo cumple
-              </span>
-            </div>
-
-            <!-- Las que NO registró en su perfil -->
-            <div *ngFor="let s of mustHaveFaltantes"
-              class="flex items-center justify-between px-3 py-2 rounded-xl text-xs bg-[#FEF2F2] border border-[#FCA5A5]">
-              <span class="font-medium text-[#111111]">{{ s }}</span>
-              <span class="text-[11px] font-bold text-[#DC2626] flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-                No lo cumple
-              </span>
-            </div>
-          </div>
-
-          <ng-template #sinObligatorias>
-            <p class="text-xs px-3 py-2.5 rounded-xl border border-dashed text-[#9A948C] border-[#E8E3D9]">
-              La vacante no declaró habilidades obligatorias.
-            </p>
-          </ng-template>
-        </div>
-
-        <!-- Requisitos deseables: se muestran aparte para no confundirlos con los obligatorios -->
-        <div *ngIf="niceToHaveSkills.length > 0">
-          <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Requisitos deseables de la vacante</p>
-          <div class="flex flex-wrap gap-1.5">
-            <span *ngFor="let s of niceToHaveSkills"
-              class="text-[11px] font-medium px-2.5 py-1 rounded-full border"
-              [ngClass]="candidatoPosee(s)
-                ? 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]'
-                : 'bg-[#F8F7F4] border-[#E8E3D9] text-[#9A948C]'">
-              {{ s }}<span *ngIf="candidatoPosee(s)"> ·  Lo cumple</span>
-            </span>
-          </div>
-        </div>
-
-        <!-- Habilidades registradas por el candidato -->
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Habilidades registradas por el candidato</p>
-          <div class="flex flex-wrap gap-1.5">
-            <span *ngFor="let s of selectedCandidate.skills"
-              class="text-[11px] font-medium px-2.5 py-1 rounded-full border bg-[#F8F7F4] border-[#E8E3D9] text-[#4A4540]">
-              {{ s }}
-            </span>
-            <p *ngIf="selectedCandidate.skills.length === 0" class="text-xs text-[#9A948C]">
-              El candidato no registró habilidades en su perfil.
-            </p>
-          </div>
-        </div>
-
-        <!-- Idiomas (consulta de solo lectura: no se editan desde aquí) -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">Idiomas</p>
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#64748B]">
-              Solo lectura
-            </span>
-          </div>
-
-          <div *ngIf="(selectedCandidate.languages || []).length > 0; else sinIdiomas" class="space-y-1.5">
-            <div
-              *ngFor="let i of selectedCandidate.languages"
-              class="px-3 py-2 rounded-xl border bg-[#F8F7F4] border-[#E8E3D9]"
-            >
-              <p class="text-xs font-semibold text-[#111111]">{{ i.idioma }}</p>
-              <div class="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
-                <span class="text-[11px] text-[#6B6560]">
-                  Escrito: <strong class="font-semibold text-[#4A4540]">{{ i.nivelEscrito || '—' }}</strong>
-                </span>
-                <span class="text-[11px] text-[#6B6560]">
-                  Oral: <strong class="font-semibold text-[#4A4540]">{{ i.nivelOral || '—' }}</strong>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <ng-template #sinIdiomas>
-            <p class="text-xs px-3 py-2.5 rounded-xl border border-dashed text-[#9A948C] border-[#E8E3D9]">
-              El candidato no registró idiomas en su perfil.
-            </p>
-          </ng-template>
-        </div>
-
-        <!-- Compatibility breakdown trigger -->
-        <button
-          type="button"
-          (click)="showBreakdown = !showBreakdown"
-          class="w-full rounded-xl border p-4 text-left transition-colors cursor-pointer bg-[#F8F7F4] border-[#E8E3D9] hover:bg-[#F0EBE1]"
-        >
-          <div class="flex items-center justify-between">
-            <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">Requisitos de la vacante</p>
-            <div class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#64748B]">
-              {{ mustHaveCubiertas.length }}/{{ mustHaveSkills.length }} obligatorias
-            </div>
-          </div>
-          <p class="text-xs mt-2 flex items-center gap-1 text-[#6B6560]">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-            </svg>
-            {{ showBreakdown ? 'Ocultar requisitos ↑' : 'Ver requisito por requisito →' }}
-          </p>
-        </button>
-
-        <!-- Inline breakdown details -->
-        <div *ngIf="showBreakdown" class="p-4 rounded-xl border bg-white border-[#E8E3D9] space-y-3">
-          <p class="text-xs font-bold text-[#111111]">Requisitos de la vacante: {{ jobTitle }}</p>
-
-          <div class="space-y-2">
-            <div *ngFor="let skill of mustHaveSkills" class="flex items-center justify-between text-xs gap-3">
-              <span class="text-[#333333]">
-                {{ skill }}
-                <span class="text-[10px] font-bold text-[#BE123C]"> · Obligatoria</span>
-              </span>
-              <span class="font-bold whitespace-nowrap"
-                [ngClass]="candidatoPosee(skill) ? 'text-[#15803D]' : 'text-[#DC2626]'">
-                {{ candidatoPosee(skill) ? 'Lo cumple' : 'No lo cumple' }}
-              </span>
-            </div>
-
-            <div *ngFor="let skill of niceToHaveSkills" class="flex items-center justify-between text-xs gap-3">
-              <span class="text-[#333333]">
-                {{ skill }}
-                <span class="text-[10px] font-bold text-[#B45309]"> · Deseable</span>
-              </span>
-              <span class="font-bold whitespace-nowrap"
-                [ngClass]="candidatoPosee(skill) ? 'text-[#15803D]' : 'text-[#9A948C]'">
-                {{ candidatoPosee(skill) ? 'Lo cumple' : 'No lo cumple' }}
-              </span>
-            </div>
-          </div>
-
-          <p class="text-[10px] text-[#9A948C] leading-snug pt-1 border-t border-[#F5F0E8]">
-            La comparación usa únicamente las habilidades registradas por el candidato en su perfil.
-          </p>
-        </div>
-
-        <!-- Locked Candidate Alert -->
-        <div
-          *ngIf="isCandidateLocked(selectedCandidate)"
-          class="p-3.5 rounded-xl border flex items-center gap-2.5 text-xs font-semibold"
-          [ngClass]="selectedCandidate.column === 'hired' ? 'bg-[#DCFCE7]/50 border-[#86EFAC] text-[#15803D]' : 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]'"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-          <span>
-            Este candidato se encuentra en estado final {{ selectedCandidate.column === 'hired' ? 'Contratado' : 'Rechazado' }} (inmutable y bloqueado).
-          </span>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex flex-col gap-2 pb-4">
-          <!-- Advance Button -->
-          <button
-            *ngIf="!isCandidateLocked(selectedCandidate) && getNextCol(selectedCandidate.column)"
-            type="button"
-            (click)="advanceCandidate(selectedCandidate)"
-            class="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm"
-          >
-            {{ getNextColLabel(selectedCandidate.column) }}
-          </button>
-
-          <!-- Reject Button -->
-          <button
-            *ngIf="puedeRechazar(selectedCandidate)"
-            type="button"
-            (click)="openRejectModal(selectedCandidate, $event)"
-            class="w-full py-2.5 rounded-xl text-sm font-semibold border cursor-pointer transition-colors border-[#FCA5A5] text-[#DC2626] hover:bg-[#FEF2F2]"
-          >
-            Rechazar candidato
-          </button>
-
-          <!-- Send Message Button -->
           <button
             type="button"
             (click)="sendMessage()"
@@ -850,6 +595,18 @@
             {{ messageSent ? 'Mensaje enviado al candidato' : 'Enviar mensaje' }}
           </button>
         </div>
+      </div>
+
+      <!-- Error al cargar el perfil -->
+      <div *ngIf="perfilError && !loadingPerfil" class="p-6 space-y-3 text-center">
+        <p class="text-sm text-[#DC2626]">{{ perfilError }}</p>
+        <button
+          type="button"
+          (click)="openProfile(selectedCandidate)"
+          class="text-sm font-semibold hover:underline text-[#111111] cursor-pointer"
+        >
+          Reintentar
+        </button>
       </div>
     </div>
   </div>
@@ -879,7 +636,7 @@
         Motivo del rechazo <span class="text-[#DC2626]">*</span>
       </label>
       <select
-        *ngIf="motivosRechazo && motivosRechazo.length > 0"
+        *ngIf="motivosRechazo.length > 0"
         [(ngModel)]="selectedMotivoId"
         (ngModelChange)="rejectError = ''"
         class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none mb-3 cursor-pointer bg-white"
@@ -888,28 +645,6 @@
         <option [ngValue]="null">Selecciona un motivo…</option>
         <option *ngFor="let r of motivosRechazo" [ngValue]="r.id">{{ r.motivo }}</option>
       </select>
-
-      <select
-        *ngIf="!motivosRechazo || motivosRechazo.length === 0"
-        [(ngModel)]="rejectReason"
-        (ngModelChange)="rejectError = ''"
-        class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none mb-3 cursor-pointer bg-white"
-        [style.borderColor]="rejectError && !rejectReason ? '#DC2626' : '#E2E8F0'"
-      >
-        <option value="">Selecciona un motivo…</option>
-        <option *ngFor="let r of fallbackRejectReasons" [value]="r">{{ r }}</option>
-      </select>
-
-      <!-- Custom reason textarea if 'Otro' selected -->
-      <textarea
-        *ngIf="rejectReason === 'Otro'"
-        [(ngModel)]="rejectCustom"
-        (ngModelChange)="rejectError = ''"
-        placeholder="Describe el motivo…"
-        rows="3"
-        class="w-full px-3.5 py-2.5 rounded-xl border text-sm resize-none outline-none mb-3 bg-white"
-        [style.borderColor]="rejectError && !rejectCustom.trim() ? '#DC2626' : '#E2E8F0'"
-      ></textarea>
 
       <p *ngIf="rejectError" class="text-xs mb-3 text-[#DC2626]">{{ rejectError }}</p>
 

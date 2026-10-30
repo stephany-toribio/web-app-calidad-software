@@ -61,6 +61,9 @@ export interface VacanteEmpresa {
   max_contrataciones: number;
   habilidades: HabilidadVacante[];
   estado: EstadoVacante;
+  /** Solo los trae el listado GET /empresas/me/vacantes */
+  postulaciones_count?: number;
+  postulaciones_semana_count?: number;
   creado_en: string;
   eliminado_en: string | null;
 }

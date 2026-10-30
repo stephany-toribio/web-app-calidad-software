@@ -355,7 +355,8 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
       this.skillLimitMessage = '';
     } else {
       if (this.limiteHabilidadesAlcanzado) {
-        this.skillLimitMessage = `Puedes filtrar por un máximo de ${MAX_HABILIDADES} habilidades.`;
+        this.skillLimitMessage =
+          `Solo puedes filtrar por ${MAX_HABILIDADES} habilidades en total, entre técnicas y blandas. Quita una para elegir otra.`;
         return;
       }
       this.selectedSkills.add(id);

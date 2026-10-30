@@ -29,7 +29,7 @@
           <line x1="8" y1="12" x2="16" y2="12" />
           <line x1="11" y1="18" x2="13" y2="18" />
         </svg>
-        Filtrossss <span *ngIf="hasFilters">({{ activeFiltersCount }})</span>
+        Filtros <span *ngIf="hasFilters">({{ activeFiltersCount }})</span>
       </button>
     </div>
   </div>
@@ -243,10 +243,16 @@
       <!-- Habilidades (técnicas y blandas, con su etiqueta) -->
       <div class="mb-5 pb-4 border-b border-[#F5F0E8]">
         <div class="flex items-center justify-between mb-2.5">
-          <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">Habilidades</p>
+          <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C]">
+            Habilidades
+            <span class="ml-1 text-[11px] font-bold"
+              [style.color]="limiteHabilidadesAlcanzado ? '#B45309' : '#C4BDB5'">
+              {{ selectedSkills.size }}/{{ maxHabilidades }}
+            </span>
+          </p>
           <button *ngIf="selectedSkills.size > 0" type="button" (click)="clearSkills()"
             class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF9C3] text-[#B45309] hover:bg-[#FDE68A] transition-colors">
-            {{ selectedSkills.size }} · Limpiar
+            Limpiar
           </button>
         </div>
 
@@ -309,7 +315,8 @@
 
         <p *ngIf="skillLimitMessage" class="text-[10px] text-[#DC2626] mt-2">{{ skillLimitMessage }}</p>
         <p class="text-[10px] text-[#9A948C] mt-2 leading-snug">
-          Elige hasta <strong class="text-[#6B6560]">{{ maxHabilidades }}</strong>. Se muestran las vacantes que piden
+          Elige hasta <strong class="text-[#6B6560]">{{ maxHabilidades }}</strong> en total, sumando
+          t&eacute;cnicas y blandas. Se muestran las vacantes que piden
           <strong class="text-[#6B6560]">al menos una</strong> de ellas.
         </p>
       </div>

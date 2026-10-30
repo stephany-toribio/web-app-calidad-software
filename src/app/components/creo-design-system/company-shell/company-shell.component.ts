@@ -1,8 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CreoWordmarkComponent } from '../creo-wordmark/creo-wordmark.component';
 import { AuthService } from '../../../core/api/auth.service';
+import { EmpresasService } from '../../../core/api/empresas.service';
 
 export type CompanyScreen = "company-home" | "company-jobs" | "company-kanban" | "company-analytics";
 
@@ -28,9 +29,11 @@ interface NotificationItem {
   templateUrl: './company-shell.component.html',
   styleUrl: './company-shell.component.css'
 })
-export class CompanyShellComponent {
+export class CompanyShellComponent implements OnInit {
   @Input() activeScreen!: CompanyScreen;
-  @Input() userName = 'Valeria';
+
+  companyName = '';
+  encargado = '';
 
   avatarOpen = false;
   notifOpen = false;
@@ -43,41 +46,37 @@ export class CompanyShellComponent {
     { id: "company-analytics", label: "Analítica", icon: "chart" },
   ];
 
-  notifications: NotificationItem[] = [
-    {
-      id: "cn1",
-      text: "Andrés Cárdenas (92% match) postuló a Senior React Developer",
-      time: "Hace 10 min",
-      unread: true,
-      target: "company-kanban",
-      iconType: "applicant",
-    },
-    {
-      id: "cn2",
-      text: "Nueva postulación de María Torres a Senior React Developer",
-      time: "Hace 1 hora",
-      unread: true,
-      target: "company-kanban",
-      iconType: "applicant",
-    },
-    {
-      id: "cn3",
-      text: "La vacante QA Engineer cierra en 6 días",
-      time: "Ayer",
-      unread: false,
-      target: "company-jobs",
-      iconType: "closing",
-    },
-  ];
+  /** Aún no existe un endpoint de notificaciones para la empresa */
+  notifications: NotificationItem[] = [];
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private empresasService: EmpresasService
+  ) {}
+
+  /** GET /empresas/me: razón social y encargado de la empresa del token */
+  ngOnInit(): void {
+    this.empresasService.miEmpresa().subscribe({
+      next: (empresa) => {
+        this.companyName = empresa.razon_social;
+        this.encargado = empresa.encargado_empresa;
+      }
+    });
+  }
 
   get hasUnread(): boolean {
     return this.notifications.some(n => n.unread);
   }
 
   get initials(): string {
-    return this.userName.trim().slice(0, 2).toUpperCase() || 'VR';
+    return this.companyName
+      .split(' ')
+      .filter(w => w)
+      .slice(0, 2)
+      .map(w => w[0])
+      .join('')
+      .toUpperCase();
   }
 
   markAllRead(): void {

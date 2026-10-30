@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef } from '@angular/core';
 import { MarkdownPipe } from '../../../core/pipes/markdown.pipe';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,10 +8,10 @@ import { CompanyShellComponent } from '../../../components/creo-design-system/co
 import { HttpErrorResponse } from '@angular/common/http';
 import { CREO_SKILLS } from '../../../data/creo-skills.data';
 import { SkillWeight } from '../../../data/creo-data';
-import { AuthService } from '../../../core/api/auth.service';
 import { CatalogosService } from '../../../core/api/catalogos.service';
 import { Habilidad } from '../../../core/api/models/catalogos.model';
 import { VacantesService } from '../../../core/api/vacantes.service';
+import { EmpresasService } from '../../../core/api/empresas.service';
 import { CrearVacantePayload, NivelPuestoResumen, TipoEmpleo } from '../../../core/api/models/vacante-empresa.model';
 
 /** Campo de la API → campo del formulario donde se muestra su error (422) */
@@ -46,8 +46,7 @@ export interface SelectedSkill {
   styleUrl: './company-create-job.component.css'
 })
 export class CompanyCreateJobComponent implements OnInit, OnDestroy {
-  userName = 'Carlos Mendoza';
-  companyName = 'TechCorp SA';
+  companyName = '';
 
   private subs = new Subscription();
   private techBlurTimer: any;
@@ -55,6 +54,17 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
 
   title = '';
   description = '';
+
+  // ── Barra de formato de la descripcion (genera Markdown) ──────────────────
+  @ViewChild('descripcionRef') descripcionRef?: ElementRef<HTMLTextAreaElement>;
+
+  /** Valor del desplegable de estilo; vuelve a vacio despues de aplicarse */
+  estiloTexto = '';
+
+  /** Pila de estados anteriores de la descripcion */
+  private historialDescripcion: string[] = [];
+  private valorAnterior = '';
+  private ultimoRegistro = 0;
   /** ID del catálogo global de niveles (GET /niveles-experiencia) */
   nivelPuestoId: number | null = null;
   /** ID del área profesional (GET /areas-estudio): es el area_estudio_id que se envía */
@@ -78,6 +88,14 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
 
   /** Tope de requisitos y de beneficios por vacante */
   readonly maxItemsLista = 10;
+
+  /** Id que devolvio el backend al registrar, para abrir SU kanban */
+  vacanteCreadaId: number | null = null;
+
+  /** Tope de habilidades por vacante, sumando tecnicas y blandas.
+   *  El backend acepta hasta 10 (EP-02 4.2); aqui se usa un limite mas estricto. */
+  readonly minHabilidades = 5;
+  readonly maxHabilidades = 10;
 
   // Requisitos del puesto (editables directamente por fila)
   requirements: string[] = [];
@@ -122,10 +140,10 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
   private catalogosService = inject(CatalogosService);
   private route = inject(ActivatedRoute);
   private vacantesService = inject(VacantesService);
+  private empresasService = inject(EmpresasService);
   nivelesPuestoList: NivelPuestoResumen[] = [];
 
   constructor(
-    private authService: AuthService,
     private router: Router
   ) { }
 
@@ -140,13 +158,9 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
       this.cargarVacante(idVacante);
     }
 
-    const user = this.authService.getUser();
-    if (user?.correo) {
-      const prefix = user.correo.split('@')[0];
-      this.userName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-      // La cuenta de empresa es la empresa: su nombre es el que viaja con la vacante
-      this.companyName = this.userName;
-    }
+    this.empresasService.miEmpresa().subscribe({
+      next: (empresa) => this.companyName = empresa.razon_social
+    });
 
     // Niveles globales y activos: sus IDs son los que acepta nivel_puesto_id
     this.subs.add(
@@ -251,7 +265,7 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
     const isDateValid = !this.errorFechas();
     // La ubicación solo es obligatoria en presencial e híbrido
     const isLocationValid = this.isRemote || !!(this.location && this.location.trim().length > 0);
-    const areSkillsValid = this.skills.length >= 1 && this.skills.length <= 10;
+    const areSkillsValid = this.skills.length >= this.minHabilidades && this.skills.length <= this.maxHabilidades;
     const isTitleValid = !!(this.title.trim() && this.title.trim().length <= 100);
     return !!(
       isTitleValid &&
@@ -450,8 +464,9 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
     if (!matched) return; // Nadie puede crear habilidades que no provengan del catálogo del admin
 
     if (this.skills.some(s => this.normalizeText(s.skill) === trimmedNorm)) return;
-    if (this.skills.length >= 10) {
-      this.errors['skills'] = 'Se permite un máximo de 10 habilidades por vacante en total.';
+    if (this.skills.length >= this.maxHabilidades) {
+      this.errors['skills'] =
+        `Se permite un máximo de ${this.maxHabilidades} habilidades por vacante en total.`;
       return;
     }
     delete this.errors['skills'];
@@ -473,8 +488,9 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
     if (!matched) return; // Nadie puede crear habilidades que no provengan del catálogo del admin
 
     if (this.skills.some(s => this.normalizeText(s.skill) === trimmedNorm)) return;
-    if (this.skills.length >= 10) {
-      this.errors['skills'] = 'Se permite un máximo de 10 habilidades por vacante en total.';
+    if (this.skills.length >= this.maxHabilidades) {
+      this.errors['skills'] =
+        `Se permite un máximo de ${this.maxHabilidades} habilidades por vacante en total.`;
       return;
     }
     delete this.errors['skills'];
@@ -496,7 +512,7 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
     const idx = this.skills.indexOf(s);
     if (idx !== -1) {
       this.skills.splice(idx, 1);
-      if (this.skills.length < 10) {
+      if (this.skills.length < this.maxHabilidades) {
         delete this.errors['skills'];
       }
     }
@@ -542,8 +558,9 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
 
   addSkill(skill: string): void {
     if (!skill || this.skills.some(s => s.skill.toLowerCase() === skill.toLowerCase())) return;
-    if (this.skills.length >= 10) {
-      this.errors['skills'] = 'Se permite un máximo de 10 habilidades por vacante.';
+    if (this.skills.length >= this.maxHabilidades) {
+      this.errors['skills'] =
+        `Se permite un máximo de ${this.maxHabilidades} habilidades por vacante.`;
       return;
     }
     delete this.errors['skills'];
@@ -578,17 +595,6 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
     return index;
   }
 
-  setRequirementsCount(val: any): void {
-    const target = Math.max(0, Math.min(this.maxItemsLista, parseInt(val, 10) || 0));
-    while (this.requirements.length < target) {
-      this.requirements.push('');
-    }
-    while (this.requirements.length > target) {
-      this.requirements.pop();
-    }
-    delete this.errors['requirements'];
-  }
-
   addRequirement(): void {
     if (this.requirements.length >= this.maxItemsLista) {
       this.errors['requirements'] = `Se permite un máximo de ${this.maxItemsLista} requisitos por vacante.`;
@@ -603,17 +609,6 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
     if (this.requirements.length < this.maxItemsLista) {
       delete this.errors['requirements'];
     }
-  }
-
-  setBenefitsCount(val: any): void {
-    const target = Math.max(0, Math.min(this.maxItemsLista, parseInt(val, 10) || 0));
-    while (this.benefits.length < target) {
-      this.benefits.push('');
-    }
-    while (this.benefits.length > target) {
-      this.benefits.pop();
-    }
-    delete this.errors['benefits'];
   }
 
   addBenefit(): void {
@@ -639,6 +634,192 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
   }
 
   /** Validación del formulario, compartida por publicar y por guardar cambios */
+  get puedeDeshacerDescripcion(): boolean {
+    return this.historialDescripcion.length > 0;
+  }
+
+  /** Guarda el estado actual antes de modificarlo */
+  private recordarDescripcion(): void {
+    this.historialDescripcion.push(this.description);
+    if (this.historialDescripcion.length > 50) this.historialDescripcion.shift();
+    this.valorAnterior = this.description;
+    this.ultimoRegistro = Date.now();
+  }
+
+  /**
+   * Al escribir a mano guarda un punto de retorno cada 700 ms, para que
+   * Deshacer retroceda por rafagas de escritura y no letra por letra.
+   */
+  onDescripcionCambio(): void {
+    this.errors['description'] = '';
+
+    const ahora = Date.now();
+    if (ahora - this.ultimoRegistro > 700) {
+      this.historialDescripcion.push(this.valorAnterior);
+      if (this.historialDescripcion.length > 50) this.historialDescripcion.shift();
+      this.ultimoRegistro = ahora;
+    }
+
+    this.valorAnterior = this.description;
+  }
+
+  deshacerDescripcion(): void {
+    const previo = this.historialDescripcion.pop();
+    if (previo === undefined) return;
+    this.escribirDescripcion(previo, previo.length, previo.length, false);
+  }
+
+  /** Escribe el texto y repone el cursor donde corresponde */
+  private escribirDescripcion(texto: string, ini: number, fin: number, registrar = true): void {
+    if (registrar) this.recordarDescripcion();
+
+    this.description = texto;
+    this.valorAnterior = texto;
+    this.errors['description'] = '';
+
+    const el = this.descripcionRef?.nativeElement;
+    if (!el) return;
+
+    // Angular escribe el valor en el textarea despues de esta vuelta
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(ini, fin);
+    });
+  }
+
+  private seleccionDescripcion(): { ini: number; fin: number } {
+    const el = this.descripcionRef?.nativeElement;
+    if (!el) {
+      const n = this.description.length;
+      return { ini: n, fin: n };
+    }
+    return { ini: el.selectionStart ?? 0, fin: el.selectionEnd ?? 0 };
+  }
+
+  /** Negrita (**) y cursiva (*). Si ya esta aplicada, la quita */
+  alternarMarca(marca: '**' | '*'): void {
+    const { ini, fin } = this.seleccionDescripcion();
+    const texto = this.description;
+    const sel = texto.slice(ini, fin);
+    const n = marca.length;
+
+    // La seleccion incluye las marcas: **hola**
+    if (sel.length > n * 2 && sel.startsWith(marca) && sel.endsWith(marca)) {
+      const limpio = sel.slice(n, -n);
+      this.escribirDescripcion(
+        texto.slice(0, ini) + limpio + texto.slice(fin), ini, ini + limpio.length
+      );
+      return;
+    }
+
+    // Las marcas rodean la seleccion: **[hola]**
+    const antes = texto.slice(Math.max(0, ini - n), ini);
+    const despues = texto.slice(fin, fin + n);
+    const esCursivaDentroDeNegrita =
+      marca === '*' && texto.slice(Math.max(0, ini - 2), ini) === '**';
+
+    if (antes === marca && despues === marca && !esCursivaDentroDeNegrita) {
+      this.escribirDescripcion(
+        texto.slice(0, ini - n) + sel + texto.slice(fin + n), ini - n, ini - n + sel.length
+      );
+      return;
+    }
+
+    if (sel) {
+      this.escribirDescripcion(
+        texto.slice(0, ini) + marca + sel + marca + texto.slice(fin),
+        ini + n, ini + n + sel.length
+      );
+    } else {
+      const cursor = ini + n;
+      this.escribirDescripcion(
+        texto.slice(0, ini) + marca + marca + texto.slice(fin), cursor, cursor
+      );
+    }
+  }
+
+  /** Limites de las lineas que toca la seleccion */
+  private lineasSeleccionadas(): { desde: number; hasta: number } {
+    const { ini, fin } = this.seleccionDescripcion();
+    const texto = this.description;
+    const desde = texto.lastIndexOf('\n', ini - 1) + 1;
+    let hasta = texto.indexOf('\n', fin);
+    if (hasta === -1) hasta = texto.length;
+    return { desde, hasta };
+  }
+
+  private reemplazarLineas(transformar: (lineas: string[]) => string[]): void {
+    const { desde, hasta } = this.lineasSeleccionadas();
+    const texto = this.description;
+    const nuevo = transformar(texto.slice(desde, hasta).split('\n')).join('\n');
+
+    this.escribirDescripcion(
+      texto.slice(0, desde) + nuevo + texto.slice(hasta), desde, desde + nuevo.length
+    );
+  }
+
+  /** Titulo (##), subtitulo (###) o texto normal */
+  aplicarEstiloTexto(): void {
+    const elegido = this.estiloTexto;
+    this.estiloTexto = '';
+    if (!elegido) return;
+
+    const prefijo = elegido === 'normal' ? '' : elegido;
+
+    this.reemplazarLineas(lineas =>
+      lineas.map(l => {
+        const limpia = l.replace(/^\s{0,3}#{1,6}\s+/, '');
+        return limpia.trim() ? prefijo + limpia : limpia;
+      })
+    );
+  }
+
+  /** Lista con vinetas o numerada. Si ya lo es, la quita */
+  alternarLista(tipo: 'vineta' | 'numerada'): void {
+    const patron = tipo === 'vineta' ? /^\s*-\s+/ : /^\s*\d+\.\s+/;
+
+    this.reemplazarLineas(lineas => {
+      const conTexto = lineas.filter(l => l.trim());
+      const yaEsLista = conTexto.length > 0 && conTexto.every(l => patron.test(l));
+      let numero = 0;
+
+      return lineas.map(l => {
+        const limpia = l.replace(/^\s*(?:-|\d+\.)\s+/, '');
+        if (yaEsLista || !limpia.trim()) return limpia;
+        numero++;
+        return tipo === 'vineta' ? `- ${limpia}` : `${numero}. ${limpia}`;
+      });
+    });
+  }
+
+  /** Quita el Markdown de la seleccion, o de todo si no hay seleccion */
+  limpiarFormatoDescripcion(): void {
+    const { ini, fin } = this.seleccionDescripcion();
+    const texto = this.description;
+    const haySeleccion = fin > ini;
+    const objetivo = haySeleccion ? texto.slice(ini, fin) : texto;
+
+    const limpio = objetivo
+      .split('\n')
+      .map(l => l
+        .replace(/^\s{0,3}#{1,6}\s+/, '')
+        .replace(/^\s*(?:[-*+]|\d+\.)\s+/, ''))
+      .join('\n')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/_(.+?)_/g, '$1')
+      .replace(/`(.+?)`/g, '$1');
+
+    if (haySeleccion) {
+      this.escribirDescripcion(
+        texto.slice(0, ini) + limpio + texto.slice(fin), ini, ini + limpio.length
+      );
+    } else {
+      this.escribirDescripcion(limpio, limpio.length, limpio.length);
+    }
+  }
+
   private erroresDelFormulario(): Record<string, string> {
     const errs: Record<string, string> = {};
     if (!this.title.trim()) {
@@ -672,8 +853,9 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
       errs['salary'] = `El salario máximo (S/ ${Number(this.salMax).toLocaleString()}) no puede ser menor que el salario mínimo (S/ ${Number(this.salMin).toLocaleString()})`;
     }
 
-    if (this.skills.length === 0) {
-      errs['skills'] = 'Debes agregar al menos una habilidad requerida (mínimo 1, máximo 10)';
+    if (this.skills.length < this.minHabilidades) {
+      errs['skills'] =
+        `Debes agregar entre ${this.minHabilidades} y ${this.maxHabilidades} habilidades, sumando técnicas y blandas (llevas ${this.skills.length}).`;
     }
 
     return errs;
@@ -692,9 +874,11 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
 
     this.saving = true;
     this.vacantesService.crearVacante(payload).subscribe({
-      next: () => {
+      next: (vacanteCreada) => {
         this.saving = false;
         this.submitted = true;
+        // Sin este id, "Ver Kanban" abriria la vacante que el panel tenga por defecto
+        this.vacanteCreadaId = vacanteCreada?.id ?? null;
       },
       error: (err: HttpErrorResponse) => {
         this.saving = false;
@@ -840,5 +1024,20 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
 
   navigate(screen: string): void {
     this.router.navigate(['/creo', screen]);
+  }
+
+  /**
+   * Abre el kanban de la vacante que se acaba de registrar.
+   * Si el id no llego, va a Mis Ofertas en vez de abrir el kanban de otra.
+   */
+  verKanbanDeLaVacante(): void {
+    if (this.vacanteCreadaId === null) {
+      this.router.navigate(['/creo', 'company-jobs']);
+      return;
+    }
+
+    this.router.navigate(['/creo', 'company-kanban'], {
+      queryParams: { id: this.vacanteCreadaId, readOnly: 'false' }
+    });
   }
 }

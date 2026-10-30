@@ -31,4 +31,11 @@ export class EmpresasService {
       .post<ApiResponse<EmpresaRegistrada>>(this.empresasUrl, payload)
       .pipe(map(respuesta => respuesta.data));
   }
+
+  /** Datos de la empresa del token */
+  miEmpresa(): Observable<EmpresaRegistrada> {
+    return this.http
+      .get<ApiResponse<EmpresaRegistrada>>(`${this.empresasUrl}/me`)
+      .pipe(map(respuesta => respuesta.data));
+  }
 }

@@ -71,6 +71,9 @@
               </button>
             </div>
             <div class="max-h-80 overflow-y-auto">
+              <p *ngIf="notifications.length === 0" class="px-4 py-6 text-center text-xs text-[#9A948C]">
+                Sin notificaciones
+              </p>
               <button
                 *ngFor="let n of notifications"
                 (click)="navigate(n.target)"
@@ -105,7 +108,7 @@
             >
               {{ initials }}
             </div>
-            <span class="hidden sm:block text-sm font-medium text-[#111111]">{{ userName }}</span>
+            <span class="hidden sm:block text-sm font-medium text-[#111111] max-w-[180px] truncate">{{ companyName }}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 9l6 6 6-6" />
             </svg>
@@ -117,8 +120,8 @@
             class="absolute right-0 top-full mt-1 w-52 rounded-xl border shadow-lg z-50 overflow-hidden bg-white border-[#E8E3D9]"
           >
             <div class="px-4 py-3 border-b border-[#E8E3D9]">
-              <p class="text-sm font-semibold text-[#111111]">{{ userName }}</p>
-              <p class="text-xs mt-0.5 text-[#9A948C]">Empresa</p>
+              <p class="text-sm font-semibold text-[#111111] truncate">{{ companyName }}</p>
+              <p class="text-xs mt-0.5 text-[#9A948C] truncate">{{ encargado || 'Empresa' }}</p>
             </div>
             <div class="border-t border-[#E8E3D9]">
               <button

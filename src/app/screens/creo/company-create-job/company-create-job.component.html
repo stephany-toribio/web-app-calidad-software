@@ -1,4 +1,4 @@
-<app-company-shell activeScreen="company-jobs" [userName]="userName">
+<app-company-shell activeScreen="company-jobs">
   <!-- Success Screen -->
   <div *ngIf="submitted" class="max-w-lg mx-auto px-4 py-20 flex flex-col items-center text-center">
     <div
@@ -19,7 +19,7 @@
         hasta: <strong>{{ closeDate }}</strong></p>
     </div>
     <div class="flex flex-col sm:flex-row gap-3 w-full">
-      <button type="button" (click)="navigate('company-kanban')"
+      <button type="button" (click)="verKanbanDeLaVacante()"
         class="flex-1 py-2.5 rounded-xl font-semibold text-sm cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm">
         Ver Kanban
       </button>
@@ -91,16 +91,95 @@
                 {{ description.trim().length }} / mín. 50 caracteres
               </span>
             </div>
-            <textarea [(ngModel)]="description" (ngModelChange)="errors['description'] = ''"
+            <!-- Barra de formato: escribe Markdown, que es lo que guarda el backend -->
+            <div class="flex flex-wrap items-center gap-1 px-2 py-1.5 rounded-t-xl border border-b-0"
+              style="background-color:#F5F0E8;"
+              [style.borderColor]="errors['description'] ? '#E5140D' : '#E8E3D9'">
+
+              <select [(ngModel)]="estiloTexto" (ngModelChange)="aplicarEstiloTexto()" name="estiloTexto"
+                title="Estilo de texto"
+                class="text-[11px] font-semibold rounded-lg border px-2 py-1 outline-none cursor-pointer bg-white"
+                style="border-color:#E8E3D9; color:#333333;">
+                <option value="">Estilo de texto</option>
+                <option value="## ">Título</option>
+                <option value="### ">Subtítulo</option>
+                <option value="normal">Texto normal</option>
+              </select>
+
+              <span class="w-px h-5 mx-0.5" style="background-color:#E0D9CC;"></span>
+
+              <button type="button" (click)="alternarMarca('**')" title="Negrita"
+                class="w-7 h-7 rounded-lg border bg-white text-sm font-bold flex items-center justify-center transition-colors hover:bg-[#FEF9C3]"
+                style="border-color:#E8E3D9; color:#333333;">B</button>
+
+              <button type="button" (click)="alternarMarca('*')" title="Cursiva"
+                class="w-7 h-7 rounded-lg border bg-white text-sm italic flex items-center justify-center transition-colors hover:bg-[#FEF9C3]"
+                style="border-color:#E8E3D9; color:#333333; font-family: Georgia, serif;">I</button>
+
+              <span class="w-px h-5 mx-0.5" style="background-color:#E0D9CC;"></span>
+
+              <button type="button" (click)="alternarLista('vineta')" title="Lista con viñetas"
+                class="w-7 h-7 rounded-lg border bg-white flex items-center justify-center transition-colors hover:bg-[#FEF9C3]"
+                style="border-color:#E8E3D9;">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#333333" stroke-width="1.5"
+                  stroke-linecap="round">
+                  <circle cx="2.5" cy="4" r="1" fill="#333333" stroke="none" />
+                  <circle cx="2.5" cy="8" r="1" fill="#333333" stroke="none" />
+                  <circle cx="2.5" cy="12" r="1" fill="#333333" stroke="none" />
+                  <path d="M6 4h8M6 8h8M6 12h8" />
+                </svg>
+              </button>
+
+              <button type="button" (click)="alternarLista('numerada')" title="Lista numerada"
+                class="w-7 h-7 rounded-lg border bg-white flex items-center justify-center transition-colors hover:bg-[#FEF9C3]"
+                style="border-color:#E8E3D9;">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#333333" stroke-width="1.5"
+                  stroke-linecap="round">
+                  <path d="M6 4h8M6 8h8M6 12h8" />
+                  <text x="0.5" y="5.5" font-size="5" fill="#333333" stroke="none"
+                    font-family="Inter, system-ui, sans-serif">1</text>
+                  <text x="0.5" y="9.5" font-size="5" fill="#333333" stroke="none"
+                    font-family="Inter, system-ui, sans-serif">2</text>
+                  <text x="0.5" y="13.5" font-size="5" fill="#333333" stroke="none"
+                    font-family="Inter, system-ui, sans-serif">3</text>
+                </svg>
+              </button>
+
+              <span class="w-px h-5 mx-0.5" style="background-color:#E0D9CC;"></span>
+
+              <button type="button" (click)="deshacerDescripcion()" [disabled]="!puedeDeshacerDescripcion"
+                title="Deshacer"
+                class="w-7 h-7 rounded-lg border bg-white flex items-center justify-center transition-colors hover:bg-[#FEF9C3] disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-white"
+                style="border-color:#E8E3D9;">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#333333" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2.5 5.5h7a3.5 3.5 0 0 1 0 7H6" />
+                  <path d="M5 2.5 2 5.5l3 3" />
+                </svg>
+              </button>
+
+              <button type="button" (click)="limpiarFormatoDescripcion()" title="Borrar formato"
+                class="w-7 h-7 rounded-lg border bg-white flex items-center justify-center transition-colors hover:bg-[#FEF9C3]"
+                style="border-color:#E8E3D9;">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#333333" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5.5 12.5h7" />
+                  <path d="M9.5 2.5 4 8l2.5 2.5h2L14 5 11.5 2.5z" />
+                  <path d="M2 14l3-3" />
+                </svg>
+              </button>
+            </div>
+
+            <textarea #descripcionRef [(ngModel)]="description" (ngModelChange)="onDescripcionCambio()"
               placeholder="Describe detalladamente el rol, responsabilidades y contexto del equipo (mínimo 50 caracteres)…"
               rows="4"
-              class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111] resize-y min-h-[120px]"
+              class="w-full px-4 py-2.5 rounded-b-xl border text-sm outline-none transition-all bg-[#FAFAF8] text-[#111111] resize-y min-h-[120px] block"
               [style.borderColor]="errors['description'] ? '#E5140D' : '#E8E3D9'"
-              onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
+              onfocus="this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
               onblur="this.style.boxShadow='none';"></textarea>
             <p *ngIf="errors['description']" class="text-xs mt-1 text-[#E5140D]">{{ errors['description'] }}</p>
             <p class="text-[11px] mt-1.5 text-[#9A948C] leading-snug">
-              Se respetan los saltos de línea. Puedes dar formato con Markdown:
+              Puedes dar formato con Markdown:
               <code class="px-1 rounded bg-[#F5F0E8] text-[#6B6560]">## Título</code>,
               <code class="px-1 rounded bg-[#F5F0E8] text-[#6B6560]">- viñeta</code>,
               <code class="px-1 rounded bg-[#F5F0E8] text-[#6B6560]">1. numerada</code>,
@@ -244,14 +323,16 @@
               <input type="date" [min]="minDate" [(ngModel)]="fechaInicio" (ngModelChange)="onDateChange()"
                 class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
                 [style.borderColor]="errors['startDate'] ? '#E5140D' : '#E8E3D9'" />
-              <p *ngIf="errors['startDate']" class="text-xs mt-1 text-[#E5140D] font-medium">{{ errors['startDate'] }}</p>
+              <p *ngIf="errors['startDate']" class="text-xs mt-1 text-[#E5140D] font-medium">{{ errors['startDate'] }}
+              </p>
             </div>
 
             <div>
               <label class="block text-sm font-semibold mb-1.5 text-[#333333]">
                 Fin de vigencia (Cierre) <span class="text-[#E5140D]">*</span>
               </label>
-              <input type="date" [min]="fechaInicio ? sumarDias(fechaInicio, 1) : minDate" [(ngModel)]="closeDate" (ngModelChange)="onDateChange()"
+              <input type="date" [min]="fechaInicio ? sumarDias(fechaInicio, 1) : minDate" [(ngModel)]="closeDate"
+                (ngModelChange)="onDateChange()"
                 class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none bg-white text-[#111111]"
                 [style.borderColor]="errors['closeDate'] ? '#E5140D' : '#E8E3D9'" />
               <p *ngIf="errors['closeDate']" class="text-xs mt-1 text-[#E5140D] font-medium">{{ errors['closeDate'] }}
@@ -266,8 +347,8 @@
                 <label class="block text-sm font-semibold text-[#111111]">
                   Habilidades requeridas para la vacante
                   <span class="ml-2 text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block"
-                    [ngClass]="skills.length >= 10 ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#F5F0E8] text-[#6B6560]'">
-                    {{ skills.length }}/10 seleccionadas
+                    [ngClass]="skills.length >= maxHabilidades ? 'bg-[#FEE2E2] text-[#DC2626]' : skills.length >= minHabilidades ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-[#F5F0E8] text-[#6B6560]'">
+                    {{ skills.length }}/{{ maxHabilidades }} seleccionadas · mínimo {{ minHabilidades }}
                   </span>
                 </label>
               </div>
@@ -344,15 +425,15 @@
                   <input type="text" [(ngModel)]="techSkillInput" (focus)="showTechSuggestions = true"
                     (blur)="onTechSkillInputBlur()"
                     (keydown.enter)="$event.preventDefault(); selectFirstTechSuggestion()"
-                    [disabled]="skills.length >= 10"
-                    [placeholder]="skills.length >= 10 ? 'Límite total de 10 habilidades alcanzado' : 'Buscar habilidad técnica de ' + currentAreaNombre + '...'"
+                    [disabled]="skills.length >= maxHabilidades"
+                    [placeholder]="skills.length >= maxHabilidades ? 'Límite total de ' + maxHabilidades + ' habilidades alcanzado' : 'Buscar habilidad técnica de ' + currentAreaNombre + '...'"
                     class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111] disabled:opacity-60 disabled:cursor-not-allowed"
                     onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
                     onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
                 </div>
 
                 <!-- Dropdown de autocompletado -->
-                <div *ngIf="showTechSuggestions && skills.length < 10"
+                <div *ngIf="showTechSuggestions && skills.length < maxHabilidades"
                   class="absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg z-20 overflow-hidden bg-white border-[#E8E3D9] max-h-56 overflow-y-auto">
                   <div *ngIf="techSuggestions.length === 0" class="px-4 py-3 text-xs text-[#9A948C] text-center italic">
                     No se encontraron habilidades de {{ currentAreaNombre }}.
@@ -413,14 +494,14 @@
                   <input type="text" [(ngModel)]="softSkillInput" (focus)="showSoftSuggestions = true"
                     (blur)="onSoftSkillInputBlur()"
                     (keydown.enter)="$event.preventDefault(); selectFirstSoftSuggestion()"
-                    [disabled]="skills.length >= 10" placeholder="Buscar habilidad blanda..."
+                    [disabled]="skills.length >= maxHabilidades" placeholder="Buscar habilidad blanda..."
                     class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111] disabled:opacity-60 disabled:cursor-not-allowed"
                     onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
                     onblur="this.style.borderColor='#E8E3D9'; this.style.boxShadow='none';" />
                 </div>
 
                 <!-- Dropdown de autocompletado -->
-                <div *ngIf="showSoftSuggestions && skills.length < 10"
+                <div *ngIf="showSoftSuggestions && skills.length < maxHabilidades"
                   class="absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg z-20 overflow-hidden bg-white border-[#E8E3D9] max-h-56 overflow-y-auto">
                   <div *ngIf="softSuggestions.length === 0" class="px-4 py-3 text-xs text-[#9A948C] text-center italic">
                     No se encontraron habilidades blandas.
@@ -455,33 +536,6 @@
                   Requisitos del puesto
                 </label>
               </div>
-
-              <!-- Modificar Cantidad de Requisitos -->
-              <div class="flex items-center gap-2 self-start sm:self-auto">
-                <span class="text-xs font-semibold text-[#6B6560]">Cantidad:</span>
-                <div class="flex items-center rounded-xl border border-[#E8E3D9] bg-[#FAFAF8] p-0.5 shadow-sm">
-                  <button type="button" (click)="setRequirementsCount(requirements.length - 1)"
-                    [disabled]="requirements.length <= 0" title="Disminuir cantidad"
-                    class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold text-[#111111] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                      stroke-linecap="round">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
-                  <input type="number" min="0" [attr.max]="maxItemsLista" [ngModel]="requirements.length"
-                    (ngModelChange)="setRequirementsCount($event)"
-                    class="w-9 text-center text-xs font-bold bg-transparent outline-none text-[#111111] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                  <button type="button" (click)="setRequirementsCount(requirements.length + 1)"
-                    [disabled]="requirements.length >= maxItemsLista" title="Aumentar cantidad"
-                    class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold text-[#111111] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                      stroke-linecap="round">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
-                </div>
-              </div>
             </div>
 
             <!-- Campo principal para escribir y agregar requisito -->
@@ -502,7 +556,8 @@
                 <span>Agregar</span>
               </button>
             </div>
-            <p *ngIf="errors['requirements']" class="text-xs text-[#E5140D] font-medium">{{ errors['requirements'] }}</p>
+            <p *ngIf="errors['requirements']" class="text-xs text-[#E5140D] font-medium">{{ errors['requirements'] }}
+            </p>
 
             <!-- Lista de requisitos agregados (editables en fila) -->
             <div *ngIf="requirements.length > 0" class="space-y-2.5 pt-1">
@@ -541,33 +596,6 @@
                   Beneficios y compensaciones
                 </label>
               </div>
-
-              <!-- Modificar Cantidad de Beneficios -->
-              <div class="flex items-center gap-2 self-start sm:self-auto">
-                <span class="text-xs font-semibold text-[#6B6560]">Cantidad:</span>
-                <div class="flex items-center rounded-xl border border-[#E8E3D9] bg-[#FAFAF8] p-0.5 shadow-sm">
-                  <button type="button" (click)="setBenefitsCount(benefits.length - 1)"
-                    [disabled]="benefits.length <= 0" title="Disminuir cantidad"
-                    class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold text-[#111111] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                      stroke-linecap="round">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
-                  <input type="number" min="0" [attr.max]="maxItemsLista" [ngModel]="benefits.length"
-                    (ngModelChange)="setBenefitsCount($event)"
-                    class="w-9 text-center text-xs font-bold bg-transparent outline-none text-[#111111] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                  <button type="button" (click)="setBenefitsCount(benefits.length + 1)"
-                    [disabled]="benefits.length >= maxItemsLista" title="Aumentar cantidad"
-                    class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold text-[#111111] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                      stroke-linecap="round">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
-                </div>
-              </div>
             </div>
 
             <!-- Campo principal para escribir y agregar beneficio -->
@@ -603,7 +631,8 @@
                   </svg>
                 </div>
                 <div class="relative flex-1">
-                  <input type="text" [(ngModel)]="benefits[i]" maxlength="200" (keydown.enter)="$event.preventDefault(); addBenefit()"
+                  <input type="text" [(ngModel)]="benefits[i]" maxlength="200"
+                    (keydown.enter)="$event.preventDefault(); addBenefit()"
                     placeholder="Escribe o edita el beneficio..."
                     class="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all bg-[#FAFAF8] border-[#E8E3D9] text-[#111111]"
                     onfocus="this.style.borderColor='#F2B705'; this.style.boxShadow='0 0 0 3px rgba(242,183,5,0.12)';"
@@ -739,13 +768,10 @@
 
               <!-- Skills tags -->
               <div class="px-5 py-3 flex flex-wrap gap-1.5">
-                <span *ngFor="let s of skills.slice(0, 4)"
+                <!-- Con el tope en 5 caben todas: truncar escondia una sola -->
+                <span *ngFor="let s of skills"
                   class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F5F0E8] text-[#4A4540]">
                   {{ s.skill }}
-                </span>
-                <span *ngIf="skills.length > 4"
-                  class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F5F0E8] text-[#9A948C]">
-                  +{{ skills.length - 4 }}
                 </span>
               </div>
 

@@ -26,9 +26,12 @@
         </div>
     </div>
 
-    <div class="skill-scroll min-h-[120px] overflow-y-auto rounded-xl border p-4 flex flex-col gap-4"
+    <!-- Agrupado: el cuadro se extiende y el scroll lo hace la pagina, asi no se cortan
+         filas de habilidades. Sin grupos la lista es muy larga y conserva su propio scroll. -->
+    <div class="skill-scroll min-h-[120px] rounded-xl border p-4 flex flex-col gap-4"
         style="background-color: #F8FAFC;" [style.border-color]="error ? '#E5140D' : '#E2E8F0'"
-        [style.max-height]="hasGroups ? 'min(60vh, 32rem)' : '18rem'">
+        [style.max-height]="hasGroups ? null : '18rem'"
+        [style.overflow-y]="hasGroups ? 'visible' : 'auto'">
 
         <p *ngIf="(hasGroups ? !hasGroupResults : filteredCatalog.length === 0)"
             class="text-sm text-slate-400 text-center py-4">
@@ -60,7 +63,7 @@
                         </svg>
                     </button>
                     <div *ngIf="isGroupOpen(group)"
-                        class="skill-scroll p-3.5 flex flex-wrap gap-2 border-t max-h-60 overflow-y-auto"
+                        class="p-3.5 flex flex-wrap gap-2 border-t"
                         style="border-color: #F1F5F9;">
                         <app-creo-chip *ngFor="let skill of groupSkills(group)" [label]="skill"
                             [selected]="isSelected(skill)" [disabled]="chipDisabled(skill)"

@@ -1,4 +1,4 @@
-<app-company-shell activeScreen="company-home" [userName]="userName">
+<app-company-shell activeScreen="company-home">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
     <!-- Greeting row -->
@@ -20,7 +20,7 @@
 
     </div>
     <!-- Metrics -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div
         *ngFor="let m of metrics"
         class="rounded-2xl border p-5 bg-white border-[#E8E3D9] shadow-sm"
@@ -65,6 +65,23 @@
 
         <!-- Table rows -->
         <div class="divide-y divide-[#F5F0E8] bg-white">
+          <p *ngIf="loading" class="px-5 py-6 text-sm text-[#9A948C]">Cargando vacantes...</p>
+
+          <div *ngIf="!loading && loadError" class="px-5 py-6 flex items-center justify-between gap-4">
+            <p class="text-sm text-[#DC2626]">{{ loadError }}</p>
+            <button
+              type="button"
+              (click)="cargarMisVacantes()"
+              class="text-sm font-semibold hover:underline text-[#111111]"
+            >
+              Reintentar
+            </button>
+          </div>
+
+          <p *ngIf="!loading && !loadError && companyJobs.length === 0" class="px-5 py-6 text-sm text-[#9A948C]">
+            No tienes vacantes publicadas ni pausadas.
+          </p>
+
           <div
             *ngFor="let job of companyJobs"
             (click)="openKanban(job)"

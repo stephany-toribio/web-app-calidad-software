@@ -5,9 +5,9 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CompanyShellComponent } from '../../../components/creo-design-system/company-shell/company-shell.component';
 import { ManagedJob, ManagedJobStatus, rangoPostulaciones } from '../../../data/creo-data';
-import { AuthService } from '../../../core/api/auth.service';
 import { VacantesService } from '../../../core/api/vacantes.service';
 import { PagarVacantePayload, VacanteEmpresa } from '../../../core/api/models/vacante-empresa.model';
+import { mapVacanteToManagedJob } from '../../../core/api/mappers/vacante-empresa.mapper';
 
 interface StatusConfig {
   label: string;
@@ -27,7 +27,6 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
   /** Se muestra un rango aproximado, nunca el número exacto de postulaciones */
   rangoPostulaciones = rangoPostulaciones;
 
-  userName = 'Carlos Mendoza';
   jobs: ManagedJob[] = [];
   loading = false;
   loadError = '';
@@ -67,6 +66,9 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
   payingJob: ManagedJob | null = null;
   paymentProcessing = false;
   paymentAmount = 100;
+  /** 9.5: solo el backend decide si esta vacante admite pago */
+  puedePagar = false;
+  pagoAviso = '';
 
   // ── Datos de la tarjeta (pago simulado) ──────────────────────────────────
   cardName = '';
@@ -79,17 +81,10 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
   private vacantesService = inject(VacantesService);
 
   constructor(
-    private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    const user = this.authService.getUser();
-    if (user?.correo) {
-      const prefix = user.correo.split('@')[0];
-      this.userName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    }
-
     this.cargarMisVacantes();
   }
 
@@ -106,7 +101,7 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
       this.vacantesService.misVacantes().subscribe({
         next: (apiVacantes) => {
           this.loading = false;
-          this.jobs = (apiVacantes || []).map(v => this.mapVacanteToManagedJob(v));
+          this.jobs = (apiVacantes || []).map(v => mapVacanteToManagedJob(v));
           if (this.statusFilter === 'inactive') this.cargarEliminadas();
         },
         error: (err) => {
@@ -124,7 +119,7 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
       this.vacantesService.vacantesEliminadas().subscribe({
         next: (eliminadas) => {
           const vigentes = this.jobs.filter(j => j.status !== 'inactive');
-          this.jobs = [...vigentes, ...(eliminadas || []).map(v => this.mapVacanteToManagedJob(v))];
+          this.jobs = [...vigentes, ...(eliminadas || []).map(v => mapVacanteToManagedJob(v))];
         },
         error: (err) => {
           this.showToast(err.error?.message || 'No fue posible cargar el historial de vacantes eliminadas.');
@@ -135,88 +130,10 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
 
   /** Reemplaza la fila con la vacante que devolvió el backend después de una acción */
   private reemplazarVacante(v: VacanteEmpresa): void {
-    const actualizada = this.mapVacanteToManagedJob(v);
-    this.jobs = this.jobs.map(j => j.id === actualizada.id ? actualizada : j);
-  }
-
-  private mapVacanteToManagedJob(v: VacanteEmpresa): ManagedJob {
-    let status: ManagedJobStatus = 'active';
-    switch (v.estado.general) {
-      case 'publicada':
-        status = 'active';
-        break;
-      case 'pausada':
-        status = 'paused';
-        break;
-      case 'finalizada':
-        status = 'closed';
-        break;
-      case 'eliminada':
-        status = 'inactive';
-        break;
-      case 'pendiente_revision':
-        status = 'pending_review';
-        break;
-      case 'pendiente_pago':
-        status = 'approved_pending_payment';
-        break;
-      case 'no_aprobada':
-        status = 'rejected_by_moderation';
-        break;
-      case 'vencida':
-        status = 'closed';
-        break;
-      case 'por_iniciar':
-        status = 'active';
-        break;
-    }
-
-    const today = new Date();
-    const close = new Date(v.fecha_fin_vigencia);
-    const diffTime = close.getTime() - today.getTime();
-    const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-
-    let publishedDate = 'Sin publicar';
-    if (v.estado.publicada_en) {
-      const pub = new Date(v.estado.publicada_en);
-      publishedDate = pub.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
-    }
-
-    const closeDate = new Date(v.fecha_fin_vigencia).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
-
-    let salary = 'A tratar';
-    if (v.salario_min !== null && v.salario_max !== null) {
-      salary = `S/ ${v.salario_min.toLocaleString()} – ${v.salario_max.toLocaleString()}`;
-    }
-
-    return {
-      id: String(v.id),
-      title: v.titulo,
-      status,
-      applicants: 0,
-      publishedDate,
-      closeDate,
-      daysLeft,
-      hireLimit: v.max_contrataciones,
-      moderationReason: v.estado.motivo_no_aprobacion || undefined,
-      description: v.descripcion,
-      level: v.nivel_puesto?.nombre,
-      requirements: v.requisitos ?? [],
-      benefits: v.beneficios ?? [],
-      location: v.ubicacion || (v.tipo_empleo === 'remoto' ? 'Remoto' : 'Lima, Perú'),
-      salary,
-      salaryMin: v.salario_min ?? undefined,
-      salaryMax: v.salario_max ?? undefined,
-      tags: v.habilidades?.map(h => h.nombre) || [],
-      skillTags: v.habilidades?.map(h => ({
-        skill: h.nombre,
-        weight: h.requisito === 'must_have' ? 'required' : 'preferred'
-      })) || [],
-      remote: v.tipo_empleo === 'remoto',
-      area: v.area_profesional?.nombre,
-      modality: v.tipo_empleo === 'remoto' ? 'Remoto' : (v.tipo_empleo === 'hibrido' ? 'Híbrido' : 'Presencial'),
-      closeDateISO: v.fecha_fin_vigencia
-    };
+    const actualizada = mapVacanteToManagedJob(v);
+    this.jobs = this.jobs.map(j => j.id === actualizada.id
+      ? { ...actualizada, applicants: v.postulaciones_count ?? j.applicants }
+      : j);
   }
 
   private normalizeText(str: string): string {
@@ -378,17 +295,35 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
     this.cardExpiry = '';
     this.cardCvv = '';
     this.cardErrors = {};
-    this.paymentAmount = (job.hireLimit || 1) * 100;
+    // El monto lo calcula siempre el servidor (EP-02 5): aqui no se adivina
+    this.paymentAmount = 0;
+    this.puedePagar = false;
+    this.pagoAviso = '';
 
     const numericId = Number(job.id);
     if (!isNaN(numericId) && numericId > 0) {
       this.vacantesService.resumenPago(numericId).subscribe({
         next: (resumen) => {
           this.paymentAmount = resumen.monto;
+          // 9.5: el formulario se habilita con puede_pagar, no con el estado local
+          this.puedePagar = resumen.puede_pagar;
+
+          if (!resumen.puede_pagar) {
+            this.pagoAviso = resumen.estado_pago === 'pagado'
+              ? 'Esta vacante ya tiene un pago registrado.'
+              : 'Esta vacante todavia no esta aprobada para el pago.';
+          }
         },
-        error: () => {}
+        error: (err) => {
+          this.puedePagar = false;
+          this.pagoAviso = err?.error?.message
+            || 'No se pudo obtener el resumen de pago. Intentalo nuevamente.';
+        }
       });
+      return;
     }
+
+    this.pagoAviso = 'Esta vacante no existe en el servidor.';
   }
 
   /**
