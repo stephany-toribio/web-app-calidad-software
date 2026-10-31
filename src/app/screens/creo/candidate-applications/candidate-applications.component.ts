@@ -128,6 +128,21 @@ export class CandidateApplicationsComponent implements OnInit, OnDestroy {
     return this.statusConfig[codigo] || this.statusConfig.recibido;
   }
 
+  getVacanteBadgeConfig(estado: EstadoVacante): { bg: string; text: string; dot: string } {
+    switch (estado) {
+      case 'activa':
+        return { bg: '#DCFCE7', text: '#15803D', dot: '#15803D' };
+      case 'pausada':
+        return { bg: '#FEF3C7', text: '#B45309', dot: '#B45309' };
+      case 'finalizada':
+        return { bg: '#F3F4F6', text: '#4B5563', dot: '#4B5563' };
+      case 'eliminada':
+        return { bg: '#FEE2E2', text: '#DC2626', dot: '#DC2626' };
+      default:
+        return { bg: '#F3F4F6', text: '#6B6560', dot: '#9A948C' };
+    }
+  }
+
   vacanteEstadoLabel(estado: EstadoVacante): string {
     switch (estado) {
       case 'activa': return 'Activa';

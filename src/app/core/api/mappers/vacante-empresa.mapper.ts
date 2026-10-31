@@ -17,17 +17,25 @@ const ESTADOS: Record<EstadoGeneralVacante, ManagedJobStatus> = {
 export function mapVacanteToManagedJob(v: VacanteEmpresa): ManagedJob {
   const status = ESTADOS[v.estado.general] ?? 'active';
 
-  const close = new Date(v.fecha_fin_vigencia);
-  const diffTime = close.getTime() - Date.now();
-  const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  // QA-04: Fecha calendario local (evitar el desfase UTC de new Date("YYYY-MM-DD"))
+  let closeDate = '';
+  let daysLeft = 0;
+  if (v.fecha_fin_vigencia) {
+    const [y, m, d] = v.fecha_fin_vigencia.split('T')[0].split('-').map(Number);
+    const closeLocal = new Date(y, m - 1, d);
+    closeDate = closeLocal.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // La vigencia abarca todo el día calendario hasta las 23:59:59
+    const finDia = new Date(y, m - 1, d, 23, 59, 59, 999);
+    const diffTime = finDia.getTime() - Date.now();
+    daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  }
 
   let publishedDate = 'Sin publicar';
   if (v.estado.publicada_en) {
     const pub = new Date(v.estado.publicada_en);
     publishedDate = pub.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
   }
-
-  const closeDate = close.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
 
   let salary = 'A tratar';
   if (v.salario_min !== null && v.salario_max !== null) {

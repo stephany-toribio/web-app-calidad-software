@@ -2,6 +2,14 @@ import { MetaPaginacion } from './api-response.model';
 import { HabilidadVacante, NivelPuestoResumen, AreaProfesionalResumen, TipoEmpleo } from './vacante-empresa.model';
 
 /** HU-04: cada resultado de GET /vacantes (no incluye la descripción) */
+/** QA-02: Habilidad en la búsqueda de candidatos (sin revelar requisito interno) */
+export interface HabilidadCandidatoResumen {
+  id: number;
+  nombre: string;
+  tipo_habilidad?: 'tecnica' | 'blanda';
+  requisito?: string;
+}
+
 export interface VacanteBusqueda {
   id: number;
   titulo: string;
@@ -15,7 +23,7 @@ export interface VacanteBusqueda {
   fecha_inicio_vigencia: string;
   fecha_fin_vigencia: string;
   publicada_en: string;
-  habilidades: HabilidadVacante[];
+  habilidades: HabilidadCandidatoResumen[];
   /** Texto aproximado; el backend nunca envía el número exacto */
   postulantes_aprox: string;
 }

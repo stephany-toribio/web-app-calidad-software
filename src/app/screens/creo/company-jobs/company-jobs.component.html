@@ -18,7 +18,7 @@
     <div class="flex items-center justify-between flex-wrap gap-4">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-[#111111]">Mis Ofertas</h1>
-        <p class="text-sm mt-0.5 text-[#9A948C]">{{ activeJobsCount }} vacantes publicadas</p>
+        <p class="text-sm mt-0.5 text-[#9A948C]">{{ publishedJobsCount }} {{ publishedJobsCount === 1 ? 'vacante publicada' : 'vacantes publicadas' }}</p>
       </div>
 
       <button

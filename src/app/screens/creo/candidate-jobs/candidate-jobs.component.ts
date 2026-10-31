@@ -212,9 +212,10 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
       benefits: [],
       applicants: 0,
       postulantesAprox: v.postulantes_aprox,
+      // QA-02: Al candidato no se le distingue internamente obligatoria vs deseable
       skillTags: v.habilidades.map(h => ({
         skill: h.nombre,
-        weight: h.requisito === 'must_have' ? 'required' as const : 'preferred' as const
+        weight: 'required' as const
       }))
     };
   }

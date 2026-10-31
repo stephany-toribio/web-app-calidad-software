@@ -162,6 +162,11 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
     return this.jobs.filter(j => j.status !== 'inactive').length;
   }
 
+  /** QA-05: Vacantes efectivamente publicadas (pagadas y vigentes) */
+  get publishedJobsCount(): number {
+    return this.jobs.filter(j => j.status === 'active').length;
+  }
+
   /**
    * Las últimas filas abren el menú hacia arriba para no quedar fuera de la pantalla.
    * Solo se hace si hay filas suficientes arriba, para que no se salga por el otro lado.
@@ -384,9 +389,13 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
       const mes = Number(vencimiento.slice(0, 2));
       const anio = 2000 + Number(vencimiento.slice(2));
 
+      const hoy = new Date();
+      const anioActual = hoy.getFullYear();
+      const mesActual = hoy.getMonth() + 1;
+
       if (mes < 1 || mes > 12) {
         errs['expiry'] = 'El mes debe estar entre 01 y 12';
-      } else if (new Date(anio, mes, 0) < new Date()) {
+      } else if (anio < anioActual || (anio === anioActual && mes < mesActual)) {
         errs['expiry'] = 'La tarjeta está vencida';
       }
     }
