@@ -8,9 +8,11 @@ import {
   CrearVacantePayload,
   NivelPuestoResumen,
   PagarVacantePayload,
+  PaginaModeracion,
   ResultadoAprobarMasivo,
   ResultadoPago,
   ResumenPagoVacante,
+  RevisionModeracion,
   VacanteEmpresa,
   VacanteRevision
 } from './models/vacante-empresa.model';
@@ -148,6 +150,16 @@ export class VacantesService {
     return this.http
       .get<ApiResponse<VacanteRevision[]>>(`${this.apiUrl}/admin/vacantes/pendientes`)
       .pipe(map(res => res.data));
+  }
+
+  /** Listado de moderación por estado de revisión, 10 por página */
+  listadoModeracion(revision: RevisionModeracion, page = 1): Observable<PaginaModeracion> {
+    let params = new HttpParams().set('revision', revision);
+    if (page > 1) params = params.set('page', page);
+
+    return this.http
+      .get<ApiPaginatedResponse<VacanteRevision>>(`${this.apiUrl}/admin/vacantes`, { params })
+      .pipe(map(res => ({ vacantes: res.data, meta: res.meta })));
   }
 
   /** Detalle de vacante para moderación */
