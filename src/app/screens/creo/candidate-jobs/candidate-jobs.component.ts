@@ -16,9 +16,9 @@ import { MetaPaginacion } from '../../../core/api/models/api-response.model';
 import {
   FiltrosBusquedaVacantes,
   PaginaVacantes,
-  SalarioMinimoFiltro,
-  VacanteBusqueda
+  SalarioMinimoFiltro
 } from '../../../core/api/models/vacante-busqueda.model';
+import { mapVacanteBusquedaToJob } from '../../../core/api/mappers/vacante-busqueda.mapper';
 import { Job } from '../../../data/creo-data';
 
 interface SalaryRange {
@@ -116,7 +116,7 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
           this.loading = false;
           if (pagina) {
             this.meta = pagina.meta;
-            this.jobsPagina = pagina.vacantes.map(v => this.aJob(v));
+            this.jobsPagina = pagina.vacantes.map(mapVacanteBusquedaToJob);
             return;
           }
           this.jobsPagina = [];
@@ -125,12 +125,12 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
         })
     );
 
-    // "Guardados" sigue siendo local: el backend aún no tiene favoritos
     this.subs.add(
       this.creoJobsService.saved$.subscribe(ids => {
         this.savedJobIds = ids;
       })
     );
+    this.creoJobsService.cargarGuardadas();
 
     this.buscar$.next();
   }
@@ -182,53 +182,6 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
       salario_minimo: this.salaryMin || null,
       page: this.paginaActual
     };
-  }
-
-  /** Adapta un resultado de la API a la tarjeta del design system */
-  private aJob(v: VacanteBusqueda): Job {
-    const remoto = v.tipo_empleo === 'remoto';
-    // Los dos salarios llegan con valor o los dos en null; null no significa 0
-    const salary = v.salario_min !== null && v.salario_max !== null
-      ? `S/ ${v.salario_min.toLocaleString('es-PE')} – ${v.salario_max.toLocaleString('es-PE')}`
-      : 'A convenir';
-
-    return {
-      id: String(v.id),
-      title: v.titulo,
-      company: v.empresa.razon_social,
-      companyDescription: v.empresa.sector,
-      location: v.ubicacion || (remoto ? 'Remoto' : ''),
-      remote: remoto,
-      salary,
-      salaryMin: v.salario_min ?? 0,
-      salaryMax: v.salario_max ?? 0,
-      tags: v.habilidades.map(h => h.nombre),
-      postedAgo: this.haceCuanto(v.publicada_en),
-      match: 0,
-      experience: v.nivel_puesto.nombre,
-      area: v.area_profesional.nombre,
-      description: '',
-      requirements: [],
-      benefits: [],
-      applicants: 0,
-      postulantesAprox: v.postulantes_aprox,
-      // QA-02: Al candidato no se le distingue internamente obligatoria vs deseable
-      skillTags: v.habilidades.map(h => ({
-        skill: h.nombre,
-        weight: 'required' as const
-      }))
-    };
-  }
-
-  /** publicada_en llega en ISO-8601 UTC; se parsea con Date, nunca comparando texto */
-  private haceCuanto(iso: string): string {
-    const fecha = new Date(iso);
-    if (isNaN(fecha.getTime())) return '';
-    const dias = Math.floor((Date.now() - fecha.getTime()) / 86_400_000);
-    if (dias <= 0) return 'Hoy';
-    if (dias === 1) return 'Hace 1 día';
-    if (dias < 30) return `Hace ${dias} días`;
-    return fecha.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   private mensajeError(error: HttpErrorResponse | null): string {
