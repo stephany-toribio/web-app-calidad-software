@@ -33,6 +33,7 @@
         <button (click)="typeFilter = 'all'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="typeFilter === 'all' ? '#111111' : 'transparent'" [style.color]="typeFilter === 'all' ? '#FFFFFF' : '#64748B'">Todos</button>
         <button (click)="typeFilter = 'candidate'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="typeFilter === 'candidate' ? '#111111' : 'transparent'" [style.color]="typeFilter === 'candidate' ? '#FFFFFF' : '#64748B'">Candidatos</button>
         <button (click)="typeFilter = 'company'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="typeFilter === 'company' ? '#111111' : 'transparent'" [style.color]="typeFilter === 'company' ? '#FFFFFF' : '#64748B'">Empresas</button>
+        <button (click)="typeFilter = 'admin'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="typeFilter === 'admin' ? '#111111' : 'transparent'" [style.color]="typeFilter === 'admin' ? '#FFFFFF' : '#64748B'">Admins</button>
       </div>
       <div class="flex bg-white border rounded-lg p-1" style="border-color: #E2E8F0;">
         <button (click)="statusFilter = 'all'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="statusFilter === 'all' ? '#111111' : 'transparent'" [style.color]="statusFilter === 'all' ? '#FFFFFF' : '#64748B'">Todos</button>
@@ -63,10 +64,14 @@
                 <p class="text-sm font-semibold" style="color: #111111;">{{ acc.name }}</p>
               </td>
               <td class="px-6 py-4">
-                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                      [style.background-color]="acc.type === 'candidate' ? '#EFF6FF' : '#F5F3FF'"
-                      [style.color]="acc.type === 'candidate' ? '#1D4ED8' : '#6D28D9'">
-                  {{ acc.type === 'candidate' ? 'Candidato' : 'Empresa' }}
+                <span *ngIf="acc.type === 'candidate'" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8]">
+                  Candidato
+                </span>
+                <span *ngIf="acc.type === 'company'" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F3FF] text-[#6D28D9]">
+                  Empresa
+                </span>
+                <span *ngIf="acc.type === 'admin'" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#334155] border border-slate-200">
+                  Administrador
                 </span>
               </td>
               <td class="px-6 py-4">
@@ -83,7 +88,7 @@
                 <p class="text-xs" style="color: #94A3B8;">{{ acc.registeredAt }}</p>
               </td>
               <td class="px-6 py-4 text-right">
-                <div class="flex items-center justify-end gap-2">
+                <div *ngIf="acc.type !== 'admin'; else adminActions" class="flex items-center justify-end gap-2">
                   <button *ngIf="acc.status === 'active'" (click)="beginReset(acc)"
                           class="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors"
                           style="border-color: #E2E8F0; color: #64748B;">Restablecer clave</button>
@@ -94,6 +99,9 @@
                           class="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors hover:bg-green-50 hover:border-green-200"
                           style="border-color: #86EFAC; color: #16A34A;">Reactivar</button>
                 </div>
+                <ng-template #adminActions>
+                  <span class="text-xs text-slate-400 italic">Cuenta protegida</span>
+                </ng-template>
               </td>
             </tr>
             <tr *ngIf="acc.status === 'suspended' && acc.suspendReason" class="bg-red-50">
@@ -158,8 +166,10 @@
         Se enviará un correo a <br/><strong>{{ resetting.email }}</strong><br/> con un enlace seguro de un solo uso para cambiar su contraseña.
       </p>
       <div class="flex items-center gap-3 mt-4">
-        <button (click)="resetting = null" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Cancelar</button>
-        <button (click)="confirmReset()" class="flex-1 py-2.5 rounded-xl bg-[#111111] text-[#F2B705] text-sm font-semibold hover:bg-black transition-colors">Enviar enlace</button>
+        <button (click)="resetting = null" [disabled]="submittingReset" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50">Cancelar</button>
+        <button (click)="confirmReset()" [disabled]="submittingReset" class="flex-1 py-2.5 rounded-xl bg-[#111111] text-[#F2B705] text-sm font-semibold hover:bg-black transition-colors disabled:opacity-50">
+          {{ submittingReset ? 'Enviando...' : 'Enviar correo' }}
+        </button>
       </div>
     </div>
   </div>

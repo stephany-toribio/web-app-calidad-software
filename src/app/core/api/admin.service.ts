@@ -50,6 +50,13 @@ export class AdminService {
       .pipe(map(res => res.data));
   }
 
+  /** Solicitar correo de recuperación/restablecimiento de contraseña */
+  solicitarRecuperacionPassword(correo: string): Observable<string> {
+    return this.http
+      .post<ApiResponse<null>>(`${environment.apiUrl}/auth/forgot-password`, { correo })
+      .pipe(map(res => res.message || 'Si el correo está registrado, se enviará el código para restablecer la contraseña.'));
+  }
+
   // --- Áreas de Estudio (ADM-04 a ADM-08) ---
 
   /** ADM-04: Listar todas las áreas (activas e inactivas) */

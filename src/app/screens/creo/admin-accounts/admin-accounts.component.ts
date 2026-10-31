@@ -36,7 +36,7 @@ export class AdminAccountsComponent implements OnInit, OnDestroy {
   accounts: AccountViewModel[] = [];
   loading = false;
   query = '';
-  typeFilter: 'all' | 'candidate' | 'company' = 'all';
+  typeFilter: 'all' | 'candidate' | 'company' | 'admin' = 'all';
   statusFilter: 'all' | AccountStatus = 'all';
 
   suspending: AccountViewModel | null = null;
@@ -44,6 +44,7 @@ export class AdminAccountsComponent implements OnInit, OnDestroy {
   suspendError = '';
 
   resetting: AccountViewModel | null = null;
+  submittingReset = false;
 
   toast: string | null = null;
   toastTimeout: any;
@@ -119,13 +120,14 @@ export class AdminAccountsComponent implements OnInit, OnDestroy {
   }
 
   beginSuspend(a: AccountViewModel) {
+    if (a.type === 'admin') return;
     this.suspending = a;
     this.suspendReason = '';
     this.suspendError = '';
   }
 
   confirmSuspend() {
-    if (!this.suspending) return;
+    if (!this.suspending || this.suspending.type === 'admin') return;
 
     if (!this.suspendReason.trim()) {
       this.suspendError = 'Debes ingresar un motivo obligatorio para suspender la cuenta';
@@ -152,6 +154,7 @@ export class AdminAccountsComponent implements OnInit, OnDestroy {
   }
 
   reactivate(a: AccountViewModel) {
+    if (a.type === 'admin') return;
     this.adminService.reactivarUsuario(a.id).subscribe({
       next: (usuarioActualizado) => {
         const idx = this.accounts.findIndex(x => x.id === a.id);
@@ -168,14 +171,28 @@ export class AdminAccountsComponent implements OnInit, OnDestroy {
   }
 
   beginReset(a: AccountViewModel) {
+    if (a.type === 'admin') return;
     this.resetting = a;
   }
 
   confirmReset() {
-    if (this.resetting) {
-      this.showToast(`Enlace de un solo uso enviado a ${this.resetting.email}`);
-      this.resetting = null;
-    }
+    if (!this.resetting || this.submittingReset) return;
+
+    this.submittingReset = true;
+    const targetEmail = this.resetting.email;
+
+    this.adminService.solicitarRecuperacionPassword(targetEmail).subscribe({
+      next: (mensaje) => {
+        this.submittingReset = false;
+        this.resetting = null;
+        this.showToast(mensaje || `Correo de restablecimiento enviado a ${targetEmail}`);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.submittingReset = false;
+        const errMap = erroresDesdeApi(err);
+        this.showToast(errMap['api'] || 'No se pudo enviar el correo de restablecimiento.');
+      }
+    });
   }
 
   trackById(index: number, account: AccountViewModel) {
