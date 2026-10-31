@@ -94,6 +94,9 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
 
   private toastTimer: any;
   private subs = new Subscription();
+  private refrescoSub?: Subscription;
+  private readonly intervaloRefresco = 45_000;
+  private refrescoTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private vacantesService: VacantesService,
@@ -119,6 +122,13 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
     );
 
     this.cargarVacantes();
+
+    // El candidato postula en OTRA sesión del navegador; sin un canal del
+    // servidor (WebSocket) el tablero no se entera solo. Se vuelve a consultar
+    // al regresar a la pestaña y cada 45 s mientras está a la vista.
+    document.addEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.addEventListener('focus', this.alCambiarVisibilidad);
+    this.programarRefresco();
   }
 
   /**
@@ -175,7 +185,64 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    this.refrescoSub?.unsubscribe();
     if (this.toastTimer) clearTimeout(this.toastTimer);
+
+    document.removeEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.removeEventListener('focus', this.alCambiarVisibilidad);
+    this.detenerRefresco();
+  }
+
+  // ── Refresco automático ────────────────────────────────────────
+
+  private readonly alCambiarVisibilidad = (): void => {
+    if (document.hidden) {
+      this.detenerRefresco();
+      return;
+    }
+
+    this.refrescarSiSePuede();
+    this.programarRefresco();
+  };
+
+  private programarRefresco(): void {
+    this.detenerRefresco();
+    if (document.hidden) return;
+    this.refrescoTimer = setInterval(
+      () => this.refrescarSiSePuede(), this.intervaloRefresco
+    );
+  }
+
+  private detenerRefresco(): void {
+    if (this.refrescoTimer) {
+      clearInterval(this.refrescoTimer);
+      this.refrescoTimer = null;
+    }
+  }
+
+  /**
+   * No se recarga mientras la empresa mueve una tarjeta ni con un diálogo
+   * abierto: el tablero cambiaría bajo sus manos.
+   */
+  private refrescarSiSePuede(): void {
+    if (document.hidden) return;
+    if (!this.selectedJobId) return;
+    if (this.draggingId || this.selectedCandidate || this.rejectTarget) return;
+    if (this.loadingJobs || this.loadingTablero) return;
+
+    this.cargarTablero(Number(this.selectedJobId), true);
+  }
+
+  /** Avisa de las postulaciones que llegaron con el tablero abierto */
+  private avisarNuevas(idsAnteriores: Set<string>): void {
+    const nuevas = this.candidates.filter(c => !idsAnteriores.has(c.id));
+    if (nuevas.length === 0) return;
+
+    this.showToast(
+      nuevas.length === 1
+        ? `Nueva postulación de ${nuevas[0].name}.`
+        : `Llegaron ${nuevas.length} postulaciones nuevas.`
+    );
   }
 
   backendToFrontColumn(codigo: string): KanbanColumn {
@@ -200,10 +267,24 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
     }
   }
 
-  cargarTablero(vacanteId: number): void {
-    this.loadingTablero = true;
-    this.tableroError = '';
-    this.kanbanService.tablero(vacanteId).subscribe({
+  /**
+   * GET del tablero de una vacante. En modo silencioso no muestra el esqueleto
+   * de carga ni borra lo que ya hay en pantalla: lo usa el refresco de fondo.
+   */
+  cargarTablero(vacanteId: number, silencioso = false): void {
+    if (!silencioso) {
+      this.loadingTablero = true;
+      this.tableroError = '';
+    }
+
+    // Solo se comparan tarjetas de ESTA vacante y con un tablero ya cargado:
+    // si no, al recuperarse de un error todo parecería recien llegado.
+    const comparable = silencioso
+      && this.tableroApi !== null
+      && this.tableroApi.vacante.id === vacanteId;
+    const idsAnteriores = new Set(this.candidates.map(c => c.id));
+
+    const peticion = this.kanbanService.tablero(vacanteId).subscribe({
       next: (tablero) => {
         this.loadingTablero = false;
         this.tableroApi = tablero;
@@ -234,14 +315,25 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
           }
         }
         this.candidates = apiCandidates;
+        if (comparable) this.avisarNuevas(idsAnteriores);
       },
       error: (err) => {
+        // Un fallo del refresco de fondo no debe vaciar el tablero
+        if (silencioso) return;
+
         this.loadingTablero = false;
         this.tableroApi = null;
         this.candidates = [];
         this.tableroError = err.error?.message || 'No fue posible cargar el tablero de postulantes.';
       }
     });
+
+    if (silencioso) {
+      this.refrescoSub?.unsubscribe();
+      this.refrescoSub = peticion;
+    } else {
+      this.subs.add(peticion);
+    }
   }
 
   reintentarTablero(): void {
