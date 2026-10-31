@@ -77,6 +77,11 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
   cardCvv = '';
   cardErrors: Record<string, string> = {};
 
+  /** Cada cuanto se reconsulta el estado mientras la pestana esta a la vista */
+  private readonly intervaloRefresco = 45_000;
+  private refrescoTimer: ReturnType<typeof setInterval> | null = null;
+  private refrescoSub: Subscription | null = null;
+
   private subs = new Subscription();
   private vacantesService = inject(VacantesService);
 
@@ -86,30 +91,109 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarMisVacantes();
+
+    // El administrador aprueba en OTRA sesion del navegador; sin un canal del
+    // servidor (WebSocket) esta pantalla no se entera sola. Se vuelve a
+    // consultar al regresar a la pestana y cada 45 s mientras esta a la vista.
+    document.addEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.addEventListener('focus', this.alCambiarVisibilidad);
+    this.programarRefresco();
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     if (this.toastTimer) clearTimeout(this.toastTimer);
+
+    document.removeEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.removeEventListener('focus', this.alCambiarVisibilidad);
+    this.detenerRefresco();
+    this.refrescoSub?.unsubscribe();
   }
 
-  /** GET /empresas/me/vacantes: vacantes no eliminadas de la empresa del token */
-  cargarMisVacantes(): void {
-    this.loading = true;
-    this.loadError = '';
-    this.subs.add(
-      this.vacantesService.misVacantes().subscribe({
-        next: (apiVacantes) => {
-          this.loading = false;
-          this.jobs = (apiVacantes || []).map(v => mapVacanteToManagedJob(v));
-          if (this.statusFilter === 'inactive') this.cargarEliminadas();
-        },
-        error: (err) => {
-          this.loading = false;
-          this.jobs = [];
-          this.loadError = err.error?.message || 'No fue posible cargar tus vacantes.';
-        }
-      })
+  private readonly alCambiarVisibilidad = (): void => {
+    if (document.hidden) {
+      this.detenerRefresco();
+      return;
+    }
+
+    this.refrescarSiSePuede();
+    this.programarRefresco();
+  };
+
+  private programarRefresco(): void {
+    this.detenerRefresco();
+    if (document.hidden) return;
+    this.refrescoTimer = setInterval(
+      () => this.refrescarSiSePuede(), this.intervaloRefresco
+    );
+  }
+
+  private detenerRefresco(): void {
+    if (this.refrescoTimer) {
+      clearInterval(this.refrescoTimer);
+      this.refrescoTimer = null;
+    }
+  }
+
+  /** Con un dialogo abierto no se recarga: cambiaria los datos bajo el usuario */
+  private refrescarSiSePuede(): void {
+    if (document.hidden) return;
+    if (this.payingJob || this.deleteConfirmTarget || this.editConfirmTarget) return;
+    if (this.paymentProcessing) return;
+
+    this.cargarMisVacantes(true);
+  }
+
+  /**
+   * GET /empresas/me/vacantes: vacantes no eliminadas de la empresa del token.
+   * En modo silencioso no muestra el esqueleto de carga ni borra lo que ya
+   * hay en pantalla: lo usa el refresco de fondo.
+   */
+  cargarMisVacantes(silencioso = false): void {
+    if (!silencioso) {
+      this.loading = true;
+      this.loadError = '';
+    }
+
+    const anteriores = new Map(this.jobs.map(j => [j.id, j.status]));
+
+    const peticion = this.vacantesService.misVacantes().subscribe({
+      next: (apiVacantes) => {
+        this.loading = false;
+        this.jobs = (apiVacantes || []).map(v => mapVacanteToManagedJob(v));
+        if (this.statusFilter === 'inactive') this.cargarEliminadas();
+        if (silencioso) this.avisarCambios(anteriores);
+      },
+      error: (err) => {
+        // Un fallo del refresco de fondo no debe vaciar la pantalla
+        if (silencioso) return;
+
+        this.loading = false;
+        this.jobs = [];
+        this.loadError = err.error?.message || 'No fue posible cargar tus vacantes.';
+      }
+    });
+
+    if (silencioso) {
+      this.refrescoSub?.unsubscribe();
+      this.refrescoSub = peticion;
+    } else {
+      this.subs.add(peticion);
+    }
+  }
+
+  /** Avisa si el administrador decidió algo mientras la pantalla estaba abierta */
+  private avisarCambios(anteriores: Map<string, ManagedJobStatus>): void {
+    const cambiadas = this.jobs.filter(
+      j => anteriores.has(j.id) && anteriores.get(j.id) !== j.status
+    );
+
+    if (cambiadas.length === 0) return;
+
+    this.showToast(
+      cambiadas.length === 1
+        ? `"${cambiadas[0].title}" cambió a ${this.statusConfig[cambiadas[0].status]?.label ?? cambiadas[0].status}.`
+        : `${cambiadas.length} de tus vacantes cambiaron de estado.`
     );
   }
 

@@ -64,6 +64,10 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
   meta: MetaPaginacion | null = null;
   private pendingTotal = 0;
 
+  /** Cada cuanto se reconsulta la cola mientras la pestana esta a la vista */
+  private readonly intervaloRefresco = 45_000;
+  private refrescoTimer: ReturnType<typeof setInterval> | null = null;
+
   loading = false;
   loadError = '';
   /** Errores por vacante de la aprobación masiva (422 BULK_APPROVAL_REJECTED) */
@@ -92,11 +96,60 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
 
     this.cargar();
     if (this.filter !== 'pending') this.cargarConteoPendientes();
+
+    // Las empresas registran vacantes desde otra sesion del navegador: sin un
+    // canal del servidor esta cola no se entera sola. Se reconsulta al volver
+    // a la pestana y cada 45 s mientras esta a la vista.
+    document.addEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.addEventListener('focus', this.alCambiarVisibilidad);
+    this.programarRefresco();
+  }
+
+  private readonly alCambiarVisibilidad = (): void => {
+    if (document.hidden) {
+      this.detenerRefresco();
+      return;
+    }
+
+    this.refrescarSiSePuede();
+    this.programarRefresco();
+  };
+
+  private programarRefresco(): void {
+    this.detenerRefresco();
+    if (document.hidden) return;
+    this.refrescoTimer = setInterval(
+      () => this.refrescarSiSePuede(), this.intervaloRefresco
+    );
+  }
+
+  private detenerRefresco(): void {
+    if (this.refrescoTimer) {
+      clearInterval(this.refrescoTimer);
+      this.refrescoTimer = null;
+    }
+  }
+
+  /**
+   * No se recarga con un dialogo abierto ni con filas marcadas: le cambiaria
+   * la seleccion al administrador en mitad de una aprobacion masiva.
+   */
+  private refrescarSiSePuede(): void {
+    if (document.hidden) return;
+    if (this.reviewingJob || this.unpublishing || this.massUnpublishOpen) return;
+    if (this.selectedReportIds.size > 0) return;
+
+    this.cargar(true);
+    if (this.filter !== 'pending') this.cargarConteoPendientes();
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     this.cargaActual?.unsubscribe();
+
+    document.removeEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.removeEventListener('focus', this.alCambiarVisibilidad);
+    this.detenerRefresco();
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
   }
 
@@ -205,10 +258,14 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
   }
 
   /** Se cancela la carga anterior para que una respuesta vieja no pise la pestaña actual */
-  cargar(): void {
-    this.loading = true;
-    this.loadError = '';
+  cargar(silencioso = false): void {
+    if (!silencioso) {
+      this.loading = true;
+      this.loadError = '';
+    }
     this.cargaActual?.unsubscribe();
+
+    const idsAnteriores = new Set(this.reports.map(r => r.id));
 
     this.cargaActual = this.vacantesService
       .listadoModeracion(REVISION_POR_FILTRO[this.filter], this.pagina)
@@ -217,6 +274,14 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
           this.loading = false;
           this.reports = vacantes.map(vr => this.desdeRevision(vr));
           this.meta = meta;
+          if (silencioso) this.avisarNuevas(idsAnteriores);
+
+          // Al aprobar el ultimo de una pagina, esa pagina puede dejar de existir
+          if (meta.last_page >= 1 && this.pagina > meta.last_page) {
+            this.pagina = meta.last_page;
+            this.cargar();
+            return;
+          }
           if (this.filter === 'pending') this.pendingTotal = meta.total;
 
           // Una vacante que ya no está en la página no puede seguir seleccionada
@@ -226,12 +291,39 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
           });
         },
         error: (err: HttpErrorResponse) => {
+          // Un fallo del refresco de fondo no debe vaciar la cola en pantalla
+          if (silencioso) return;
+
           this.loading = false;
           this.reports = [];
           this.meta = null;
           this.loadError = err.error?.message || 'No fue posible cargar las vacantes.';
         }
       });
+  }
+
+  /**
+   * Tras aprobar o no aprobar, la vacante deja de pertenecer a "Pendientes".
+   * Retocar la fila la dejaba visible con su estado nuevo y descuadraba el
+   * total, que es lo que obligaba a recargar con F5; se relee del servidor.
+   */
+  /** Avisa cuando una empresa registro una vacante mientras mirabas la cola */
+  private avisarNuevas(idsAnteriores: Set<string>): void {
+    if (idsAnteriores.size === 0) return;
+
+    const nuevas = this.reports.filter(r => !idsAnteriores.has(r.id));
+    if (nuevas.length === 0) return;
+
+    this.showToast(
+      nuevas.length === 1
+        ? `Nueva vacante en revisión: "${nuevas[0].title}".`
+        : `Llegaron ${nuevas.length} vacantes nuevas a revisión.`
+    );
+  }
+
+  private recargarTrasDecision(): void {
+    this.cargarConteoPendientes();
+    this.cargar();
   }
 
   private cargarConteoPendientes(): void {
@@ -307,7 +399,7 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
     this.vacantesService.aprobarVacante(Number(r.id)).subscribe({
       next: (vr) => {
         this.actualizarFila(vr);
-        this.cargarConteoPendientes();
+        this.recargarTrasDecision();
         this.showToast(`Vacante "${r.title}" aprobada. La empresa debe completar el pago para publicarla.`);
       },
       error: (err: HttpErrorResponse) => {
@@ -339,7 +431,7 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
     this.vacantesService.noAprobarVacante(Number(target.id), motivo).subscribe({
       next: (vr) => {
         this.actualizarFila(vr);
-        this.cargarConteoPendientes();
+        this.recargarTrasDecision();
         this.showToast(`Vacante "${target.title}" marcada como no aprobada.`);
         this.unpublishing = null;
       },
@@ -368,7 +460,7 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
           aprobadas.has(r.id) ? { ...r, status: 'approved' as ReportStatus } : r
         );
         aprobadas.forEach(id => this.selectedReportIds.delete(id));
-        this.cargarConteoPendientes();
+        this.recargarTrasDecision();
         const n = resp.aprobadas.length;
         this.showToast(`Se ${n === 1 ? 'aprobó 1 vacante' : `aprobaron ${n} vacantes`}. Cada empresa debe completar el pago para publicarlas.`);
       },
@@ -420,13 +512,13 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
     ).subscribe(resultados => {
       const fallidas = resultados.filter(res => !res.vr);
       resultados.forEach(res => { if (res.vr) this.actualizarFila(res.vr); });
-      this.cargarConteoPendientes();
 
       this.bulkErrors = fallidas.map(f => {
         const r = this.reports.find(x => x.id === f.id);
         return `${r?.title ?? 'Vacante ' + f.id}: ${f.error}`;
       });
       this.massUnpublishOpen = false;
+      this.recargarTrasDecision();
 
       const ok = resultados.length - fallidas.length;
       this.showToast(fallidas.length === 0

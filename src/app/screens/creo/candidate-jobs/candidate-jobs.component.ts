@@ -93,6 +93,15 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
   private buscar$ = new Subject<void>();
   /** Texto del buscador: espera a que el candidato deje de escribir */
   private buscarTexto$ = new Subject<void>();
+  /** Refresco de fondo: la misma consulta, sin esqueleto de carga */
+  private refrescar$ = new Subject<void>();
+
+  /** Aviso de las ofertas que se publicaron con la pantalla abierta */
+  actionToast: string | null = null;
+  private toastTimer: any;
+
+  private readonly intervaloRefresco = 45_000;
+  private refrescoTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private creoJobsService: CreoJobsService,
@@ -103,22 +112,36 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
     this.cargarCatalogos();
 
     this.subs.add(
-      merge(this.buscar$, this.buscarTexto$.pipe(debounceTime(400)))
+      merge(
+        this.buscar$.pipe(map(() => false)),
+        this.buscarTexto$.pipe(debounceTime(400), map(() => false)),
+        this.refrescar$.pipe(map(() => true))
+      )
         .pipe(
-          tap(() => { this.loading = true; this.errorMessage = ''; }),
+          tap(silencioso => {
+            if (silencioso) return;
+            this.loading = true;
+            this.errorMessage = '';
+          }),
           // switchMap descarta la respuesta de una búsqueda que ya quedó vieja
-          switchMap(() => this.vacantesService.buscarVacantes(this.filtrosActuales()).pipe(
-            map(pagina => ({ pagina, error: null as HttpErrorResponse | null })),
-            catchError((error: HttpErrorResponse) => of({ pagina: null as PaginaVacantes | null, error }))
+          switchMap(silencioso => this.vacantesService.buscarVacantes(this.filtrosActuales()).pipe(
+            map(pagina => ({ pagina, error: null as HttpErrorResponse | null, silencioso })),
+            catchError((error: HttpErrorResponse) => of({ pagina: null as PaginaVacantes | null, error, silencioso }))
           ))
         )
-        .subscribe(({ pagina, error }) => {
-          this.loading = false;
+        .subscribe(({ pagina, error, silencioso }) => {
           if (pagina) {
+            this.loading = false;
+            const idsAnteriores = new Set(this.jobsPagina.map(j => j.id));
             this.meta = pagina.meta;
             this.jobsPagina = pagina.vacantes.map(mapVacanteBusquedaToJob);
+            if (silencioso) this.avisarNuevas(idsAnteriores);
             return;
           }
+          // Un fallo del refresco de fondo no debe vaciar lo que ya se ve
+          if (silencioso) return;
+
+          this.loading = false;
           this.jobsPagina = [];
           this.meta = { ...this.meta, total: 0, last_page: 1 };
           this.errorMessage = this.mensajeError(error);
@@ -133,10 +156,84 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
     this.creoJobsService.cargarGuardadas();
 
     this.buscar$.next();
+
+    // La empresa paga y publica en OTRA sesión del navegador; sin un canal del
+    // servidor (WebSocket) esta pantalla no se entera sola. Se vuelve a
+    // consultar al regresar a la pestaña y cada 45 s mientras está a la vista.
+    document.addEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.addEventListener('focus', this.alCambiarVisibilidad);
+    this.programarRefresco();
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+
+    document.removeEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.removeEventListener('focus', this.alCambiarVisibilidad);
+    this.detenerRefresco();
+  }
+
+  // ── Refresco automático ────────────────────────────────────────
+
+  private readonly alCambiarVisibilidad = (): void => {
+    if (document.hidden) {
+      this.detenerRefresco();
+      return;
+    }
+
+    this.refrescarSiSePuede();
+    this.programarRefresco();
+  };
+
+  private programarRefresco(): void {
+    this.detenerRefresco();
+    if (document.hidden) return;
+    this.refrescoTimer = setInterval(
+      () => this.refrescarSiSePuede(), this.intervaloRefresco
+    );
+  }
+
+  private detenerRefresco(): void {
+    if (this.refrescoTimer) {
+      clearInterval(this.refrescoTimer);
+      this.refrescoTimer = null;
+    }
+  }
+
+  /**
+   * No se refresca mientras el candidato está eligiendo filtros ni con una
+   * búsqueda suya en curso: cambiaría los resultados bajo sus manos.
+   */
+  private refrescarSiSePuede(): void {
+    if (document.hidden) return;
+    if (this.loading) return;
+    if (this.sidebarOpen) return;
+
+    this.refrescar$.next();
+  }
+
+  /** Avisa de lo que se publicó (la empresa pagó) con la pantalla abierta */
+  private avisarNuevas(idsAnteriores: Set<string>): void {
+    if (idsAnteriores.size === 0) return;
+
+    const nuevas = this.jobsPagina.filter(j => !idsAnteriores.has(j.id));
+    if (nuevas.length === 0) return;
+
+    this.showToast(
+      nuevas.length === 1
+        ? `Nueva oferta publicada: "${nuevas[0].title}".`
+        : `${nuevas.length} ofertas nuevas se publicaron.`
+    );
+  }
+
+  showToast(msg: string): void {
+    this.actionToast = msg;
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.actionToast = null;
+      this.toastTimer = null;
+    }, 4000);
   }
 
   private cargarCatalogos(): void {

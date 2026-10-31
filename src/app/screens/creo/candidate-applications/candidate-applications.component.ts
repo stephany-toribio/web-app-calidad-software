@@ -55,6 +55,9 @@ export class CandidateApplicationsComponent implements OnInit, OnDestroy {
   };
 
   private subs = new Subscription();
+  private refrescoSub?: Subscription;
+  private readonly intervaloRefresco = 45_000;
+  private refrescoTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private postulacionesService: PostulacionesService,
@@ -63,31 +66,111 @@ export class CandidateApplicationsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarPostulaciones();
+
+    // La empresa mueve el Kanban en OTRA sesión del navegador; sin un canal del
+    // servidor (WebSocket) esta pantalla no se entera sola. Se vuelve a
+    // consultar al regresar a la pestaña y cada 45 s mientras está a la vista.
+    document.addEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.addEventListener('focus', this.alCambiarVisibilidad);
+    this.programarRefresco();
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    this.refrescoSub?.unsubscribe();
     if (this.toastTimer) clearTimeout(this.toastTimer);
+
+    document.removeEventListener('visibilitychange', this.alCambiarVisibilidad);
+    window.removeEventListener('focus', this.alCambiarVisibilidad);
+    this.detenerRefresco();
   }
 
-  cargarPostulaciones(): void {
-    this.loading = true;
-    this.errorMessage = '';
-    this.subs.add(
-      this.postulacionesService.misPostulaciones().subscribe({
-        next: (apps) => {
-          this.applications = apps || [];
-          this.loading = false;
-        },
-        error: (err) => {
-          this.loading = false;
-          if (err.status === 401) {
-            this.errorMessage = 'Inicia sesión como candidato para ver tus postulaciones.';
-          } else {
-            this.errorMessage = err.error?.message || 'No fue posible cargar tus postulaciones.';
-          }
+  // ── Refresco automático ────────────────────────────────────────
+
+  private readonly alCambiarVisibilidad = (): void => {
+    if (document.hidden) {
+      this.detenerRefresco();
+      return;
+    }
+
+    this.refrescarSiSePuede();
+    this.programarRefresco();
+  };
+
+  private programarRefresco(): void {
+    this.detenerRefresco();
+    if (document.hidden) return;
+    this.refrescoTimer = setInterval(
+      () => this.refrescarSiSePuede(), this.intervaloRefresco
+    );
+  }
+
+  private detenerRefresco(): void {
+    if (this.refrescoTimer) {
+      clearInterval(this.refrescoTimer);
+      this.refrescoTimer = null;
+    }
+  }
+
+  /** Con el diálogo de retiro abierto no se recarga: cambiaría los datos bajo el usuario */
+  private refrescarSiSePuede(): void {
+    if (document.hidden) return;
+    if (this.withdrawTargetApp || this.submittingWithdraw) return;
+
+    this.cargarPostulaciones(true);
+  }
+
+  /**
+   * GET /postulaciones/mias. En modo silencioso no muestra el esqueleto de
+   * carga ni borra lo que ya hay en pantalla: lo usa el refresco de fondo.
+   */
+  cargarPostulaciones(silencioso = false): void {
+    if (!silencioso) {
+      this.loading = true;
+      this.errorMessage = '';
+    }
+
+    const anteriores = new Map(this.applications.map(a => [a.id, a.estado.codigo]));
+
+    const peticion = this.postulacionesService.misPostulaciones().subscribe({
+      next: (apps) => {
+        this.applications = apps || [];
+        this.loading = false;
+        if (silencioso) this.avisarCambios(anteriores);
+      },
+      error: (err) => {
+        // Un fallo del refresco de fondo no debe vaciar la pantalla
+        if (silencioso) return;
+
+        this.loading = false;
+        if (err.status === 401) {
+          this.errorMessage = 'Inicia sesión como candidato para ver tus postulaciones.';
+        } else {
+          this.errorMessage = err.error?.message || 'No fue posible cargar tus postulaciones.';
         }
-      })
+      }
+    });
+
+    if (silencioso) {
+      this.refrescoSub?.unsubscribe();
+      this.refrescoSub = peticion;
+    } else {
+      this.subs.add(peticion);
+    }
+  }
+
+  /** Avisa si la empresa movió el Kanban con la pantalla abierta */
+  private avisarCambios(anteriores: Map<number, EtapaPostulacionCodigo>): void {
+    const cambiadas = this.applications.filter(
+      a => anteriores.has(a.id) && anteriores.get(a.id) !== a.estado.codigo
+    );
+
+    if (cambiadas.length === 0) return;
+
+    this.showToast(
+      cambiadas.length === 1
+        ? `Tu postulación cambió a ${this.statusConfig[cambiadas[0].estado.codigo]?.label ?? cambiadas[0].estado.codigo}.`
+        : `${cambiadas.length} de tus postulaciones cambiaron de estado.`
     );
   }
 
