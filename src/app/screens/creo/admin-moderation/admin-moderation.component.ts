@@ -3,13 +3,24 @@ import { MarkdownPipe } from '../../../core/pipes/markdown.pipe';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AdminShellComponent } from '../../../components/creo-design-system/admin-shell/admin-shell.component';
 import { VacantesService } from '../../../core/api/vacantes.service';
-import { VacanteRevision } from '../../../core/api/models/vacante-empresa.model';
+import { MetaPaginacion } from '../../../core/api/models/api-response.model';
+import { RevisionModeracion, VacanteRevision } from '../../../core/api/models/vacante-empresa.model';
 
 export type ReportStatus = "pending" | "unpublished" | "approved";
+
+type FiltroModeracion = "all" | ReportStatus;
+
+const REVISION_POR_FILTRO: Record<FiltroModeracion, RevisionModeracion> = {
+  pending: 'pendiente',
+  approved: 'aprobada',
+  unpublished: 'no_aprobada',
+  all: 'todas',
+};
 
 export interface ReportedJob {
   id: string;
@@ -41,15 +52,17 @@ export interface ReportedJob {
 })
 export class AdminModerationComponent implements OnInit, OnDestroy {
   private vacantesService = inject(VacantesService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private subs = new Subscription();
+  private cargaActual?: Subscription;
 
-  /**
-   * Vacantes que vienen de GET /admin/vacantes/pendientes.
-   * Las que el admin aprueba o no aprueba en esta sesión se conservan en la lista
-   * con su nuevo estado, para que aparezcan en las pestañas "Aprobadas" y "No aprobadas".
-   */
+  /** Página actual de GET /admin/vacantes para la pestaña elegida */
   reports: ReportedJob[] = [];
-  filter: "all" | ReportStatus = "pending";
+  filter: FiltroModeracion = "pending";
+  pagina = 1;
+  meta: MetaPaginacion | null = null;
+  private pendingTotal = 0;
 
   loading = false;
   loadError = '';
@@ -72,11 +85,18 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
   massUnpublishError = '';
 
   ngOnInit(): void {
-    this.cargarPendientesAdmin();
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab && tab in REVISION_POR_FILTRO) {
+      this.filter = tab as FiltroModeracion;
+    }
+
+    this.cargar();
+    if (this.filter !== 'pending') this.cargarConteoPendientes();
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    this.cargaActual?.unsubscribe();
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
   }
 
@@ -85,7 +105,29 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
   }
 
   get pendingCount(): number {
-    return this.reports.filter(r => r.status === 'pending').length;
+    return this.pendingTotal;
+  }
+
+  get totalPaginas(): number {
+    return this.meta?.last_page ?? 1;
+  }
+
+  cambiarFiltro(filtro: FiltroModeracion): void {
+    if (filtro === this.filter) return;
+
+    this.filter = filtro;
+    this.pagina = 1;
+    this.selectedReportIds.clear();
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: filtro }, replaceUrl: true });
+    this.cargar();
+  }
+
+  irAPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas || pagina === this.pagina) return;
+
+    this.pagina = pagina;
+    this.selectedReportIds.clear();
+    this.cargar();
   }
 
   get isAllSelected(): boolean {
@@ -162,16 +204,22 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
     this.reviewingJob = null;
   }
 
-  /** HU-22: cola real de vacantes sin revisión vigente (la más antigua primero) */
-  cargarPendientesAdmin(): void {
+  /** Se cancela la carga anterior para que una respuesta vieja no pise la pestaña actual */
+  cargar(): void {
     this.loading = true;
     this.loadError = '';
-    this.subs.add(
-      this.vacantesService.vacantesPendientes().subscribe({
-        next: (vacantes) => {
+    this.cargaActual?.unsubscribe();
+
+    this.cargaActual = this.vacantesService
+      .listadoModeracion(REVISION_POR_FILTRO[this.filter], this.pagina)
+      .subscribe({
+        next: ({ vacantes, meta }) => {
           this.loading = false;
-          this.reports = (vacantes || []).map(vr => this.desdeRevision(vr));
-          // Una vacante que ya no está pendiente no puede seguir seleccionada
+          this.reports = vacantes.map(vr => this.desdeRevision(vr));
+          this.meta = meta;
+          if (this.filter === 'pending') this.pendingTotal = meta.total;
+
+          // Una vacante que ya no está en la página no puede seguir seleccionada
           const vigentes = new Set(this.reports.map(r => r.id));
           this.selectedReportIds.forEach(id => {
             if (!vigentes.has(id)) this.selectedReportIds.delete(id);
@@ -179,14 +227,26 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
         },
         error: (err: HttpErrorResponse) => {
           this.loading = false;
-          this.loadError = err.error?.message || 'No fue posible cargar las vacantes pendientes de revisión.';
+          this.reports = [];
+          this.meta = null;
+          this.loadError = err.error?.message || 'No fue posible cargar las vacantes.';
         }
+      });
+  }
+
+  private cargarConteoPendientes(): void {
+    this.subs.add(
+      this.vacantesService.listadoModeracion('pendiente').subscribe({
+        next: ({ meta }) => this.pendingTotal = meta.total,
+        error: () => {}
       })
     );
   }
 
   private desdeRevision(vr: VacanteRevision): ReportedJob {
-    const createdAt = vr.creado_en ? new Date(vr.creado_en) : new Date();
+    // Las decididas muestran la fecha de la decisión, que es por la que se ordenan
+    const fecha = vr.revision?.revisado_en ?? vr.creado_en;
+    const createdAt = fecha ? new Date(fecha) : new Date();
     const formattedDate = createdAt.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
 
     // Los dos salarios llegan con valor o los dos en null (vacante sin salario publicado)
@@ -235,7 +295,8 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
   /** 409 VACANCY_ALREADY_REVIEWED: otro admin decidió antes; se recarga la cola */
   private manejarYaRevisada(err: HttpErrorResponse): boolean {
     if (err.status === 409 && err.error?.error_code === 'VACANCY_ALREADY_REVIEWED') {
-      this.cargarPendientesAdmin();
+      this.cargar();
+      this.cargarConteoPendientes();
       return true;
     }
     return false;
@@ -246,6 +307,7 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
     this.vacantesService.aprobarVacante(Number(r.id)).subscribe({
       next: (vr) => {
         this.actualizarFila(vr);
+        this.cargarConteoPendientes();
         this.showToast(`Vacante "${r.title}" aprobada. La empresa debe completar el pago para publicarla.`);
       },
       error: (err: HttpErrorResponse) => {
@@ -277,6 +339,7 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
     this.vacantesService.noAprobarVacante(Number(target.id), motivo).subscribe({
       next: (vr) => {
         this.actualizarFila(vr);
+        this.cargarConteoPendientes();
         this.showToast(`Vacante "${target.title}" marcada como no aprobada.`);
         this.unpublishing = null;
       },
@@ -305,6 +368,7 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
           aprobadas.has(r.id) ? { ...r, status: 'approved' as ReportStatus } : r
         );
         aprobadas.forEach(id => this.selectedReportIds.delete(id));
+        this.cargarConteoPendientes();
         const n = resp.aprobadas.length;
         this.showToast(`Se ${n === 1 ? 'aprobó 1 vacante' : `aprobaron ${n} vacantes`}. Cada empresa debe completar el pago para publicarlas.`);
       },
@@ -356,6 +420,7 @@ export class AdminModerationComponent implements OnInit, OnDestroy {
     ).subscribe(resultados => {
       const fallidas = resultados.filter(res => !res.vr);
       resultados.forEach(res => { if (res.vr) this.actualizarFila(res.vr); });
+      this.cargarConteoPendientes();
 
       this.bulkErrors = fallidas.map(f => {
         const r = this.reports.find(x => x.id === f.id);

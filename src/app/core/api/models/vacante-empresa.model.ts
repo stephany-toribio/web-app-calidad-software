@@ -1,3 +1,5 @@
+import { MetaPaginacion } from './api-response.model';
+
 export type TipoEmpleo = 'presencial' | 'remoto' | 'hibrido';
 
 export type EstadoGeneralVacante =
@@ -155,6 +157,14 @@ export interface VacanteRevision {
   empresa: EmpresaRevisionResumen;
   revision: RevisionDetalle;
   creado_en: string;
+}
+
+/** Filtro de GET /admin/vacantes; 'todas' requiere soporte en el backend */
+export type RevisionModeracion = 'pendiente' | 'aprobada' | 'no_aprobada' | 'todas';
+
+export interface PaginaModeracion {
+  vacantes: VacanteRevision[];
+  meta: MetaPaginacion;
 }
 
 export interface ResultadoAprobarMasivo {

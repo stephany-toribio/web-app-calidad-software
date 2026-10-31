@@ -32,7 +32,7 @@
     <div class="flex rounded-xl border overflow-hidden self-start border-[#E2E8F0] shadow-sm">
       <button
         type="button"
-        (click)="filter = 'pending'"
+        (click)="cambiarFiltro('pending')"
         class="h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer border-r border-[#E2E8F0]"
         [style.backgroundColor]="filter === 'pending' ? '#111111' : '#FFFFFF'"
         [style.color]="filter === 'pending' ? '#FFFFFF' : '#64748B'"
@@ -50,7 +50,7 @@
 
       <button
         type="button"
-        (click)="filter = 'unpublished'"
+        (click)="cambiarFiltro('unpublished')"
         class="h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer border-r border-[#E2E8F0]"
         [style.backgroundColor]="filter === 'unpublished' ? '#111111' : '#FFFFFF'"
         [style.color]="filter === 'unpublished' ? '#FFFFFF' : '#64748B'"
@@ -60,7 +60,7 @@
 
       <button
         type="button"
-        (click)="filter = 'approved'"
+        (click)="cambiarFiltro('approved')"
         class="h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer border-r border-[#E2E8F0]"
         [style.backgroundColor]="filter === 'approved' ? '#111111' : '#FFFFFF'"
         [style.color]="filter === 'approved' ? '#FFFFFF' : '#64748B'"
@@ -70,7 +70,7 @@
 
       <button
         type="button"
-        (click)="filter = 'all'"
+        (click)="cambiarFiltro('all')"
         class="h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer"
         [style.backgroundColor]="filter === 'all' ? '#111111' : '#FFFFFF'"
         [style.color]="filter === 'all' ? '#FFFFFF' : '#64748B'"
@@ -145,12 +145,12 @@
 
   <!-- Carga y error de la cola -->
   <div *ngIf="loading" class="rounded-2xl border p-10 text-center bg-white border-[#E2E8F0] shadow-sm text-sm text-[#64748B]">
-    Cargando vacantes pendientes de revisión...
+    Cargando vacantes...
   </div>
 
   <div *ngIf="!loading && loadError" class="rounded-2xl border p-6 text-center bg-[#FEF2F2] border-[#FCA5A5] text-sm text-[#991B1B]">
     <p class="mb-3">{{ loadError }}</p>
-    <button type="button" (click)="cargarPendientesAdmin()" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#111111] text-white cursor-pointer">
+    <button type="button" (click)="cargar()" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#111111] text-white cursor-pointer">
       Reintentar
     </button>
   </div>
@@ -302,6 +302,25 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Paginación (meta del servidor) -->
+  <div *ngIf="!loading && !loadError && meta && totalPaginas > 1"
+    class="mt-4 flex items-center justify-between gap-3">
+    <p class="text-xs text-[#64748B]">
+      Página <strong class="text-[#111111]">{{ pagina }}</strong> de <strong class="text-[#111111]">{{ totalPaginas }}</strong>
+      · {{ meta.total }} vacante{{ meta.total !== 1 ? 's' : '' }}
+    </p>
+    <div class="flex items-center gap-2">
+      <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 1"
+        class="h-8 px-3 rounded-lg border text-xs font-semibold transition-colors border-[#E2E8F0] text-[#475569] bg-white hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+        Anterior
+      </button>
+      <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina === totalPaginas"
+        class="h-8 px-3 rounded-lg border text-xs font-semibold transition-colors border-[#E2E8F0] text-[#475569] bg-white hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+        Siguiente
+      </button>
     </div>
   </div>
 
