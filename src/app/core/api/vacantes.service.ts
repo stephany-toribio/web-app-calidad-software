@@ -28,8 +28,6 @@ export class VacantesService {
   }
 
   /**
-   * HU-04: búsqueda de vacantes disponibles (Candidato), 10 por página.
-   * Solo se envían los filtros con valor; el backend ignora los desconocidos.
    */
   buscarVacantes(filtros: FiltrosBusquedaVacantes): Observable<PaginaVacantes> {
     let params = new HttpParams();
@@ -45,6 +43,25 @@ export class VacantesService {
     return this.http
       .get<ApiPaginatedResponse<VacanteBusqueda>>(`${this.apiUrl}/vacantes`, { params })
       .pipe(map(res => ({ vacantes: res.data, meta: res.meta })));
+  }
+
+  /** Vacantes guardadas del candidato que siguen disponibles, la más reciente primero */
+  vacantesGuardadas(): Observable<VacanteBusqueda[]> {
+    return this.http
+      .get<ApiResponse<VacanteBusqueda[]>>(`${this.apiUrl}/candidatos/me/vacantes-guardadas`)
+      .pipe(map(res => res.data));
+  }
+
+  guardarVacante(id: number): Observable<void> {
+    return this.http
+      .put<ApiResponse<unknown>>(`${this.apiUrl}/candidatos/me/vacantes-guardadas/${id}`, {})
+      .pipe(map(() => undefined));
+  }
+
+  quitarVacanteGuardada(id: number): Observable<void> {
+    return this.http
+      .delete<ApiResponse<unknown>>(`${this.apiUrl}/candidatos/me/vacantes-guardadas/${id}`)
+      .pipe(map(() => undefined));
   }
 
   /** Mis vacantes no eliminadas (Empresa) */

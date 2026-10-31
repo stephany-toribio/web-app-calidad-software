@@ -71,7 +71,6 @@ export class CandidateJobDetailComponent implements OnInit, OnDestroy {
       })
     );
 
-    // "Guardados" sigue siendo local: el backend aún no tiene favoritos
     this.subs.add(
       this.creoJobsService.saved$.subscribe(savedIds => {
         if (this.job) {
@@ -79,6 +78,7 @@ export class CandidateJobDetailComponent implements OnInit, OnDestroy {
         }
       })
     );
+    this.creoJobsService.cargarGuardadas();
   }
 
   ngOnDestroy(): void {

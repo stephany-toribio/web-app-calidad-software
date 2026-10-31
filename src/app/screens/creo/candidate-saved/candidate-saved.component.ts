@@ -16,7 +16,6 @@ import { Job } from '../../../data/creo-data';
 })
 export class CandidateSavedComponent implements OnInit, OnDestroy {
   savedJobs: Job[] = [];
-  savedJobIds: string[] = [];
   appliedJobIds: string[] = [];
 
   private subs = new Subscription();
@@ -29,15 +28,14 @@ export class CandidateSavedComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subs.add(
       combineLatest([
-        this.creoJobsService.publicJobs$,
-        this.creoJobsService.saved$,
+        this.creoJobsService.guardadas$,
         this.creoJobsService.applied$,
-      ]).subscribe(([jobs, savedIds, appliedIds]: [Job[], string[], string[]]) => {
-        this.savedJobIds = savedIds;
+      ]).subscribe(([jobs, appliedIds]: [Job[], string[]]) => {
         this.appliedJobIds = appliedIds;
-        this.savedJobs = jobs.filter((j: Job) => savedIds.includes(j.id));
+        this.savedJobs = jobs;
       })
     );
+    this.creoJobsService.cargarGuardadas();
   }
 
   ngOnDestroy(): void {

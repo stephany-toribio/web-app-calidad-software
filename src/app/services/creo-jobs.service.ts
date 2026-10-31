@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, combineLatest, map } from 'rxjs';
+import { VacantesService } from '../core/api/vacantes.service';
+import { mapVacanteBusquedaToJob } from '../core/api/mappers/vacante-busqueda.mapper';
 import {
   JOBS,
   APPLICATIONS,
@@ -62,7 +64,7 @@ export interface ModerationJob {
   providedIn: 'root'
 })
 export class CreoJobsService {
-  private savedKey = 'creo_saved_jobs';
+  private vacantesService = inject(VacantesService);
   private moderationKey = 'creo_moderation_queue';
   private jobsKey = 'creo_jobs';
   private managedKey = 'creo_managed_jobs';
@@ -81,8 +83,11 @@ export class CreoJobsService {
   private jobsSubject = new BehaviorSubject<Job[]>(this.cargar(this.jobsKey, JOBS));
   jobs$ = this.jobsSubject.asObservable();
 
-  private savedSubject = new BehaviorSubject<string[]>(this.loadSaved());
+  private savedSubject = new BehaviorSubject<string[]>([]);
   saved$ = this.savedSubject.asObservable();
+
+  private guardadasSubject = new BehaviorSubject<Job[]>([]);
+  guardadas$ = this.guardadasSubject.asObservable();
 
   private appliedSubject = new BehaviorSubject<string[]>(this.loadApplied());
   applied$ = this.appliedSubject.asObservable();
@@ -242,15 +247,6 @@ export class CreoJobsService {
     this.saveModeration(actualizada);
   }
 
-  private loadSaved(): string[] {
-    try {
-      const stored = localStorage.getItem(this.savedKey);
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    // Default saved jobs as shown in Figma / Screenshot 3: j1 and j5
-    return ['j1', 'j5'];
-  }
-
   private loadApplied(): string[] {
     try {
       const stored = localStorage.getItem(this.appliedKey);
@@ -272,15 +268,42 @@ export class CreoJobsService {
     return this.savedSubject.value.includes(jobId);
   }
 
+  /** Se vacía antes de pedirlas para no mostrar las guardadas de otra sesión */
+  cargarGuardadas(): void {
+    this.savedSubject.next([]);
+    this.guardadasSubject.next([]);
+    this.refrescarGuardadas();
+  }
+
   toggleSave(jobId: string): void {
-    const current = this.savedSubject.value;
-    const updated = current.includes(jobId)
-      ? current.filter(id => id !== jobId)
-      : [...current, jobId];
-    this.savedSubject.next(updated);
-    try {
-      localStorage.setItem(this.savedKey, JSON.stringify(updated));
-    } catch {}
+    const actuales = this.savedSubject.value;
+    const guardar = !actuales.includes(jobId);
+
+    this.savedSubject.next(guardar ? [...actuales, jobId] : actuales.filter(id => id !== jobId));
+    if (!guardar) {
+      this.guardadasSubject.next(this.guardadasSubject.value.filter(j => j.id !== jobId));
+    }
+
+    const peticion = guardar
+      ? this.vacantesService.guardarVacante(Number(jobId))
+      : this.vacantesService.quitarVacanteGuardada(Number(jobId));
+
+    peticion.subscribe({
+      next: () => { if (guardar) this.refrescarGuardadas(); },
+      // Si falla se vuelve a lo que diga el servidor
+      error: () => this.refrescarGuardadas()
+    });
+  }
+
+  private refrescarGuardadas(): void {
+    this.vacantesService.vacantesGuardadas().subscribe({
+      next: vacantes => {
+        const jobs = vacantes.map(mapVacanteBusquedaToJob);
+        this.guardadasSubject.next(jobs);
+        this.savedSubject.next(jobs.map(j => j.id));
+      },
+      error: () => {}
+    });
   }
 
   isApplied(jobId: string): boolean {
