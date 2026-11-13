@@ -1,31 +1,34 @@
-## Descripción
+## Problema y resultado
 
-Describe brevemente los cambios realizados.
+Qué falla o se necesita y qué comportamiento queda después del cambio.
 
-## Issue relacionado
+## Trazabilidad
 
-Indicar el Issue relacionado con este cambio.
+- Issue / tarea QA:
+- Requisitos RF/PWA/RNF:
+- Casos CP:
+- Hito y dependencias:
 
-Ejemplo: `D1-02`
+## Cambios
 
-## Tipo de cambio
+-
 
-- [ ] Nueva funcionalidad
-- [ ] Corrección
-- [ ] Refactorización
-- [ ] Documentación
-- [ ] Pruebas
-- [ ] Configuración
+## Validación realizada
 
-## Validación
+| Comando o caso | Ambiente / commit | Resultado | Evidencia |
+| --- | --- | --- | --- |
+| | | | |
 
-- [ ] El proyecto ejecuta correctamente.
-- [ ] Probé los cambios realizados.
-- [ ] El cambio corresponde al Issue indicado.
-- [ ] No incluí contraseñas, tokens ni secretos.
-- [ ] El PR está dirigido a la rama correcta.
-- [ ] Revisé los archivos modificados antes de solicitar revisión.
+Indicar expresamente qué no se ejecutó y por qué. No marcar como aprobado un caso pendiente.
 
-## Evidencia
+## Revisión
 
-Agregar capturas, resultados de Postman, pruebas u otra evidencia cuando corresponda.
+- [ ] Rama de origen creada desde develop y destino correcto.
+- [ ] Criterios de la issue cubiertos y dependencias revisadas.
+- [ ] Retest y regresión apropiados, o justificación para un cambio documental.
+- [ ] Contratos y documentación actualizados.
+- [ ] Evidencias sin secretos ni datos personales reales.
+- [ ] Revisión de otro integrante; el autor no se autoaprueba.
+- [ ] Riesgos, bloqueo y recuperación descritos cuando corresponda.
+
+Usar Refs mientras falte validación; Closes solo cuando integrar este PR realmente complete la issue.

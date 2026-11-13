@@ -1,0 +1,52 @@
+name: Tarea del proyecto
+description: Definir resultado, dependencias y pruebas de una tarea.
+title: "QA-NN: "
+body:
+  - type: input
+    id: epic
+    attributes:
+      label: Épica, hito y requisitos
+      description: E01-E08, M0-M5, RF/PWA/RNF y enlace al plan.
+    validations:
+      required: true
+  - type: dropdown
+    id: rol
+    attributes:
+      label: Responsable por rol
+      options:
+        - R1 - API y Karate
+        - R2 - Web, PWA y Selenium
+        - R3 - Integración, Appium y JMeter
+    validations:
+      required: true
+  - type: dropdown
+    id: prioridad
+    attributes:
+      label: Prioridad
+      options:
+        - P0 - Bloqueo o integridad crítica
+        - P1 - Necesario para el alcance
+        - P2 - Mejora opcional
+    validations:
+      required: true
+  - type: textarea
+    id: resultado
+    attributes:
+      label: Resultado y criterios de aceptación
+      description: Resultado verificable, límites y checklist.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencias
+    attributes:
+      label: Dependencias
+      description: Enlaces reales a las issues que deben completarse.
+    validations:
+      required: true
+  - type: textarea
+    id: pruebas
+    attributes:
+      label: Casos, evidencia y cierre
+      description: IDs CP, herramientas, ambiente y resultado esperado, revisor y Definition of Done.
+    validations:
+      required: true
