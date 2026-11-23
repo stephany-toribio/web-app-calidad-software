@@ -157,7 +157,7 @@ El [plan maestro](https://github.com/stephany-toribio/recruitment-api-calidad-so
 | R2 | Web, PWA y Selenium | R3 | 33 |
 | R3 | Integración, Appium y JMeter | R1 | 34 |
 
-Los roles deben asociarse a los usuarios reales del equipo; no equivalen todavía a asignaciones nominales de GitHub. Los puntos expresan tamaño relativo, no horas. Las fechas se fijarán con el plazo real y la disponibilidad del equipo.
+Las asignaciones nominales confirmadas son R1: @stephany-toribio, R2: @aquinoestoyxd y R3: @luisvalenzuela25. Las responsabilidades y dependencias se detallan en el plan maestro. Los puntos expresan tamaño relativo, no horas. Las fechas se fijarán con el plazo real y la disponibilidad del equipo.
 
 Consultar [GESTION_PROYECTO.md](docs/GESTION_PROYECTO.md) para los hitos, estados, reglas de trabajo, índice de issues, riesgos y criterios de cierre.
 

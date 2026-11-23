@@ -10,7 +10,15 @@ Este plan organiza la entrega de Calidad de Software para tres integrantes. El �
 | R2 | Web, PWA y Selenium | R3 | 11 | 33 |
 | R3 | Integración, Appium y JMeter | R1 | 10 | 34 |
 
-Las asignaciones son por rol. Se deben sustituir por los usuarios reales del equipo en Assignees; no se han inventado identidades. Las ocho épicas y el issue maestro no suman puntos para evitar doble conteo. Las dos issues QA-01 documentales preexistentes tampoco están incluidas en los 102 puntos de las 31 tareas nuevas.
+Las asignaciones nominales fueron confirmadas en el plan maestro el 13/11/2026:
+
+| Rol | Responsable GitHub | Frente principal | Revisor por defecto |
+| --- | --- | --- | --- |
+| R1 | @stephany-toribio | Backend, API y Karate | R2 |
+| R2 | @aquinoestoyxd | Frontend, PWA y Selenium | R3 |
+| R3 | @luisvalenzuela25 | Integración, Appium, JMeter y trazabilidad | R1 |
+
+Las 31 tareas nuevas se distribuyen según el plan maestro. La asignación de una tarea no acredita su ejecución ni su aprobación. Las ocho épicas y el issue maestro no suman puntos para evitar doble conteo. Las dos issues QA-01 documentales preexistentes tampoco están incluidas en los 102 puntos de las 31 tareas nuevas.
 
 Los puntos son tamaño relativo y se revisan tras la línea base. No son horas ni fechas comprometidas. El calendario se fijará con el plazo real y la disponibilidad de los tres integrantes.
 
@@ -82,13 +90,15 @@ Cada issue contiene criterios de aceptación verificables, casos asociados, evid
 
 ## Configuración del GitHub Project
 
-Usar un solo Project para las issues de los dos repositorios. La creación de issues en un repositorio y su incorporación a un Project son operaciones distintas; verificar la presencia de los elementos en el tablero.
+El [GitHub Project #3](https://github.com/users/stephany-toribio/projects/3) es el tablero único acordado para las issues de ambos repositorios. El [issue maestro #3](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/3) conserva el índice del plan y sus relaciones.
+
+La creación y asignación de issues no acredita su incorporación al tablero. La presencia de los elementos y la configuración de campos, vistas y automatizaciones quedan pendientes de verificación directa.
 
 | Campo | Valores o uso |
 | --- | --- |
 | Status | Backlog, Ready, In progress, In review, In validation, Blocked, Done |
 | Tipo | Plan, Épica, Tarea, Defecto |
-| Rol | R1, R2, R3; puente provisional hasta las asignaciones nominales |
+| Rol | R1, R2, R3; asociados a los responsables nominales confirmados |
 | Assignees | Usuarios reales verificados; un responsable principal por tarea |
 | Prioridad | P0, P1, P2 |
 | Hito | M0, M1, M2, M3, M4, M5 |
