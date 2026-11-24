@@ -1,0 +1,5 @@
+PASS: SPA fallback de Nginx
+PASS: perfil-sin-autenticacion - HTTP 401 - JSON valido
+PASS: ruta-inexistente - HTTP 404 - JSON valido
+PASS: login-sin-campos - HTTP 422 - JSON valido
+PASS: Contrato del artefacto estatico verificado.

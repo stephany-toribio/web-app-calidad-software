@@ -1,0 +1,10 @@
+PASS: Variable ausente
+PASS: URL relativa
+PASS: HTTP
+PASS: Localhost
+PASS: Loopback
+PASS: Prefijo incorrecto
+PASS: Credenciales
+PASS: Parametros
+PASS: Fragmento
+PASS: 9/9 pruebas negativas.
