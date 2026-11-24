@@ -32,3 +32,20 @@ Versionar las suites en las rutas previstas del README. Registrar comando, caso,
 Las pruebas usan datos ficticios y un entorno aislado. Mantener fuera del repositorio credenciales reales, tokens y artefactos con datos privados. Los cambios de alcance se reflejan en ambos README, la matriz y el [plan maestro](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/3).
 
 Consultar [docs/GESTION_PROYECTO.md](docs/GESTION_PROYECTO.md) para roles, hitos, estados, criterios y dependencias.
+
+## Cumplimiento de la rúbrica
+
+Consultar [RUBRICA_EVALUACION.md](docs/RUBRICA_EVALUACION.md)
+antes de implementar una tarea de automatización.
+
+- Identificar los requisitos, escenarios CP y controles RUB.
+- Vincular el ticket Jira cuando corresponda.
+- Registrar los resultados reales de cada ejecución.
+- No declarar PASS sin evidencia verificable.
+- Solicitar revisión cruzada.
+- Conservar los hallazgos y resultados de regresión.
+- No almacenar secretos ni datos personales reales.
+- Actualizar documentación e issues ante cambios de alcance.
+
+Las ramas `docs/QA-NN-descripcion` se utilizarán para
+actualizaciones documentales controladas.

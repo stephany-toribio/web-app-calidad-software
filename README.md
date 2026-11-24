@@ -1,4 +1,4 @@
-# Portal de Empleos PWA — Frontend — Calidad de Software
+# Portal de Empleos Web, PWA y Android — Frontend — Calidad de Software
 
 Angular 19, TypeScript 5.7 y Tailwind CSS 4.
 
@@ -6,7 +6,7 @@ API del mismo proyecto: [recruitment-api-calidad-software](https://github.com/st
 
 ## Objetivo y delimitación
 
-Este proyecto del curso Calidad de Software evalúa el Portal de Empleos CREO+ con datos persistentes, flujos de aprobación, permisos y pruebas reproducibles. La entrega incluye una **PWA instalable en Android** y automatización con **Karate, JMeter, Selenium y Appium**.
+Este proyecto del curso Calidad de Software evalúa el Portal de Empleos CREO+ con datos persistentes, flujos de aprobación, permisos y pruebas reproducibles. La entrega incluye una **PWA instalable y un APK Android híbrido mediante Capacitor** y automatización con **Karate, JMeter, Selenium y Appium**.
 
 La base de trabajo es `develop`. `main` se reserva para las entregas estables y ahora conserva una base anterior. El código ya existente se verifica antes de modificarlo: una pantalla, endpoint o test versionado no acredita por sí solo una ejecución aprobada.
 
@@ -24,10 +24,10 @@ La base de trabajo es `develop`. `main` se reserva para las entregas estables y 
 | RF-08 | Revisión, entrevista, contratación/rechazo y cupos |
 | RF-09 | Seguimiento y retiro propio en estados permitidos |
 | RF-10 | Historial de decisiones, fechas y motivos |
-| PWA-01 | PWA instalable y apertura en Android |
-| PWA-02 | Caché pública, vista offline y escrituras solo en línea |
-| PWA-03 | Actualización, reapertura y recuperación de la PWA |
-| PWA-04 | Diseño móvil, accesibilidad y selectores estables |
+| PWA-01 | PWA y APK instalables y apertura en Android |
+| PWA-02 | Caché pública web, comportamiento offline y escrituras solo en línea en PWA y APK |
+| PWA-03 | Actualización, reapertura y recuperación diferenciadas de PWA y APK |
+| PWA-04 | Diseño móvil, accesibilidad, selectores estables e interacción nativa en APK |
 | RNF-01 | Autorización del servidor y protección de sesiones/datos |
 | RNF-02 | Integridad transaccional y concurrencia |
 | RNF-03 | Rendimiento bajo carga controlada |
@@ -36,7 +36,7 @@ La base de trabajo es `develop`. `main` se reserva para las entregas estables y 
 ### Fuera del alcance de esta entrega
 
 - Matching con IA, rediseño del algoritmo o integración con un tercer servicio Python.
-- Aplicación nativa Android/iOS, publicación en tiendas y soporte específico de iOS.
+- Desarrollo de un frontend móvil independiente, publicación obligatoria en tiendas y soporte específico de iOS. El APK híbrido mediante Capacitor sí está incluido.
 - Pasarela bancaria, cobros reales y datos reales de tarjetas.
 - Postulaciones, pagos o decisiones sin conexión y colas automáticas de escrituras.
 - Nuevos módulos de analítica, lector de CV, auditoría avanzada o ampliación de catálogos que no sean necesarios para el flujo evaluado.
@@ -72,9 +72,9 @@ Las funciones adicionales ya presentes —por ejemplo, vacantes guardadas o recu
 
 Contratado y Rechazado son estados finales. Se rechazan los saltos y las operaciones no permitidas sobre postulaciones retiradas. El número de puestos limita las **contrataciones**, no la cantidad de candidatos que pueden postular mientras la oferta siga disponible.
 
-## PWA y comportamiento móvil
+## PWA, APK Android y comportamiento móvil
 
-La PWA forma parte confirmada del alcance; todavía debe implementarse y demostrarse con evidencia.
+La PWA y el APK Android híbrido forman parte del alcance. Ambos deben implementarse y validarse con evidencia real.
 
 | ID | Cambio previsto | Comprobación de aceptación |
 | --- | --- | --- |
@@ -86,7 +86,24 @@ La PWA forma parte confirmada del alcance; todavía debe implementarse y demostr
 
 Si se pierde la respuesta durante una postulación, el resultado puede ser incierto: se debe consultar el estado persistente antes de reintentar y conservar la protección de unicidad de la API.
 
-Appium se ejecutará en un dispositivo o emulador Android y documentará el modo de apertura de la PWA instalada y el contexto usado. La vista móvil del escritorio no sustituye esa prueba. La instalación manual, cuando exista, se identificará como tal; no se presentará como paso automatizado.
+Appium se ejecutará sobre el APK generado mediante Capacitor en un dispositivo o emulador Android. Se documentarán las capabilities, UiAutomator2, los contextos NATIVE_APP y WebView, los gestos swipe y tap y el flujo funcional end-to-end. Se demostrará interacción con elementos realmente nativos. La vista móvil del escritorio no sustituye esta prueba. Los pasos manuales se distinguirán de los automatizados.
+
+### Aplicación Android híbrida mediante Capacitor
+
+El APK se generará reutilizando el frontend Angular existente.
+
+- Se versionará la configuración de Capacitor y el proyecto Android.
+- Se documentarán las versiones de Node.js, JDK, Android SDK y Gradle.
+- El APK utilizará la API del ambiente QA autorizado mediante HTTPS.
+- Se comprobarán la instalación y apertura en Android.
+- Se incorporará una interacción nativa funcional.
+- Appium verificará los gestos swipe y tap y los contextos disponibles.
+- Se validará la persistencia de las postulaciones.
+- La PWA y el APK tendrán mecanismos de actualización diferenciados.
+- No se permitirá éxito ficticio ni escrituras en cola sin conexión.
+
+Las pruebas del APK serán independientes de la comprobación
+del manifiesto y service worker de la PWA.
 
 ## Plan de pruebas y evidencias
 
@@ -117,26 +134,26 @@ Todos los casos de la siguiente matriz están **planificados**. Su resultado se 
 | CP-21 | RF-09 | Mis postulaciones y consulta de su vacante histórica | El candidato conserva seguimiento propio ante cambios de la vacante | Karate, Selenium |
 | CP-22 | RF-10 | Consulta de historial tras decisiones y retiro | Movimientos, fechas y motivo cuando corresponde; sin pérdida de registros | Karate, Selenium |
 | CP-23 | RF-01 a RF-10 | Recorrido integrado de los tres roles en web | El resultado final visible coincide con la API y la base | Selenium |
-| CP-24 | PWA-01 | Instalación y apertura desde el lanzador Android | Manifiesto/iconos correctos y apertura instalada en modo standalone | Android, Appium |
-| CP-25 | PWA-04 | Pantallas móviles, orientación, teclado y foco | Acciones accesibles y sin desbordamientos que bloqueen el recorrido | Selenium, Appium |
-| CP-26 | PWA-02, RNF-01 | Apertura sin red y revisión de caché | Shell/vista offline; sin tokens, perfiles ni respuestas privadas en caché SW | Android/DevTools, Appium |
+| CP-24 | PWA-01 | Instalación y apertura de PWA y APK Android | PWA standalone y APK instalable con verificaciones diferenciadas | Android, Appium |
+| CP-25 | PWA-04 | Pantallas PWA y APK, orientación, teclado y foco | Acciones accesibles y sin desbordamientos que bloqueen el recorrido | Selenium, Appium |
+| CP-26 | PWA-02, RNF-01 | Comportamiento offline de PWA y APK | Vista offline; sin exposición de datos privados ni almacenamiento inseguro de tokens; caché SW verificada en PWA | Android/DevTools, Appium |
 | CP-27 | PWA-02, RF-07 | Corte de red antes/durante una escritura y recuperación | Sin éxito ficticio, cola automática ni duplicación; resultado incierto se consulta | Appium, API |
-| CP-28 | PWA-03 | Actualización instalada entre dos builds | Nueva versión usable, aviso/recuperación y formularios sin pérdida silenciosa | Android, Appium |
-| CP-29 | PWA-01, RF-02, RF-06, RF-07 | Login, búsqueda, detalle y postulación desde PWA Android | Ejecución Appium y persistencia demostradas en dispositivo/emulador | Appium |
-| CP-30 | PWA-02, PWA-03, RF-02 | Sesión inválida, logout y reapertura móvil | Reautenticación y mensajes coherentes; datos privados no expuestos | Appium |
+| CP-28 | PWA-03 | Actualización diferenciada de PWA y APK | Nueva versión usable, recuperación y formularios sin pérdida silenciosa | Android, Appium |
+| CP-29 | PWA-01, PWA-04, RF-02, RF-06, RF-07 | Login, búsqueda, detalle y postulación desde APK Android | Appium con swipe, tap, interacción nativa, contextos y persistencia demostrada | Appium |
+| CP-30 | PWA-02, PWA-03, RF-02 | Sesión inválida, logout y reapertura de PWA y APK | Reautenticación y mensajes coherentes; datos privados no expuestos | Appium |
 | CP-31 | RNF-03 | Carga de búsqueda/listado/detalle | p95, throughput y errores medidos frente al objetivo aprobado | JMeter |
 | CP-32 | RF-02, RNF-03 | Login concurrente con credenciales únicas | Correlación correcta de tokens, respuestas y tiempos | JMeter |
 | CP-33 | RF-07, RF-08, RNF-02, RNF-03 | Carga de postulaciones y decisiones | Sin pérdida, duplicación ni sobrecontratación; integridad verificada al finalizar | JMeter, PHPUnit/MySQL |
-| CP-34 | RNF-04 | Reproducción desde copia limpia y CI con reportes | Comandos repetibles, fallos visibles y evidencia completa sin secretos | CI, Karate, Selenium, Appium, JMeter |
+| CP-34 | RNF-04 | Reproducción desde copia limpia, CI y trazabilidad Jira | Comandos repetibles, reportes, tickets vinculados y evidencia sin secretos | CI, Karate, Selenium, Appium, JMeter |
 
 ### Suites previstas
 
 | Herramienta | Repositorio y ruta prevista | Entregable |
 | --- | --- | --- |
-| Karate | API: `qa/karate/` | Features positivos/negativos, Scenario Outline, runner, fixtures y reporte |
-| JMeter | API: `qa/jmeter/` | Planes JMX, CSV ficticio, correlación, assertions, JTL y reporte HTML |
-| Selenium | Frontend: `qa/selenium/` | Page Objects, esperas explícitas, recorridos por rol, capturas y reporte |
-| Appium | Frontend: `qa/appium/` | Capabilities, versiones, pruebas Android/PWA, capturas y reporte |
+| Karate | API: `qa/karate/` | Features positivos/negativos, Scenario Outline, esquemas JSON, tiempos, variables dinámicas, call, runner, fixtures y reporte |
+| JMeter | API: `qa/jmeter/` | Thread Groups, planes JMX, CSV Data-Driven, listeners, correlación, Response/Duration Assertion, JTL y reporte HTML |
+| Selenium | Frontend: `qa/selenium/` | Page Objects, selectores robustos sin XPath absolutos, esperas explícitas, recorridos end-to-end, capturas y reporte |
+| Appium | Frontend: `qa/appium/` | APK Android, capabilities, UiAutomator2, contextos nativo/WebView, swipe, tap, flujo end-to-end y reporte |
 | PHPUnit | API: `tests/Unit/`, `tests/Feature/`, `tests/MySql/` | Regresiones y pruebas de integridad/concurrencia; complementan las cuatro herramientas |
 
 Las rutas `qa/*` son ubicaciones de implementación previstas; no se describen como suites ya incorporadas. Los reportes deben indicar commit, fecha, ambiente, datos y resultado, y excluir tokens, contraseñas y datos personales reales.
@@ -146,6 +163,32 @@ Las rutas `qa/*` son ubicaciones de implementación previstas; no se describen c
 En QA-24 se medirá la línea base y se fijarán los umbrales de aceptación antes de ejecutar la carga de aceptación. Como objetivos iniciales de planificación: 25 usuarios virtuales, p95 de lecturas ≤2 s, p95 de login/escrituras ≤3 s, errores inesperados <1% y cero pérdida, duplicación o sobrecontratación.
 
 La exploración de 10/25/50 usuarios se hará solo en un entorno QA aislado, con ramp-up, duración y condiciones de parada documentados. Se separarán los 4xx esperados de los errores inesperados y se informará tamaño de muestra y límites del alojamiento. Los objetivos no son resultados medidos ni promesas de capacidad.
+
+## Cumplimiento de la rúbrica académica
+
+La referencia de aceptación del proyecto es
+[RUBRICA_EVALUACION.md](docs/RUBRICA_EVALUACION.md).
+
+El objetivo es alcanzar el nivel Excelente en los cinco criterios:
+
+| Criterio | Puntos máximos | Tareas principales |
+|---|---:|---|
+| Karate DSL | 4 | QA-14 a QA-17 |
+| Apache JMeter | 4 | QA-24 a QA-26 |
+| Selenium | 4 | QA-18 a QA-20 |
+| Appium | 4 | QA-21 a QA-23 |
+| Jira y reportes | 4 | QA-04, QA-29 a QA-31 |
+| Total objetivo | 20 | Entrega integrada |
+
+Cada prueba automatizada debe estar vinculada a un requisito,
+caso de prueba, control RUB, ticket Jira, issue GitHub y reporte.
+
+GitHub Projects mantiene la gestión técnica del desarrollo.
+Jira es obligatorio para la trazabilidad académica y la gestión
+de defectos y retests.
+
+Los criterios planificados no representan resultados aprobados.
+El cumplimiento se acredita mediante ejecución y evidencia real.
 
 ## Gestión y reparto para tres integrantes
 
@@ -165,14 +208,14 @@ Consultar [GESTION_PROYECTO.md](docs/GESTION_PROYECTO.md) para los hitos, estado
 
 - Los requisitos incluidos tienen casos y evidencia trazables.
 - El flujo completo funciona con datos persistentes y permisos del servidor.
-- Las cuatro suites se ejecutan y reportan resultados; la PWA se instala y se prueba en Android.
+- Las cuatro suites se ejecutan y reportan resultados; la PWA y el APK se validan en Android. Appium demuestra gestos e interacciones nativas y un flujo end-to-end.
 - Los casos P0/P1 están aprobados, sin bloqueos ni defectos Sev1/Sev2 pendientes dentro del alcance.
 - Los resultados de rendimiento se comparan con los objetivos definidos, incluida la integridad posterior a la carga.
 - Hay revisión de otro integrante, CI y regresión cuando corresponda, manual, informe y demostración reproducibles.
 
 ## Ramas y Pull Requests
 
-`main` y `develop` son las dos ramas permanentes. Crear una rama temporal por tarea desde `develop`, abrir PR hacia `develop`, revisar y verificar el resultado y eliminarla después de integrarla. La rama actual `feature/QA-01-alcance-calidad-software` es temporal.
+`main` y `develop` son las dos ramas permanentes. Crear una rama temporal por tarea desde `develop`, abrir PR hacia `develop`, revisar y verificar el resultado y eliminarla después de integrarla.
 
 Al trabajar tres personas puede haber varias ramas temporales a la vez. No se necesita conservar ramas `deploy/*` para separar ambientes: la configuración de entorno se versiona y documenta. La entrega coordinada pasa de `develop` a `main` solo después de superar los criterios de cierre.
 

@@ -7,6 +7,9 @@ Qué falla o se necesita y qué comportamiento queda después del cambio.
 - Issue / tarea QA:
 - Requisitos RF/PWA/RNF:
 - Casos CP:
+- Controles RUB:
+- Ticket(s) Jira:
+- Commit/build probado:
 - Hito y dependencias:
 
 ## Cambios
@@ -32,3 +35,14 @@ Indicar expresamente qué no se ejecutó y por qué. No marcar como aprobado un 
 - [ ] Riesgos, bloqueo y recuperación descritos cuando corresponda.
 
 Usar Refs mientras falte validación; Closes solo cuando integrar este PR realmente complete la issue.
+
+## Cumplimiento académico
+
+- [ ] Controles RUB aplicables identificados.
+- [ ] Casos automatizados vinculados a Jira cuando corresponda.
+- [ ] Reportes de ejecución reproducibles.
+- [ ] Resultados pendientes, PASS, FAIL y BLOCKED diferenciados.
+- [ ] Evidencia del APK y de controles nativos cuando corresponda.
+
+Justificar los criterios no aplicables. Un PR documental
+no acredita la ejecución de las suites automatizadas.
