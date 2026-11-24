@@ -1,0 +1,7 @@
+perfil-sin-autenticacion: HTTP 401
+PASS: Estado HTTP y respuesta JSON.
+ruta-inexistente: HTTP 404
+PASS: Estado HTTP y respuesta JSON.
+login-sin-campos: HTTP 422
+PASS: Estado HTTP y respuesta JSON.
+PASS: Contrato HTTP negativo verificado.

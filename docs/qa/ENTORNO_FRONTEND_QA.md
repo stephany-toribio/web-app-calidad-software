@@ -7,7 +7,7 @@
 | development | http://localhost:8002/api/v1 | npm.cmd start |
 | qa | /api/v1, relativa al origen del frontend | npm.cmd run start:qa |
 
-La configuración production conserva su configuración previa.
+La configuración production utiliza /api/v1. El servidor debe enrutar este prefijo hacia la API. La compatibilidad del despliegue productivo queda pendiente de verificación.
 Para generar el artefacto de QA se debe usar expresamente build:qa.
 
 ## Preparación reproducible
@@ -150,3 +150,111 @@ sin reutilizar node_modules ni la caché Angular del directorio original.
 
 Esta prueba se realizó en la misma máquina mediante clon local.
 No acredita todavía la reproducción en otra máquina ni desde GitHub.
+
+## Ampliación del alcance — Android y Capacitor
+
+### Configuraciones vigentes
+
+| Ambiente | API | Comando |
+| --- | --- | --- |
+| Desarrollo | localhost:8002/api/v1 | npm start |
+| Web QA | /api/v1 | npm run build:qa |
+| Producción web | /api/v1 | npm run build |
+| Android QA | URL absoluta HTTPS | npm run build:android |
+
+### Compilación Android
+
+La variable ANDROID_API_URL es obligatoria.
+
+El script scripts/build-android.mjs genera la configuración
+environment.android.generated.ts y ejecuta Angular con
+la configuración android.
+
+El archivo generado está excluido de Git.
+
+El artefacto se genera en dist/creo-angular-android/browser.
+
+Ejemplo de validación del build desde WSL:
+
+    ANDROID_API_URL=https://qa.example.test/api/v1 npm run build:android
+
+El dominio utilizado es ficticio y sirve exclusivamente
+para comprobar la compilación, no la conectividad.
+
+La URL definitiva será proporcionada mediante QA-13.
+
+### Integración con Capacitor
+
+QA-10 utilizará el artefacto Android como base para
+configurar el webDir de Capacitor.
+
+Los proxies de Angular y Nginx no se incorporan como
+servidores dentro del APK.
+
+El APK requiere una URL absoluta de la API.
+
+### Origen WebView y CORS
+
+El origen previsto es https://localhost si se conserva
+la configuración habitual de Capacitor para Android.
+
+El origen efectivo deberá confirmarse en QA-10.
+
+QA-13 configurará HTTPS, los orígenes CORS autorizados,
+los métodos y los encabezados necesarios.
+
+No se desactivarán globalmente las protecciones CORS.
+
+QA-21 comprobará la conectividad real desde el APK,
+incluyendo solicitudes preflight cuando correspondan.
+
+### Distribución de responsabilidades
+
+| Tarea | Responsabilidad |
+| --- | --- |
+| QA-03 | Configuración y compilación Angular |
+| QA-10 | Capacitor, PWA y generación APK |
+| QA-13 | Despliegue HTTPS y CORS |
+| QA-21 | Conectividad APK y preparación Appium |
+| QA-22 | Automatización Android E2E |
+
+QA-03 no acredita todavía la generación del APK
+ni la ejecución de Appium.
+
+### Seguridad de dependencias
+
+Evaluar las vulnerabilidades según su aplicabilidad,
+distinguiendo dependencias de desarrollo y producción.
+
+No ejecutar npm audit fix --force sin evaluar el impacto.
+
+### Validaciones adicionales
+
+- Compilación estándar.
+- Compilación web QA.
+- Compilación Angular Android parametrizada.
+- Rechazo de configuraciones Android inválidas.
+- Respuestas negativas de la API mediante proxy QA.
+- Auditoría actualizada de dependencias.
+
+Los resultados se registrarán después de ejecutar
+las comprobaciones correspondientes.
+
+
+## Resultados de la ampliación QA-03
+
+Las tres configuraciones Angular fueron compiladas
+correctamente desde WSL2.
+
+Se aprobaron nueve pruebas negativas de configuración
+Android y las comprobaciones HTTP 401, 404 y 422
+mediante el proxy de desarrollo.
+
+El detalle de las ejecuciones adicionales, los logs,
+los riesgos de seguridad y las limitaciones se encuentra
+en [RESULTADOS QA-03](../evidencias/QA-03/RESULTADOS.md).
+
+La revisión cruzada formal no constituye un requisito
+de cierre según la decisión vigente del equipo.
+Se mantienen la validación técnica, las evidencias
+reproducibles y la integración en develop.
