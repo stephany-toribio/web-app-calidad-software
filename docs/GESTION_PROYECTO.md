@@ -1,4 +1,4 @@
-# Gestión integral — Portal de Empleos PWA
+# Gestión integral — Portal de Empleos Web, PWA y Android
 
 Este plan organiza la entrega de Calidad de Software para tres integrantes. El índice operativo estable es el [issue maestro](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/3). Los README de ambos repositorios delimitan los requisitos y las 34 familias de casos planificadas.
 
@@ -7,7 +7,7 @@ Este plan organiza la entrega de Calidad de Software para tres integrantes. El �
 | Rol | Frente principal | Revisor por defecto | Tareas nuevas | Puntos relativos |
 | --- | --- | --- | --- | --- |
 | R1 | API y Karate | R2 | 10 | 35 |
-| R2 | Web, PWA y Selenium | R3 | 11 | 33 |
+| R2 | Web, PWA, Capacitor y Selenium | R3 | 11 | 33 |
 | R3 | Integración, Appium y JMeter | R1 | 10 | 34 |
 
 Las asignaciones nominales fueron confirmadas en el plan maestro el 13/11/2026:
@@ -15,7 +15,7 @@ Las asignaciones nominales fueron confirmadas en el plan maestro el 13/11/2026:
 | Rol | Responsable GitHub | Frente principal | Revisor por defecto |
 | --- | --- | --- | --- |
 | R1 | @stephany-toribio | Backend, API y Karate | R2 |
-| R2 | @aquinoestoyxd | Frontend, PWA y Selenium | R3 |
+| R2 | @aquinoestoyxd | Frontend, PWA, Capacitor y Selenium | R3 |
 | R3 | @luisvalenzuela25 | Integración, Appium, JMeter y trazabilidad | R1 |
 
 Las 31 tareas nuevas se distribuyen según el plan maestro. La asignación de una tarea no acredita su ejecución ni su aprobación. Las ocho épicas y el issue maestro no suman puntos para evitar doble conteo. Las dos issues QA-01 documentales preexistentes tampoco están incluidas en los 102 puntos de las 31 tareas nuevas.
@@ -28,12 +28,12 @@ Los puntos son tamaño relativo y se revisan tras la línea base. No son horas n
 | --- | --- | --- |
 | M0 | Alcance y línea base | README de ambos repositorios delimitados; ambiente reproducible, datos ficticios y línea base registrada. |
 | M1 | Flujo de negocio estable | Registro, permisos, publicación, postulación, retiro, decisiones e historial verificados sin defectos graves abiertos. |
-| M2 | PWA y entorno QA | PWA instalada y actualizable en Android, falta de red controlada y entorno QA accesible. |
+| M2 | PWA, APK y entorno QA | PWA instalable, APK generado mediante Capacitor, falta de red controlada y entorno QA accesible. |
 | M3 | API automatizada | Karate positivo, negativo y de flujo integral ejecutado con reportes y fixtures. |
-| M4 | Web y Android automatizados | Selenium y Appium ejecutados; PWA instalada y recorrido Android demostrado. |
+| M4 | Web y Android automatizados | Selenium y Appium ejecutados; APK instalado, gestos e interacciones nativas y recorrido Android demostrados. |
 | M5 | Rendimiento, regresión y entrega | Carga medida, integridad comprobada, regresión aprobada, CI/evidencias/informe y release coordinada. |
 
-Los hitos son puertas de verificación, no una secuencia que impida trabajar en paralelo. Una tarea de PWA o de automatización puede empezar en cuanto sus dependencias estén listas. La viabilidad de Appium con la PWA debe comprobarse temprano con QA-10, QA-13 y QA-21.
+Los hitos son puertas de verificación, no una secuencia que impida trabajar en paralelo. Una tarea de PWA o de automatización puede empezar en cuanto sus dependencias estén listas. La viabilidad del APK y de Appium debe comprobarse temprano con QA-10, QA-13 y QA-21. La PWA conserva sus comprobaciones independientes.
 
 Primer reparto después de revisar/integrar los PR documentales: R1 comienza QA-02, R2 QA-03 y R3 QA-04. Luego cada rol toma una tarea desbloqueada de mayor prioridad; nadie espera a que termine toda una épica si sus dependencias ya están cumplidas.
 
@@ -43,12 +43,12 @@ Primer reparto después de revisar/integrar los PR documentales: R1 comienza QA-
 | --- | --- | --- |
 | [E01](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/4) — Preparación, alcance y entorno reproducible | Disponer de una base verificable, datos aislados y un entorno de QA accesible desde Android. | R3 |
 | [E02](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/5) — Flujo de negocio, permisos e integridad | Verificar y corregir el recorrido de registro, publicación, postulación y decisión sin rehacer lo que ya funciona. | R1 |
-| [E03](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/6) — PWA instalable y experiencia móvil | Entregar PWA Android con manifiesto, instalación, actualización y comportamiento honesto sin conexión. | R2 |
-| [E04](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/7) — Automatización API con Karate | Automatizar contratos, validaciones, permisos y flujo integral con reportes y datos repetibles. | R1 |
-| [E05](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/8) — Automatización web con Selenium | Demostrar los recorridos de candidato, empresa y administrador desde la interfaz web. | R2 |
-| [E06](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/9) — Automatización Android con Appium | Instalar, abrir y probar la PWA en Android con evidencia del contexto y persistencia. | R3 |
-| [E07](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/10) — Rendimiento y concurrencia con JMeter | Medir cargas controladas, comprobar integridad y tratar cuellos de botella demostrados. | R3 |
-| [E08](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/11) — CI, trazabilidad, evidencias y entrega | Mantener el seguimiento, ejecutar regresión, preparar el informe y publicar una release coordinada. | R3 |
+| [E03](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/6) — PWA, APK Android y experiencia móvil | Entregar PWA y APK Android mediante Capacitor, con instalación, actualización diferenciada y comportamiento honesto sin conexión. | R2 |
+| [E04](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/7) — Automatización API con Karate | Automatizar contratos JSON, estados HTTP, tiempos, variables dinámicas, call, permisos y flujo integral con reportes y datos repetibles. | R1 |
+| [E05](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/8) — Automatización web con Selenium | Demostrar los recorridos web de los tres roles mediante Selenium, selectores robustos y esperas explícitas o fluidas. | R2 |
+| [E06](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/9) — Automatización Android con Appium | Instalar y probar el APK Android con Appium, capabilities, contextos, gestos nativos, flujo end-to-end y persistencia. | R3 |
+| [E07](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/10) — Rendimiento y concurrencia con JMeter | Medir cargas realistas con Thread Groups, CSV Data-Driven, listeners, assertions y reporte HTML; comprobar integridad y tratar cuellos de botella demostrados. | R3 |
+| [E08](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/11) — CI, trazabilidad, evidencias y entrega | Mantener trazabilidad Jira, ejecutar regresión, consolidar evidencias de la rúbrica y publicar una release coordinada con APK. | R3 |
 
 QA-01 tiene dos tickets documentales: [API](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/1) y [Frontend](https://github.com/stephany-toribio/web-app-calidad-software/issues/1). Se revisan mediante los PR #2 de sus respectivos repositorios.
 
@@ -62,7 +62,7 @@ QA-01 tiene dos tickets documentales: [API](https://github.com/stephany-toribio/
 | [QA-07](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/15) — Validar publicación, moderación, pago simulado y disponibilidad | API | M1 | R1 | P0 | 5 | [QA-02](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/12), [QA-05](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/14) |
 | [QA-08](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/16) — Verificar postulación, duplicados, retiro y concurrencia | API | M1 | R1 | P0 | 5 | [QA-05](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/14), [QA-07](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/15) |
 | [QA-09](https://github.com/stephany-toribio/web-app-calidad-software/issues/5) — Validar Kanban, decisiones, cupos e historial de extremo a extremo | Frontend | M1 | R2 | P0 | 5 | [QA-05](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/14), [QA-07](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/15), [QA-08](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/16) |
-| [QA-10](https://github.com/stephany-toribio/web-app-calidad-software/issues/6) — Implementar manifiesto, iconos e instalación de la PWA | Frontend | M2 | R2 | P1 | 3 | [QA-03](https://github.com/stephany-toribio/web-app-calidad-software/issues/3) |
+| [QA-10](https://github.com/stephany-toribio/web-app-calidad-software/issues/6) — Implementar PWA, Capacitor y generación de APK Android | Frontend | M2 | R2 | P1 | 3 | [QA-03](https://github.com/stephany-toribio/web-app-calidad-software/issues/3), [QA-13](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/17) |
 | [QA-11](https://github.com/stephany-toribio/web-app-calidad-software/issues/7) — Implementar actualización, caché y comportamiento sin conexión | Frontend | M2 | R2 | P0 | 3 | [QA-10](https://github.com/stephany-toribio/web-app-calidad-software/issues/6) |
 | [QA-12](https://github.com/stephany-toribio/web-app-calidad-software/issues/8) — Ajustar diseño móvil, accesibilidad y selectores de prueba | Frontend | M2 | R2 | P1 | 3 | [QA-06](https://github.com/stephany-toribio/web-app-calidad-software/issues/4), [QA-10](https://github.com/stephany-toribio/web-app-calidad-software/issues/6) |
 | [QA-13](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/17) — Preparar despliegue de QA con HTTPS y datos reproducibles | API | M2 | R3 | P0 | 3 | [QA-02](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/12), [QA-03](https://github.com/stephany-toribio/web-app-calidad-software/issues/3) |
@@ -74,8 +74,8 @@ QA-01 tiene dos tickets documentales: [API](https://github.com/stephany-toribio/
 | [QA-19](https://github.com/stephany-toribio/web-app-calidad-software/issues/10) — Automatizar el recorrido web del candidato con Selenium | Frontend | M4 | R2 | P0 | 3 | [QA-06](https://github.com/stephany-toribio/web-app-calidad-software/issues/4), [QA-08](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/16), [QA-12](https://github.com/stephany-toribio/web-app-calidad-software/issues/8), [QA-18](https://github.com/stephany-toribio/web-app-calidad-software/issues/9) |
 | [QA-20](https://github.com/stephany-toribio/web-app-calidad-software/issues/11) — Automatizar moderación y decisiones de empresa con Selenium | Frontend | M4 | R3 | P0 | 3 | [QA-07](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/15), [QA-09](https://github.com/stephany-toribio/web-app-calidad-software/issues/5), [QA-12](https://github.com/stephany-toribio/web-app-calidad-software/issues/8), [QA-18](https://github.com/stephany-toribio/web-app-calidad-software/issues/9) |
 | [QA-21](https://github.com/stephany-toribio/web-app-calidad-software/issues/12) — Preparar Appium y Android con capacidades reproducibles | Frontend | M4 | R3 | P1 | 3 | [QA-04](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/13), [QA-13](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/17), [QA-10](https://github.com/stephany-toribio/web-app-calidad-software/issues/6) |
-| [QA-22](https://github.com/stephany-toribio/web-app-calidad-software/issues/13) — Automatizar la PWA instalada y la postulación en Android | Frontend | M4 | R3 | P0 | 5 | [QA-08](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/16), [QA-10](https://github.com/stephany-toribio/web-app-calidad-software/issues/6), [QA-11](https://github.com/stephany-toribio/web-app-calidad-software/issues/7), [QA-12](https://github.com/stephany-toribio/web-app-calidad-software/issues/8), [QA-13](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/17), [QA-21](https://github.com/stephany-toribio/web-app-calidad-software/issues/12) |
-| [QA-23](https://github.com/stephany-toribio/web-app-calidad-software/issues/14) — Probar sesión, actualización y falta de red en Android | Frontend | M4 | R2 | P1 | 3 | [QA-11](https://github.com/stephany-toribio/web-app-calidad-software/issues/7), [QA-21](https://github.com/stephany-toribio/web-app-calidad-software/issues/12), [QA-22](https://github.com/stephany-toribio/web-app-calidad-software/issues/13) |
+| [QA-22](https://github.com/stephany-toribio/web-app-calidad-software/issues/13) — Automatizar APK Android, gestos nativos y postulación end-to-end | Frontend | M4 | R3 | P0 | 5 | [QA-08](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/16), [QA-10](https://github.com/stephany-toribio/web-app-calidad-software/issues/6), [QA-11](https://github.com/stephany-toribio/web-app-calidad-software/issues/7), [QA-12](https://github.com/stephany-toribio/web-app-calidad-software/issues/8), [QA-13](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/17), [QA-21](https://github.com/stephany-toribio/web-app-calidad-software/issues/12) |
+| [QA-23](https://github.com/stephany-toribio/web-app-calidad-software/issues/14) — Probar sesión, actualización y falta de red en PWA y APK | Frontend | M4 | R2 | P1 | 3 | [QA-11](https://github.com/stephany-toribio/web-app-calidad-software/issues/7), [QA-21](https://github.com/stephany-toribio/web-app-calidad-software/issues/12), [QA-22](https://github.com/stephany-toribio/web-app-calidad-software/issues/13) |
 | [QA-24](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/22) — Diseñar cargas, CSV y objetivos de rendimiento con JMeter | API | M5 | R3 | P1 | 3 | [QA-02](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/12), [QA-04](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/13) |
 | [QA-25](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/23) — Ejecutar cargas y concurrencia controlada con JMeter | API | M5 | R3 | P0 | 5 | [QA-08](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/16), [QA-09](https://github.com/stephany-toribio/web-app-calidad-software/issues/5), [QA-13](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/17), [QA-24](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/22) |
 | [QA-26](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/24) — Analizar rendimiento y corregir cuellos de botella demostrados | API | M5 | R1 | P1 | 3 | [QA-25](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/23) |
@@ -149,7 +149,7 @@ Revisión breve del equipo al comenzar cada jornada: qué se terminó con eviden
 | Severidad | Impacto |
 | --- | --- |
 | Sev1 | Pérdida/corrupción de datos, bypass de autorización o fallo crítico de integridad |
-| Sev2 | Bloquea el flujo principal, instalación PWA o una herramienta obligatoria sin alternativa aceptada |
+| Sev2 | Bloquea el flujo principal, instalación PWA/APK o una herramienta obligatoria sin alternativa aceptada |
 | Sev3 | Función degradada con alternativa y sin pérdida de integridad |
 | Sev4 | Detalle visual/editorial que no bloquea el proceso |
 
@@ -216,6 +216,71 @@ Organizar evidencias por herramienta y ejecución. Versionar código de pruebas 
 
 Para ampliar el alcance, registrar motivo, resultado esperado, impacto en pruebas/dependencias, esfuerzo y decisión del equipo. Actualizar los dos README, matriz y backlog; no añadir matching, aplicaciones nativas o pagos reales de forma implícita.
 
-La release requiere los casos P0/P1 aprobados, PWA Android demostrada, cuatro herramientas con reporte, integridad posterior a carga, ausencia de Sev1/Sev2 y manual/informe/guion reproducibles. Coordinar frontend/API, revisar PR hacia main, registrar versión y prueba posterior. Después cerrar issues/épicas, conservar riesgos residuales y hacer retrospectiva.
+La release requiere los casos P0/P1 aprobados, PWA y APK Android demostrados, trazabilidad Jira acreditada, cuatro herramientas con reporte, integridad posterior a carga, ausencia de Sev1/Sev2 y manual/informe/guion reproducibles. Coordinar frontend/API, revisar PR hacia main, registrar versión y prueba posterior. Después cerrar issues/épicas, conservar riesgos residuales y hacer retrospectiva.
 
-Este plan organiza trabajo pendiente; no certifica que se hayan implementado la PWA, las suites o el despliegue de QA.
+Este plan organiza trabajo pendiente; no certifica que se hayan implementado la PWA, el APK, las suites o el despliegue de QA.
+
+## Alineación obligatoria con la rúbrica
+
+La referencia académica del proyecto es
+[RUBRICA_EVALUACION.md](RUBRICA_EVALUACION.md).
+
+Se mantienen los cinco criterios de cuatro puntos cada uno:
+
+| Criterio | Responsable principal | Evidencia |
+|---|---|---|
+| Karate DSL | R1 | Contratos JSON, tiempos, variables y call |
+| JMeter | R3 | Thread Groups, CSV, assertions y HTML |
+| Selenium | R2 | Selectores robustos, esperas y flujos E2E |
+| Appium | R3 | APK, capabilities, gestos e interacción nativa |
+| Jira y reportes | R3, con apoyo de R1 y R2 | Tickets y evidencias vinculadas |
+
+R2 mantiene la responsabilidad de implementar el frontend,
+la PWA y la generación del APK mediante Capacitor.
+R3 mantiene la responsabilidad principal de automatizar Android.
+
+### Trazabilidad
+
+GitHub Projects administra el desarrollo técnico.
+Jira administra la trazabilidad académica de pruebas y defectos.
+
+Cada escenario automatizado deberá relacionar:
+
+Requisito → CP → RUB → Ticket Jira → Issue GitHub →
+Script → Commit/build → Ejecución → Reporte → Resultado.
+
+Los tickets Jira deben existir realmente.
+
+### Control de cambios
+
+La actualización conserva los 18 requisitos, las 34 familias
+de casos, las ocho épicas y las 31 tareas existentes.
+
+El catálogo central del backend contiene 111 escenarios
+diseñados, 24 controles RUB y 15 riesgos registrados.
+
+Las estimaciones originales de 35, 33 y 34 puntos por rol
+constituyen la línea base anterior a la ampliación del APK.
+Deberán revisarse con el equipo antes de comprometer fechas.
+
+No se declaran aprobadas las pruebas por la existencia
+de documentación o Pull Requests integrados.
+
+### Puertas adicionales de aceptación
+
+- M0: criterios RUB definidos y Jira preparado para trazabilidad.
+- M2: APK generado e instalado; configuración QA identificada.
+- M3: Karate con esquemas, estados, tiempos y reutilización.
+- M4: Selenium estable y Appium con interacción nativa real.
+- M5: JMeter con CSV, assertions y reporte HTML;
+  regresión, APK final y trazabilidad completa en Jira.
+
+### Coordinación de la entrega Android
+
+QA-13 prepara el entorno HTTPS sin depender del APK.
+QA-10 puede iniciar su implementación en paralelo, pero
+requiere QA-13 para su aceptación completa.
+QA-21 verifica la conectividad real del APK con la API.
+QA-12 y QA-22 aseguran que swipe y tap se demuestren
+sobre controles realmente nativos, diferenciándolos
+de las interacciones HTML en WebView.
