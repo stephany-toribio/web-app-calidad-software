@@ -79,7 +79,7 @@ Después de actualizar:
 
 Pendientes de verificación:
 - Instalación del entorno y ejecución de las comprobaciones en otra máquina.
-- Instalación desde un clon limpio de la rama.
+- Verificación del clon remoto de GitHub después de publicar la rama.
 - Revisión cruzada de la configuración y las evidencias.
 - Publicación HTTPS y conexión con la API QA.
 - Acceso desde Android.
@@ -134,3 +134,19 @@ Digest: sha256:8eb2b5540eae779603cc3db84b3986a15ecb5308b54303146eee9837c137b51a
 
 La etiqueta puede cambiar; para reproducir la misma imagen se puede usar
 nginx@sha256:8eb2b5540eae779603cc3db84b3986a15ecb5308b54303146eee9837c137b51a.
+
+## Instalación desde clon limpio local
+
+Se verificó el commit d53b832 mediante un clon local independiente,
+sin reutilizar node_modules ni la caché Angular del directorio original.
+
+- Node.js: 22.23.5.
+- npm: 10.9.9.
+- npm ci: completado; 865 paquetes instalados.
+- npm run build:qa: completado; bundle inicial de 366.13 kB.
+- git ls-files .angular: sin archivos versionados.
+- git status --short después de instalar y compilar: sin cambios.
+- Auditoría: 43 alertas; 2 bajas, 25 moderadas, 14 altas y 2 críticas.
+
+Esta prueba se realizó en la misma máquina mediante clon local.
+No acredita todavía la reproducción en otra máquina ni desde GitHub.
