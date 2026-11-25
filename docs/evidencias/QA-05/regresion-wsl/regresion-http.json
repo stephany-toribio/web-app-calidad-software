@@ -1,0 +1,177 @@
+{
+  "fecha": "2026-11-25T00:05:16.786378-05:00",
+  "tipo": "Regresion HTTP mediante proxy Angular QA",
+  "total": 24,
+  "aprobados": 24,
+  "fallidos": 0,
+  "resultados": [
+    {
+      "caso": "QA05-W01",
+      "descripcion": "Login candidato",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W02",
+      "descripcion": "Login empresa",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W03",
+      "descripcion": "Login admin",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W01",
+      "descripcion": "Identidad del servidor: candidato",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W02",
+      "descripcion": "Identidad del servidor: empresa",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W03",
+      "descripcion": "Identidad del servidor: admin",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W01",
+      "descripcion": "Perfil candidato",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W02",
+      "descripcion": "Perfil empresa",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W04",
+      "descripcion": "Identidad del servidor: candidato",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W04",
+      "descripcion": "Identidad del servidor: empresa",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W04",
+      "descripcion": "Identidad del servidor: admin",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W05",
+      "descripcion": "Token invalido",
+      "esperado": 401,
+      "obtenido": 401,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W06",
+      "descripcion": "Rechazo de cuenta suspendida",
+      "esperado": 403,
+      "obtenido": 403,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W07",
+      "descripcion": "Candidato accede a perfil empresa",
+      "esperado": 403,
+      "obtenido": 403,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W07",
+      "descripcion": "Empresa accede a perfil candidato",
+      "esperado": 403,
+      "obtenido": 403,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W07",
+      "descripcion": "Candidato consulta vacantes privadas",
+      "esperado": 403,
+      "obtenido": 403,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W07",
+      "descripcion": "Admin accede a ruta exclusiva candidato",
+      "esperado": 403,
+      "obtenido": 403,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W07",
+      "descripcion": "Admin accede a ruta exclusiva empresa",
+      "esperado": 403,
+      "obtenido": 403,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W08",
+      "descripcion": "Logout candidato",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W08",
+      "descripcion": "Revocacion del token: candidato",
+      "esperado": 401,
+      "obtenido": 401,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W09",
+      "descripcion": "Logout empresa",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W09",
+      "descripcion": "Revocacion del token: empresa",
+      "esperado": 401,
+      "obtenido": 401,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W10",
+      "descripcion": "Logout admin",
+      "esperado": 200,
+      "obtenido": 200,
+      "resultado": "PASS"
+    },
+    {
+      "caso": "QA05-W10",
+      "descripcion": "Revocacion del token: admin",
+      "esperado": 401,
+      "obtenido": 401,
+      "resultado": "PASS"
+    }
+  ]
+}

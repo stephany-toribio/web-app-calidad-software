@@ -109,7 +109,9 @@ export class CreoAdminLoginComponent {
 
         if (error.status === 403) {
           this.errors = {
-            auth: 'No tienes permisos para acceder como administrador.'
+            auth: typeof error.error?.message === 'string' && error.error.message.trim()
+              ? error.error.message.trim()
+              : 'No tienes permisos para acceder como administrador.'
           };
           return;
         }

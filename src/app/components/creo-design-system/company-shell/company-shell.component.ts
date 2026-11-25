@@ -101,9 +101,19 @@ export class CompanyShellComponent implements OnInit {
   }
 
   logout(): void {
+    const token = this.authService.getToken();
+
+    const navegarAlInicio = () => {
+      const actual = this.authService.getToken();
+
+      if (actual === null || actual === token) {
+        void this.router.navigate(['/creo/landing']);
+      }
+    };
+
     this.authService.logout().subscribe({
-      complete: () => this.router.navigate(['/creo/landing']),
-      error: () => this.router.navigate(['/creo/landing']),
+      complete: navegarAlInicio,
+      error: navegarAlInicio,
     });
   }
 }

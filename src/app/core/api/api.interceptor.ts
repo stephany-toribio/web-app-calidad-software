@@ -1,27 +1,42 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import {
+  HttpErrorResponse,
+  HttpInterceptorFn
+} from '@angular/common/http';
+
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
+
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
+import { getSessionInvalidationReason } from './session-policy';
 
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(AuthService);
 
-  if (!req.url.startsWith(environment.apiUrl)) {
+  const apiUrl = environment.apiUrl.replace(/\/+$/, '');
+
+  const requestPath = req.url.split(/[?#]/, 1)[0];
+
+  const belongsToApi =
+    requestPath === apiUrl ||
+    requestPath.startsWith(`${apiUrl}/`);
+
+  if (!belongsToApi) {
     return next(req);
   }
 
-  const isLoginRequest = req.url.includes('/auth/login');
-  // Token con el que sale esta petición (puede cambiar antes de que llegue la respuesta)
+  const isLoginRequest =
+    requestPath === `${apiUrl}/auth/login`;
+
   const token = authService.getToken();
 
   const headers: Record<string, string> = {
     Accept: 'application/json'
   };
 
-  if (token) {
+  if (token && !isLoginRequest) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
@@ -31,36 +46,22 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
     })
   ).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (!isLoginRequest) {
-        if (error.status === 401 && token === authService.getToken()) {
-          authService.clearSession();
+      const reason = getSessionInvalidationReason({
+        status: error.status,
+        payload: error.error,
+        requestToken: token,
+        currentToken: authService.getToken(),
+        isLoginRequest
+      });
 
-          router.navigate(['/creo/landing'], {
-            queryParams: { sessionExpired: 'true' }
-          });
-        } else if (error.status === 403) {
-          // Si el usuario es administrador o la petición pertenece a administración (/admin/),
-          // una respuesta 403 con 'bloquead' o 'suspend' hace referencia a la entidad gestionada,
-          // por lo que NO se debe cerrar la sesión del admin.
-          if (!authService.isAdmin() && !req.url.includes('/admin/')) {
-            const msg = (error.error?.message || '').toLowerCase();
-            const code = (error.error?.error_code || error.error?.code || '').toLowerCase();
-            const isAccountSuspended =
-              code.includes('suspend') ||
-              code.includes('bloquead') ||
-              msg.includes('tu cuenta') ||
-              msg.includes('su cuenta') ||
-              (msg.includes('cuenta') && (msg.includes('suspend') || msg.includes('bloquead')));
+      if (reason !== null) {
+        authService.clearSession();
 
-            if (isAccountSuspended) {
-              authService.clearSession();
-
-              router.navigate(['/creo/landing'], {
-                queryParams: { accountSuspended: 'true' }
-              });
-            }
+        void router.navigate(['/creo/landing'], {
+          queryParams: {
+            [reason]: 'true'
           }
-        }
+        });
       }
 
       return throwError(() => error);

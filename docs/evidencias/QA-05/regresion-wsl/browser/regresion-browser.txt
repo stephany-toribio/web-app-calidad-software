@@ -1,0 +1,36 @@
+¿Entorno QA aislado y candidato2 disponible? [si/no]: 
+===== LOGIN =====
+[PASS] W01: Login candidato 
+[PASS] W02: Login empresa 
+[PASS] W03: Login admin 
+
+===== RECARGA =====
+[PASS] W04: Recarga conserva sesiones 
+
+===== TOKEN INVALIDO =====
+[PASS] W05: Token invalido 
+
+===== CUENTA SUSPENDIDA =====
+[PASS] W06: Cuenta suspendida 
+
+===== GUARDS =====
+[PASS] W07: Navegacion restringida por roles 
+
+===== LOGOUT =====
+[PASS] W08: Logout y revocacion candidato 
+[PASS] W09: Logout y revocacion empresa 
+[PASS] W10: Logout y revocacion admin 
+
+===== SUSPENSION Y REACTIVACION =====
+[PASS] W11: Suspension y aislamiento admin 
+[PASS] W12: Reactivacion y nuevo login 
+
+===== LIMPIEZA =====
+Tokens pendientes de revocacion: 0
+
+===== RESULTADOS FINALES =====
+PASS: 12
+FAIL: 0
+BLOQUEADOS: 0
+Reporte: /home/steph/projects/qa-backups/QA-05/frontend/browser/resultados-browser.json
+PASS: Regresion funcional QA-05 completa.

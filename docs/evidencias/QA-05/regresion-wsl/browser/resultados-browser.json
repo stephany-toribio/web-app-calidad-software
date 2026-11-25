@@ -1,0 +1,86 @@
+{
+  "fecha": "2026-11-25T00:15:32.629099-05:00",
+  "herramienta": "Playwright Chromium headless",
+  "chromium": "159.0.8154.6",
+  "esperados": 12,
+  "ejecutados": 12,
+  "aprobados": 12,
+  "fallidos": 0,
+  "bloqueados": 0,
+  "restauracion_cuenta": true,
+  "tokens_pendientes": 0,
+  "resultados": [
+    {
+      "caso": "W01",
+      "descripcion": "Login candidato",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W02",
+      "descripcion": "Login empresa",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W03",
+      "descripcion": "Login admin",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W04",
+      "descripcion": "Recarga conserva sesiones",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W05",
+      "descripcion": "Token invalido",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W06",
+      "descripcion": "Cuenta suspendida",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W07",
+      "descripcion": "Navegacion restringida por roles",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W08",
+      "descripcion": "Logout y revocacion candidato",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W09",
+      "descripcion": "Logout y revocacion empresa",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W10",
+      "descripcion": "Logout y revocacion admin",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W11",
+      "descripcion": "Suspension y aislamiento admin",
+      "resultado": "PASS",
+      "detalle": ""
+    },
+    {
+      "caso": "W12",
+      "descripcion": "Reactivacion y nuevo login",
+      "resultado": "PASS",
+      "detalle": ""
+    }
+  ]
+}

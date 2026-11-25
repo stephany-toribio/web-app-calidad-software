@@ -186,7 +186,9 @@ export class CreoLandingComponent {
 
         if (error.status === 403) {
           this.errors.set({
-            auth: 'Esta cuenta no tiene permiso para acceder.'
+            auth: typeof error.error?.message === 'string' && error.error.message.trim()
+              ? error.error.message.trim()
+              : 'Esta cuenta no tiene permiso para acceder.'
           });
           return;
         }
