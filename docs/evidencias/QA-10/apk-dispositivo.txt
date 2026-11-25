@@ -1,0 +1,14 @@
+QA-10 - APK debug
+Fecha: 2026-11-25T11:54:18.0546292-05:00
+Modelo: SM-X900
+Android: 16
+API Android: 36
+Paquete: edu.upch.creo.qa
+versionName: 1.0
+versionCode: 1
+Instalacion ADB: Success
+Lanzamiento: Status ok; COLD; TotalTime 1166 ms
+Tamano APK: 4572020 bytes
+SHA256: A0F3BE7FBBD2B793D95E052AD703D2A64FD3A412B1D9F872D40705993ABF8C7E
+API configurada: https://qa.example.test/api/v1 (ficticia)
+Conexion APK-API no verificada.
