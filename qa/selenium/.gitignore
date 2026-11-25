@@ -1,0 +1,5 @@
+/target/
+/target-evidencias/
+*.log
+.env
+.env.*
