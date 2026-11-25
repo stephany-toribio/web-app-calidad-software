@@ -58,3 +58,10 @@ La conectividad APK-API corresponde a QA-21.
 
 La instalación del APK no sustituye la prueba de instalación de la PWA.
 QA-10 permanece abierto.
+
+## Estado actualizado — 25/11/2026
+
+Los pendientes historicos de verificacion tecnica de la PWA,
+navegacion e iconos se resolvieron durante QA-10.
+Consultar CP-24-PWA.md y apk-api-manual.md para los resultados vigentes.
+La revision e integracion de QA-10 se registran en su PR.

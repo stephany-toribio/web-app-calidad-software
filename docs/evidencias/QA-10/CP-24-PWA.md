@@ -31,3 +31,26 @@ Ambiente: https://maybe-partial-penguin-gadgets.trycloudflare.com
 URL temporal: requiere Docker y el tunel activos.
 Los avisos de screenshots para instalacion enriquecida corresponden a una mejora opcional.
 Este registro no acredita ejecucion de Appium.
+
+## Actualizacion de verificacion tecnica — 25/11/2026
+
+Esta actualizacion sustituye los pendientes tecnicos anteriores
+sobre iconos maskable y disponibilidad de las dependencias para QA-10.
+
+- El ejecutor confirma ambos iconos maskable completos dentro del area segura.
+- Retest normal: standalone=true y controlador ngsw-worker.js activo.
+- QA-03: el commit 3de0e81 figura en el historial de origin/develop.
+- QA-13: el commit bacfe21 figura en el historial de origin/develop.
+- Se revisaron ENTORNO_LOCAL_QA.md y las evidencias de QA-13:
+  incluyen aislamiento, inicializacion, datos, respaldo y recuperacion.
+- HTTPS temporal, CORS y acceso real desde Android fueron comprobados
+  durante QA-10 y complementan las verificaciones locales anteriores.
+- Implementacion e iconos identificados por el commit 74122fe.
+- Resultados APK identificados por su SHA256 en apk-api-manual.md.
+
+Los criterios tecnicos de QA-10 quedan verificados mediante los
+resultados documentados y las comprobaciones manuales del ejecutor.
+No se declara ejecutada una suite Appium ni cerrado integralmente QA-13.
+
+Permanece el riesgo documentado de disponibilidad del tunel temporal.
+El cierre formal de QA-10 requiere registrar su revision e integracion.
