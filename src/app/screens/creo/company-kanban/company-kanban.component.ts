@@ -7,7 +7,9 @@ import { CompanyShellComponent } from '../../../components/creo-design-system/co
 import { KanbanService } from '../../../core/api/kanban.service';
 import { VacantesService } from '../../../core/api/vacantes.service';
 import { KanbanCandidate, KanbanColumn, ManagedJob, ManagedJobStatus } from '../../../data/creo-data';
-import { MotivoRechazo, TableroKanban } from '../../../core/api/models/kanban.model';
+import { MotivoRechazo, TableroKanban,
+  HistorialKanban
+} from '../../../core/api/models/kanban.model';
 import { PerfilPostulante } from '../../../core/api/models/perfil-postulante.model';
 import { EstadoGeneralVacante } from '../../../core/api/models/vacante-empresa.model';
 import { mapVacanteToManagedJob } from '../../../core/api/mappers/vacante-empresa.mapper';
@@ -88,13 +90,25 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   rejectTarget: KanbanCandidate | null = null;
   rejectError = '';
 
-  messageSent = false;
   autoNotificationToast: string | null = null;
   isReadOnly = false;
 
   private toastTimer: any;
   private subs = new Subscription();
   private refrescoSub?: Subscription;
+  private perfilSub?: Subscription;
+  private historialSub?: Subscription;
+
+  mostrarHistorial = false;
+  cargandoHistorial = false;
+  historialError = '';
+  historial: HistorialKanban | null = null;
+  private historialVersion = 0;
+
+  procesandoMovimiento = false;
+  private tableroVersion = 0;
+  private perfilVersion = 0;
+  private routeReadOnly = false;
   private readonly intervaloRefresco = 45_000;
   private refrescoTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -111,9 +125,7 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
       this.kanbanService.motivosRechazo().subscribe({
         next: (motivos) => {
           this.motivosRechazo = motivos || [];
-          if (this.motivosRechazo.length > 0) {
-            this.selectedMotivoId = this.motivosRechazo[0].id;
-          }
+          this.selectedMotivoId = null;
         },
         error: (err) => {
           this.motivosError = err.error?.message || 'No fue posible cargar los motivos de rechazo.';
@@ -175,6 +187,30 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   }
 
   private seleccionarVacante(job: ManagedJob, routeReadOnly: boolean): void {
+    this.cerrarHistorial();
+    this.tableroVersion++;
+    this.refrescoSub?.unsubscribe();
+
+    this.perfilVersion++;
+    this.perfilSub?.unsubscribe();
+
+    this.selectedCandidate = null;
+    this.perfilPostulante = null;
+    this.loadingPerfil = false;
+    this.perfilError = '';
+    this.rejectTarget = null;
+    this.rejectError = '';
+    this.draggingId = null;
+    this.dragOverCol = null;
+    this.selectedMotivoId = null;
+
+    this.candidates = [];
+    this.tableroApi = null;
+    this.hiredCountState = 0;
+    this.cuposDisponibles = 0;
+
+    this.routeReadOnly = routeReadOnly;
+
     this.selectedJob = job;
     this.selectedJobId = job.id;
     this.jobTitle = job.title;
@@ -184,8 +220,13 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.cerrarHistorial();
+    this.tableroVersion++;
+    this.perfilVersion++;
+
     this.subs.unsubscribe();
     this.refrescoSub?.unsubscribe();
+    this.perfilSub?.unsubscribe();
     if (this.toastTimer) clearTimeout(this.toastTimer);
 
     document.removeEventListener('visibilitychange', this.alCambiarVisibilidad);
@@ -227,7 +268,13 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   private refrescarSiSePuede(): void {
     if (document.hidden) return;
     if (!this.selectedJobId) return;
-    if (this.draggingId || this.selectedCandidate || this.rejectTarget) return;
+    if (
+      this.procesandoMovimiento ||
+      this.mostrarHistorial ||
+      this.draggingId ||
+      this.selectedCandidate ||
+      this.rejectTarget
+    ) return;
     if (this.loadingJobs || this.loadingTablero) return;
 
     this.cargarTablero(Number(this.selectedJobId), true);
@@ -272,6 +319,15 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
    * de carga ni borra lo que ya hay en pantalla: lo usa el refresco de fondo.
    */
   cargarTablero(vacanteId: number, silencioso = false): void {
+    if (
+      this.procesandoMovimiento ||
+      String(vacanteId) !== this.selectedJobId
+    ) return;
+
+    const version = ++this.tableroVersion;
+
+    this.refrescoSub?.unsubscribe();
+
     if (!silencioso) {
       this.loadingTablero = true;
       this.tableroError = '';
@@ -286,13 +342,20 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
 
     const peticion = this.kanbanService.tablero(vacanteId).subscribe({
       next: (tablero) => {
+        if (
+          version !== this.tableroVersion ||
+          String(vacanteId) !== this.selectedJobId ||
+          this.procesandoMovimiento
+        ) return;
+
         this.loadingTablero = false;
         this.tableroApi = tablero;
         this.jobTitle = tablero.vacante.titulo;
         this.hireLimit = tablero.vacante.max_contrataciones;
         this.hiredCountState = tablero.vacante.contratados;
         this.cuposDisponibles = tablero.vacante.cupos_disponibles;
-        this.isReadOnly = tablero.vacante.solo_lectura;
+        this.isReadOnly =
+          this.routeReadOnly || tablero.vacante.solo_lectura;
 
         const apiCandidates: KanbanCandidate[] = [];
         for (const col of tablero.columnas) {
@@ -318,7 +381,14 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
         if (comparable) this.avisarNuevas(idsAnteriores);
       },
       error: (err) => {
-        // Un fallo del refresco de fondo no debe vaciar el tablero
+        if (
+          version !== this.tableroVersion ||
+          String(vacanteId) !== this.selectedJobId
+        ) return;
+
+        this.loadingTablero = false;
+
+        // Conservar el tablero ante fallos del refresco.
         if (silencioso) return;
 
         this.loadingTablero = false;
@@ -328,12 +398,7 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
       }
     });
 
-    if (silencioso) {
-      this.refrescoSub?.unsubscribe();
-      this.refrescoSub = peticion;
-    } else {
-      this.subs.add(peticion);
-    }
+    this.refrescoSub = peticion;
   }
 
   reintentarTablero(): void {
@@ -342,6 +407,8 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
 
   /** Solo cambia la URL: cargarVacantes reacciona al nuevo ?id */
   onSelectJob(jobId: string): void {
+    if (this.procesandoMovimiento) return;
+
     const job = this.jobs.find(j => j.id === jobId);
     this.router.navigate([], {
       relativeTo: this.route,
@@ -433,7 +500,14 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   }
 
   isCandidateLocked(cand: KanbanCandidate): boolean {
-    if (this.isReadOnly) return true;
+    if (
+      this.isReadOnly ||
+      this.loadingTablero ||
+      this.loadingJobs ||
+      this.procesandoMovimiento ||
+      cand.jobId !== this.selectedJobId
+    ) return true;
+
     return cand.column === 'hired' || cand.column === 'rejected';
   }
 
@@ -505,70 +579,34 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
 
   onDrop(col: KanbanColumn, event: DragEvent): void {
     event.preventDefault();
-    this.dragOverCol = null;
-    if (!this.draggingId) return;
 
-    const cand = this.candidates.find(c => c.id === this.draggingId);
-    if (!cand) return;
+    const id = this.draggingId;
 
-    if (this.isCandidateLocked(cand)) {
-      this.showToast(`El candidato ${cand.name} ya está en estado final (${cand.column === 'hired' ? 'Contratado' : 'Rechazado'}) y está bloqueado.`);
-      this.draggingId = null;
-      return;
-    }
-
-    if (col === cand.column) {
-      this.draggingId = null;
-      return;
-    }
-
-    if (!this.puedeAvanzarA(cand, col)) {
-      const siguiente = this.getNextCol(cand.column);
-      if (this.posicion(col) < this.posicion(cand.column)) {
-        this.showToast(`El proceso de selección solo avanza. ${cand.name} no puede volver a "${this.etiquetaColumna(col)}".`);
-      } else if (siguiente) {
-        this.showToast(`${cand.name} debe pasar primero por "${this.etiquetaColumna(siguiente)}".`);
-      }
-      this.draggingId = null;
-      return;
-    }
-
-    // Modal de rechazo
-    if (col === 'rejected') {
-      this.openRejectModal(cand);
-      this.draggingId = null;
-      return;
-    }
-
-    const numericVacanteId = Number(this.selectedJobId);
-    const numericPostulacionId = Number(cand.id);
-
-    if (col === 'hired') {
-      if (this.cuposDisponibles <= 0) {
-        this.showToast(`Límite de contratación alcanzado (${this.hiredCount}/${this.hireLimit} cupos). No se pueden contratar más candidatos.`);
-        this.draggingId = null;
-        return;
-      }
-      this.kanbanService.contratar(numericVacanteId, numericPostulacionId).subscribe({
-        next: () => {
-          this.cargarTablero(numericVacanteId);
-          this.showToast(`Candidato contratado. Se notificó al postulante automáticamente.`);
-        },
-        error: (err) => {
-          this.showToast(err.error?.message || 'Error al contratar al postulante.');
-        }
-      });
-    } else {
-      this.kanbanService.avanzar(numericVacanteId, numericPostulacionId).subscribe({
-        next: () => {
-          this.cargarTablero(numericVacanteId);
-        },
-        error: (err) => {
-          this.showToast(err.error?.message || 'Error al avanzar al postulante.');
-        }
-      });
-    }
     this.draggingId = null;
+    this.dragOverCol = null;
+
+    if (!id || this.procesandoMovimiento || this.rejectTarget) return;
+
+    const candidato = this.candidates.find(
+      cand => cand.id === id &&
+              cand.jobId === this.selectedJobId
+    );
+
+    if (!candidato || col === candidato.column) return;
+
+    if (!this.puedeAvanzarA(candidato, col)) {
+      this.showToast(
+        'El movimiento no está permitido desde la etapa actual.'
+      );
+      return;
+    }
+
+    if (col === 'rejected') {
+      this.openRejectModal(candidato);
+      return;
+    }
+
+    this.ejecutarMovimiento(candidato, col);
   }
 
   onDragEnd(): void {
@@ -580,35 +618,77 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
 
   openProfile(cand: KanbanCandidate, event?: Event): void {
     if (event) event.stopPropagation();
-    this.selectedCandidate = cand;
+
+    if (this.procesandoMovimiento) return;
+
+    const actual = this.candidates.find(
+      item => item.id === cand.id &&
+              item.jobId === this.selectedJobId
+    );
+
+    if (!actual) return;
+
+    const version = ++this.perfilVersion;
+    const vacanteId = this.selectedJobId;
+    const candidatoId = actual.id;
+
+    this.perfilSub?.unsubscribe();
+
+    this.selectedCandidate = actual;
     this.perfilPostulante = null;
     this.perfilError = '';
-    this.messageSent = false;
-
     this.loadingPerfil = true;
-    this.kanbanService.perfilPostulante(Number(cand.id)).subscribe({
-      next: (perfil) => {
-        this.perfilPostulante = perfil;
-        this.loadingPerfil = false;
-      },
-      error: (err) => {
-        this.loadingPerfil = false;
-        if (err.status === 409) {
-          this.showToast(err.error?.message || 'La postulación no está disponible para consulta.');
-          this.closeProfile();
-          return;
+
+    this.perfilSub =
+      this.kanbanService.perfilPostulante(Number(actual.id)).subscribe({
+        next: (perfil) => {
+          if (
+            version !== this.perfilVersion ||
+            vacanteId !== this.selectedJobId ||
+            candidatoId !== this.selectedCandidate?.id
+          ) return;
+
+          this.perfilPostulante = perfil;
+          this.loadingPerfil = false;
+        },
+
+        error: (err) => {
+          if (
+            version !== this.perfilVersion ||
+            vacanteId !== this.selectedJobId ||
+            candidatoId !== this.selectedCandidate?.id
+          ) return;
+
+          this.loadingPerfil = false;
+
+          if ([403, 404, 409].includes(err.status)) {
+            this.closeProfile();
+
+            this.showToast(
+              err.error?.message ||
+              'La postulación no está disponible para consulta.'
+            );
+
+            this.cargarTablero(Number(vacanteId));
+            return;
+          }
+
+          this.perfilError = err.error?.message ||
+            'No fue posible cargar el perfil del postulante.';
         }
-        this.perfilError = err.error?.message || 'No fue posible cargar el perfil del postulante.';
-      }
-    });
+      });
   }
 
   closeProfile(): void {
+    if (this.procesandoMovimiento) return;
+
+    this.perfilVersion++;
+    this.perfilSub?.unsubscribe();
+
     this.selectedCandidate = null;
     this.perfilPostulante = null;
     this.loadingPerfil = false;
     this.perfilError = '';
-    this.messageSent = false;
   }
 
   // ── HU-06: Modal y acción de rechazo ──
@@ -616,44 +696,174 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   openRejectModal(cand: KanbanCandidate, event?: Event): void {
     if (event) event.stopPropagation();
 
-    if (!this.puedeRechazar(cand)) {
-      this.showToast(`Este candidato no puede ser rechazado en su estado actual.`);
+    if (this.procesandoMovimiento || this.rejectTarget) return;
+
+    const actual = this.candidates.find(
+      item => item.id === cand.id &&
+              item.jobId === this.selectedJobId
+    );
+
+    if (!actual || !this.puedeRechazar(actual)) {
+      this.showToast(
+        'Este candidato no puede ser rechazado en su estado actual.'
+      );
       return;
     }
 
-    this.rejectTarget = cand;
-    this.selectedMotivoId = this.motivosRechazo[0]?.id ?? null;
+    this.rejectTarget = actual;
+    this.selectedMotivoId = null;
     this.rejectError = this.motivosError;
   }
 
   closeRejectModal(): void {
+    if (this.procesandoMovimiento) return;
+
     this.rejectTarget = null;
+    this.selectedMotivoId = null;
     this.rejectError = '';
   }
 
   confirmReject(): void {
-    if (!this.rejectTarget) return;
+    if (
+      !this.rejectTarget ||
+      this.procesandoMovimiento
+    ) return;
 
-    if (!this.selectedMotivoId) {
-      this.rejectError = this.motivosError || 'Seleccione un motivo de rechazo válido.';
+    if (
+      !this.selectedMotivoId ||
+      !this.motivosRechazo.some(
+        motivo => motivo.id === this.selectedMotivoId
+      )
+    ) {
+      this.rejectError = this.motivosError ||
+        'Seleccione un motivo de rechazo válido.';
       return;
     }
 
-    const numericVacanteId = Number(this.selectedJobId);
-    this.kanbanService.rechazar(numericVacanteId, Number(this.rejectTarget.id), this.selectedMotivoId).subscribe({
+    this.ejecutarMovimiento(
+      this.rejectTarget,
+      'rejected',
+      this.selectedMotivoId
+    );
+  }
+
+  private ejecutarMovimiento(
+    candidato: KanbanCandidate,
+    destino: KanbanColumn,
+    motivoId?: number
+  ): void {
+    if (this.procesandoMovimiento) return;
+
+    if (this.rejectTarget && destino !== 'rejected') return;
+
+    const actual = this.candidates.find(
+      item => item.id === candidato.id &&
+              item.jobId === this.selectedJobId
+    );
+
+    if (!actual || !this.puedeAvanzarA(actual, destino)) {
+      return;
+    }
+
+    if (
+      destino === 'hired' &&
+      this.cuposDisponibles <= 0
+    ) {
+      this.showToast(
+        'Límite de contratación alcanzado.'
+      );
+      return;
+    }
+
+    if (
+      destino === 'rejected' &&
+      (
+        !motivoId ||
+        this.rejectTarget?.id !== actual.id ||
+        !this.motivosRechazo.some(m => m.id === motivoId)
+      )
+    ) {
+      this.rejectError = 'Seleccione un motivo de rechazo válido.';
+      return;
+    }
+
+    const vacanteId = Number(this.selectedJobId);
+    const postulacionId = Number(actual.id);
+
+    if (
+      !Number.isSafeInteger(vacanteId) ||
+      !Number.isSafeInteger(postulacionId) ||
+      vacanteId <= 0 ||
+      postulacionId <= 0
+    ) return;
+
+    this.procesandoMovimiento = true;
+    this.rejectError = '';
+
+    this.tableroVersion++;
+    this.refrescoSub?.unsubscribe();
+
+    const peticion = destino === 'hired'
+      ? this.kanbanService.contratar(vacanteId, postulacionId)
+      : destino === 'rejected'
+        ? this.kanbanService.rechazar(
+            vacanteId, postulacionId, motivoId!
+          )
+        : this.kanbanService.avanzar(vacanteId, postulacionId);
+
+    this.subs.add(peticion.subscribe({
       next: () => {
-        const name = this.rejectTarget?.name;
-        if (this.selectedCandidate?.id === this.rejectTarget?.id) {
-          this.closeProfile();
+        this.procesandoMovimiento = false;
+
+        if (String(vacanteId) !== this.selectedJobId) {
+          if (this.selectedJobId) {
+            this.cargarTablero(Number(this.selectedJobId));
+          }
+          return;
         }
+
+        this.closeProfile();
         this.closeRejectModal();
-        this.cargarTablero(numericVacanteId);
-        this.showToast(`Candidato ${name} rechazado. Notificación enviada automáticamente.`);
+        this.cargarTablero(vacanteId);
+
+        const mensaje = destino === 'hired'
+          ? 'Contratación registrada correctamente.'
+          : destino === 'rejected'
+            ? 'Rechazo registrado correctamente.'
+            : 'Cambio de etapa registrado correctamente.';
+
+        this.showToast(mensaje);
       },
+
       error: (err) => {
-        this.rejectError = err.error?.message || 'No fue posible registrar el rechazo.';
+        this.procesandoMovimiento = false;
+
+        if (String(vacanteId) !== this.selectedJobId) {
+          if (this.selectedJobId) {
+            this.cargarTablero(Number(this.selectedJobId));
+          }
+          return;
+        }
+
+        const mensaje = err.status === 0
+          ? 'No se pudo confirmar el resultado. Consulta el estado actualizado.'
+          : err.error?.message ||
+            'No fue posible registrar el movimiento.';
+
+        if (destino === 'rejected') {
+          this.rejectError = mensaje;
+        } else {
+          this.showToast(mensaje);
+        }
+
+        if ([0, 403, 404, 409].includes(err.status)) {
+          this.closeProfile();
+          this.closeRejectModal();
+          this.cargarTablero(vacanteId);
+          this.showToast(mensaje);
+        }
       }
-    });
+    }));
   }
 
   getNextCol(currentCol: KanbanColumn): KanbanColumn | null {
@@ -675,46 +885,80 @@ export class CompanyKanbanComponent implements OnInit, OnDestroy {
   }
 
   advanceCandidate(cand: KanbanCandidate): void {
-    const nextCol = this.getNextCol(cand.column);
-    if (!nextCol) return;
+    if (this.procesandoMovimiento || this.rejectTarget) return;
 
-    const numericVacanteId = Number(this.selectedJobId);
-    const numericPostulacionId = Number(cand.id);
+    const actual = this.candidates.find(
+      item => item.id === cand.id &&
+              item.jobId === this.selectedJobId
+    );
 
-    if (nextCol === 'hired') {
-      if (this.cuposDisponibles <= 0) {
-        this.showToast(`Límite de contratación alcanzado (${this.hiredCount}/${this.hireLimit} cupos).`);
-        return;
-      }
-      this.kanbanService.contratar(numericVacanteId, numericPostulacionId).subscribe({
-        next: () => {
-          this.closeProfile();
-          this.cargarTablero(numericVacanteId);
-          this.showToast(`Candidato contratado. Notificación enviada automáticamente.`);
-        },
-        error: (err) => {
-          this.showToast(err.error?.message || 'Error al contratar al postulante.');
-        }
-      });
-    } else {
-      this.kanbanService.avanzar(numericVacanteId, numericPostulacionId).subscribe({
-        next: () => {
-          this.closeProfile();
-          this.cargarTablero(numericVacanteId);
-          this.showToast(`Candidato avanzado a ${this.etiquetaColumna(nextCol)}.`);
-        },
-        error: (err) => {
-          this.showToast(err.error?.message || 'Error al avanzar al postulante.');
-        }
-      });
-    }
+    if (!actual) return;
+
+    const destino = this.getNextCol(actual.column);
+
+    if (!destino) return;
+
+    this.ejecutarMovimiento(actual, destino);
   }
 
-  sendMessage(): void {
-    this.messageSent = true;
-    setTimeout(() => {
-      this.messageSent = false;
-    }, 4000);
+  abrirHistorial(): void {
+    if (
+      this.procesandoMovimiento ||
+      !this.selectedJobId
+    ) return;
+
+    const vacanteId = Number(this.selectedJobId);
+
+    if (
+      !Number.isSafeInteger(vacanteId) ||
+      vacanteId <= 0
+    ) return;
+
+    const version = ++this.historialVersion;
+
+    this.historialSub?.unsubscribe();
+
+    this.mostrarHistorial = true;
+    this.cargandoHistorial = true;
+    this.historial = null;
+    this.historialError = '';
+
+    this.historialSub =
+      this.kanbanService.historial(vacanteId).subscribe({
+        next: (historial) => {
+          if (
+            version !== this.historialVersion ||
+            String(vacanteId) !== this.selectedJobId ||
+            !this.mostrarHistorial
+          ) return;
+
+          this.cargandoHistorial = false;
+          this.historial = historial;
+        },
+
+        error: (err) => {
+          if (
+            version !== this.historialVersion ||
+            String(vacanteId) !== this.selectedJobId ||
+            !this.mostrarHistorial
+          ) return;
+
+          this.cargandoHistorial = false;
+          this.historial = null;
+          this.historialError = err.error?.message ||
+            'No fue posible consultar el historial.';
+        }
+      });
+  }
+
+  cerrarHistorial(): void {
+    this.historialVersion++;
+    this.historialSub?.unsubscribe();
+
+    this.mostrarHistorial = false;
+    this.cargandoHistorial = false;
+    this.historial = null;
+    this.historialError = '';
   }
 
   showToast(msg: string): void {
