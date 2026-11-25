@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="creo.tests.CompanyAdminAuthTest" time="13.704" tests="4" errors="0" skipped="0" failures="0"><testcase name="loginEmpresaValido" classname="creo.tests.CompanyAdminAuthTest" time="3.155" /><testcase name="adminNoAccedePerfilCandidato" classname="creo.tests.CompanyAdminAuthTest" time="3.74" /><testcase name="loginAdminValido" classname="creo.tests.CompanyAdminAuthTest" time="2.995" /><testcase name="empresaNoAccedeAdministracion" classname="creo.tests.CompanyAdminAuthTest" time="3.807" /></testsuite>

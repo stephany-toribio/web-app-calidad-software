@@ -80,5 +80,10 @@ en vivo. No sustituye Appium, JMeter ni Jira.
 
 ## Estado
 
-Implementacion inicial.
-Ejecucion remota pendiente de verificacion.
+Implementacion FULL verificada en GitHub Actions.
+
+Run: 45719731928.
+Node: 171/171.
+Selenium: 20/20.
+
+Modo DEMO pendiente de ensayo consolidado.

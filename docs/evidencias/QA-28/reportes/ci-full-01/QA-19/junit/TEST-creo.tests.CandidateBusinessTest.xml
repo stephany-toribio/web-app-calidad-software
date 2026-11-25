@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="creo.tests.CandidateBusinessTest" time="19.365" tests="2" errors="0" skipped="0" failures="0"><testcase name="busquedaSinResultados" classname="creo.tests.CandidateBusinessTest" time="5.538" /><testcase name="recorridoCompletoCandidato" classname="creo.tests.CandidateBusinessTest" time="13.796" /></testsuite>

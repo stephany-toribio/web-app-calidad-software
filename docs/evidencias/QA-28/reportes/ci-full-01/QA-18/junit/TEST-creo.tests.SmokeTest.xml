@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="creo.tests.SmokeTest" time="3.357" tests="1" errors="0" skipped="0" failures="0"><testcase name="navegadorCargaFrontendReal" classname="creo.tests.SmokeTest" time="3.323" /></testsuite>
