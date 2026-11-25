@@ -1,0 +1,28 @@
+Modo QA-20: full
+===== PREFLIGHT QA-20 =====
+PASS: Preflight QA-20
+Run ID: 0ef94886-32ec-4b0f-a437-931230aea7b9
+PASS: Precondicion del defecto reproducida
+PERFIL-DIAG: {"postulacion": {"id": "int", "estado": {"codigo": "str", "nombre": "str"}}, "candidato": {"nombre": "str", "apellidos": "str", "correo": "str", "celular": "str", "busca_primer_empleo": "bool"}, "estudios": {"tipo": "array", "cantidad": 1, "elemento": {"id": "int", "tipo_estudio": {"id": "int", "nombre": "str"}, "area_estudio": {"id": "int", "nombre": "str"}, "pais": "NoneType", "institucion": "NoneType", "carrera": "NoneType", "estado": "NoneType", "ciclo_actual": "NoneType", "fecha_inicio": "NoneType", "fecha_fin": "NoneType"}}, "experiencias": {"tipo": "array", "cantidad": 0, "elemento": null}, "idiomas": {"tipo": "array", "cantidad": 1, "elemento": {"id": "int", "idioma": {"id": "int", "nombre": "str"}, "nivel_escrito": "str", "nivel_oral": "str"}}, "habilidades": {"tecnicas": {"tipo": "array", "cantidad": 0, "elemento": null}, "blandas": {"tipo": "array", "cantidad": 1, "elemento": {"id": "int", "nombre": "str"}}}, "requisitos_vacante": {"must_have": {"posee": {"tipo": "array", "cantidad": 0, "elemento": null}, "faltan": {"tipo": "array", "cantidad": 1, "elemento": {"id": "int", "nombre": "str"}}}, "nice_to_have": {"tipo": "array", "cantidad": 4, "elemento": {"id": "int", "nombre": "str", "posee": "bool"}}}}
+PASS: Vacante Kanban publicada
+PASS: Dos postulaciones independientes preparadas
+PASS: Empresa sintetica preparada
+PASS: Administrador sintetico preparado
+PASS: Dos candidatos sinteticos preparados
+PASS: Vacante pendiente sin revision ni pago
+===== SELENIUM QA-20 =====
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.24 s -- in creo.tests.CompanyAdminAuthTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 32.62 s -- in creo.tests.CompanyKanbanTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.23 s -- in creo.tests.AdminModerationTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.720 s -- in creo.tests.CompanyPaymentTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+Exit code Maven: 0
+PASS: Cantidad de pruebas: 8
+PASS: Escaneo de credenciales y tokens
+PASS: Ejecucion Selenium QA-20
+===== LIMPIEZA QA-20 =====
+PASS: Fixtures eliminados: 4
+PASS: Fixtures restantes: 0
+PASS: Limpieza QA-20
+Reportes privados: /tmp/tmp.F5lPQCR0is

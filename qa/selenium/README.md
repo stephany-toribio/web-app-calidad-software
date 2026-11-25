@@ -125,3 +125,48 @@ otros procesos modifiquen los fixtures de una corrida.
 - [Casos de prueba](../../docs/evidencias/QA-19/CASOS_DE_PRUEBA.md)
 - [Resultados](../../docs/evidencias/QA-19/RESULTADOS.md)
 - [Incidencias](../../docs/evidencias/QA-19/INCIDENCIAS.md)
+
+## QA-20 — Empresa y administrador
+
+Suite de autenticacion, autorizacion, moderacion,
+pago simulado, Kanban, historial y limite de contrataciones.
+
+### Regresion completa
+
+    qa/selenium/scripts/run-qa20.sh full
+
+Ejecuta nueve escenarios funcionales.
+
+### Demostracion en vivo
+
+    qa/selenium/scripts/run-qa20.sh demo
+
+Ejecuta tres escenarios del conjunto completo:
+
+- Aprobacion administrativa.
+- Pago simulado y publicacion.
+- Contratacion y rechazo empresarial.
+
+### Precondiciones
+
+- Backend QA: puerto 8002.
+- Frontend QA: puerto 4202.
+- Selenium Grid: puerto 4444.
+- Java 21, Maven y Python 3.
+- Catalogos y build QA disponibles.
+
+### Gestion de datos
+
+Fixtures sinteticos por UUID, preflight,
+validaciones API/MySQL y limpieza automatica.
+
+No se utilizan cuentas personales ni pagos reales.
+
+### Documentacion
+
+- [Casos de prueba](../../docs/evidencias/QA-20/CASOS_DE_PRUEBA.md)
+- [Resultados](../../docs/evidencias/QA-20/RESULTADOS.md)
+- [Incidencias](../../docs/evidencias/QA-20/INCIDENCIAS.md)
+- [Resumen JSON](../../docs/evidencias/QA-20/resumen-resultados.json)
+
+Resultado: dos FULL de 9/9 y dos DEMO de 3/3.

@@ -23,12 +23,12 @@ export interface EstudioPostulante {
   id: number;
   tipo_estudio: { id: number; nombre: string };
   area_estudio: { id: number; nombre: string };
-  pais: { id: number; nombre: string };
-  institucion: { id: number; nombre: string };
-  carrera: { id: number; nombre: string };
-  estado: 'en_curso' | 'finalizado' | 'incompleto';
+  pais: { id: number; nombre: string } | null;
+  institucion: { id: number; nombre: string } | null;
+  carrera: { id: number; nombre: string } | null;
+  estado: 'en_curso' | 'finalizado' | 'incompleto' | null;
   ciclo_actual: number | null;
-  fecha_inicio: string;
+  fecha_inicio: string | null;
   fecha_fin: string | null;
 }
 

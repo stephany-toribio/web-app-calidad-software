@@ -506,10 +506,10 @@
           <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Formación Académica</p>
           <div *ngIf="perfilPostulante.estudios.length > 0; else sinEstudiosApi" class="space-y-2">
             <div *ngFor="let est of perfilPostulante.estudios" class="p-3 rounded-xl border bg-[#F8F7F4] border-[#E8E3D9]">
-              <p class="text-xs font-bold text-[#111111]">{{ est.carrera.nombre }}</p>
-              <p class="text-[11px] text-[#6B6560]">{{ est.institucion.nombre }} · {{ est.tipo_estudio.nombre }}</p>
+              <p class="text-xs font-bold text-[#111111]">{{ est.carrera?.nombre || 'Carrera no registrada' }}</p>
+              <p class="text-[11px] text-[#6B6560]">{{ est.institucion?.nombre || 'Institución no registrada' }} · {{ est.tipo_estudio.nombre || 'Tipo de estudio no registrado' }}</p>
               <p class="text-[10px] text-[#9A948C] mt-1">
-                Estado: <strong class="font-semibold capitalize text-[#4A4540]">{{ est.estado.replace('_', ' ') }}</strong>
+                Estado: <strong class="font-semibold capitalize text-[#4A4540]">{{ est.estado ? est.estado.replace('_', ' ') : 'No registrado' }}</strong>
                 <span *ngIf="est.fecha_inicio"> · {{ est.fecha_inicio | date:'MMM yyyy' }} - {{ est.fecha_fin ? (est.fecha_fin | date:'MMM yyyy') : 'Al presente' }}</span>
               </p>
             </div>
@@ -573,10 +573,11 @@
             type="button"
             (click)="advanceCandidate(selectedCandidate)"
             data-testid="kanban-advance"
+            [textContent]="getNextColLabel(selectedCandidate.column)"
+            [attr.aria-label]="getNextColLabel(selectedCandidate.column)"
             [disabled]="procesandoMovimiento"
             class="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm"
           >
-            {{ getNextColLabel(selectedCandidate.column) }}
           </button>
           <button
             *ngIf="puedeRechazar(selectedCandidate)"

@@ -1,0 +1,20 @@
+{
+  "run_id": "388b7c86-e302-456e-b893-648cd74a26b7",
+  "vacante_id": 350,
+  "fase": "persistida",
+  "estado_api": {
+    "general": "publicada",
+    "revision": "aprobada",
+    "motivo_no_aprobacion": null,
+    "pago": "pagado",
+    "disponibilidad": "activa",
+    "vigente": true,
+    "publicada_en": "2026-11-25T21:23:36.000000Z"
+  },
+  "cantidad_pagos": 1,
+  "pago_id": 229,
+  "monto": 100.0,
+  "moneda": "PEN",
+  "ultimos4": "4242",
+  "resultado": "PASS"
+}

@@ -1,0 +1,85 @@
+{
+  "run_id": "e263aa23-8d48-4dc4-acb2-2bdb41320278",
+  "fase": "contratacion",
+  "vacante_id": 342,
+  "max_contrataciones": 1,
+  "contratados": 1,
+  "cupos_disponibles": 0,
+  "alfa": {
+    "success": true,
+    "id": 188,
+    "candidato_id": 349,
+    "empleo_id": 342,
+    "estado_postulacion_id": 4,
+    "estado_nombre": "Contratado",
+    "retirada_en": null,
+    "fecha_postulacion": "2026-11-25 21:17:48",
+    "historial": [
+      {
+        "id": 200,
+        "postulacion_id": 188,
+        "estado_postulacion_id": 2,
+        "motivo_rechazo_id": null,
+        "fecha_cambio": "2026-11-25 21:17:48",
+        "created_at": "2026-11-25 21:17:48",
+        "updated_at": "2026-11-25 21:17:48",
+        "estado_nombre": "En Revisión"
+      },
+      {
+        "id": 201,
+        "postulacion_id": 188,
+        "estado_postulacion_id": 3,
+        "motivo_rechazo_id": null,
+        "fecha_cambio": "2026-11-25 21:17:48",
+        "created_at": "2026-11-25 21:17:48",
+        "updated_at": "2026-11-25 21:17:48",
+        "estado_nombre": "Entrevista"
+      },
+      {
+        "id": 204,
+        "postulacion_id": 188,
+        "estado_postulacion_id": 4,
+        "motivo_rechazo_id": null,
+        "fecha_cambio": "2026-11-25 21:18:22",
+        "created_at": "2026-11-25 21:18:22",
+        "updated_at": "2026-11-25 21:18:22",
+        "estado_nombre": "Contratado"
+      }
+    ],
+    "notificaciones": 1
+  },
+  "beta": {
+    "success": true,
+    "id": 189,
+    "candidato_id": 350,
+    "empleo_id": 342,
+    "estado_postulacion_id": 3,
+    "estado_nombre": "Entrevista",
+    "retirada_en": null,
+    "fecha_postulacion": "2026-11-25 21:17:49",
+    "historial": [
+      {
+        "id": 202,
+        "postulacion_id": 189,
+        "estado_postulacion_id": 2,
+        "motivo_rechazo_id": null,
+        "fecha_cambio": "2026-11-25 21:17:49",
+        "created_at": "2026-11-25 21:17:49",
+        "updated_at": "2026-11-25 21:17:49",
+        "estado_nombre": "En Revisión"
+      },
+      {
+        "id": 203,
+        "postulacion_id": 189,
+        "estado_postulacion_id": 3,
+        "motivo_rechazo_id": null,
+        "fecha_cambio": "2026-11-25 21:17:49",
+        "created_at": "2026-11-25 21:17:49",
+        "updated_at": "2026-11-25 21:17:49",
+        "estado_nombre": "Entrevista"
+      }
+    ],
+    "notificaciones": 0
+  },
+  "resultado": "PASS"
+}
