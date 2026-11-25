@@ -58,6 +58,7 @@ export class CreoRegisterCompanyComponent {
 
   isValidating = false;
   isSubmitting = false;
+  registroCompletado = false;
 
   private readonly MAX_DESCRIPCION_CARACTERES = 250;
   private readonly MAX_CAMPO_CARACTERES = 255;
@@ -248,7 +249,7 @@ export class CreoRegisterCompanyComponent {
    */
 
   nextStep(): void {
-    if (this.isValidating) {
+    if (this.isValidating || this.isSubmitting || this.registroCompletado) {
       return;
     }
 
@@ -350,7 +351,12 @@ export class CreoRegisterCompanyComponent {
   handleSubmit(event: Event): void {
     event.preventDefault();
 
-    if (this.currentStep !== 2 || this.isSubmitting) {
+    if (
+      this.currentStep !== 2 ||
+      this.isSubmitting ||
+      this.isValidating ||
+      this.registroCompletado
+    ) {
       return;
     }
 
@@ -377,6 +383,7 @@ export class CreoRegisterCompanyComponent {
          * La empresa ya fue creada.
          * Ahora iniciamos sesión con las mismas credenciales.
          */
+        this.registroCompletado = true;
         this.iniciarSesionDespuesDelRegistro(payload);
       },
 
@@ -503,6 +510,25 @@ export class CreoRegisterCompanyComponent {
     }
 
     this.errors = mapped;
+
+    const camposEmpresa = [
+      'razSocial', 'descripcion', 'ruc',
+      'sector', 'website'
+    ];
+
+    const camposAcceso = [
+      'email', 'password', 'contactName'
+    ];
+
+    const claves = Object.keys(mapped);
+
+    if (claves.some(campo => camposEmpresa.includes(campo))) {
+      this.currentStep = 0;
+      this.scrollTop();
+    } else if (claves.some(campo => camposAcceso.includes(campo))) {
+      this.currentStep = 1;
+      this.scrollTop();
+    }
   }
 
   private removeError(campo: string): void {
@@ -522,6 +548,8 @@ export class CreoRegisterCompanyComponent {
   }
 
   prevStep(): void {
+    if (this.isValidating || this.isSubmitting || this.registroCompletado) return;
+
     if (this.currentStep > 0) {
       this.currentStep -= 1;
       this.scrollTop();
@@ -529,6 +557,8 @@ export class CreoRegisterCompanyComponent {
   }
 
   goToStep(step: number): void {
+    if (this.isValidating || this.isSubmitting || this.registroCompletado) return;
+
     this.currentStep = step;
     this.errors = {};
     this.scrollTop();
@@ -539,6 +569,8 @@ export class CreoRegisterCompanyComponent {
   }
 
   goToLanding(): void {
+    if (this.isValidating || this.isSubmitting) return;
+
     this.router.navigate(['/creo/landing']);
   }
 }

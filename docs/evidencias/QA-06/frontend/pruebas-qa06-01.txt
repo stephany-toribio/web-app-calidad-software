@@ -1,0 +1,236 @@
+
+> creo-angular@1.0.0 test:qa06
+> node --test tests/qa06/*.test.mjs
+
+TAP version 13
+# Subtest: F23-A: errores de duplicidad durante registro
+ok 1 - F23-A: errores de duplicidad durante registro
+  ---
+  duration_ms: 2.436343
+  type: 'test'
+  ...
+# Subtest: F23-B: errores de duplicidad durante edicion
+ok 2 - F23-B: errores de duplicidad durante edicion
+  ---
+  duration_ms: 0.553031
+  type: 'test'
+  ...
+# Subtest: F23-C: error de maximo de habilidades
+ok 3 - F23-C: error de maximo de habilidades
+  ---
+  duration_ms: 0.623245
+  type: 'test'
+  ...
+# Subtest: F24: openEditModal bloqueado durante guardado
+ok 4 - F24: openEditModal bloqueado durante guardado
+  ---
+  duration_ms: 0.428144
+  type: 'test'
+  ...
+# Subtest: F24: openExpModal bloqueado durante guardado
+ok 5 - F24: openExpModal bloqueado durante guardado
+  ---
+  duration_ms: 0.158721
+  type: 'test'
+  ...
+# Subtest: F24: openEduModal bloqueado durante guardado
+ok 6 - F24: openEduModal bloqueado durante guardado
+  ---
+  duration_ms: 0.219866
+  type: 'test'
+  ...
+# Subtest: F24: openSkillsModal bloqueado durante guardado
+ok 7 - F24: openSkillsModal bloqueado durante guardado
+  ---
+  duration_ms: 0.159303
+  type: 'test'
+  ...
+# Subtest: F24: closeEditModal bloqueado durante guardado
+ok 8 - F24: closeEditModal bloqueado durante guardado
+  ---
+  duration_ms: 0.100302
+  type: 'test'
+  ...
+# Subtest: F24: closeExpModal bloqueado durante guardado
+ok 9 - F24: closeExpModal bloqueado durante guardado
+  ---
+  duration_ms: 0.466645
+  type: 'test'
+  ...
+# Subtest: F24: closeEduModal bloqueado durante guardado
+ok 10 - F24: closeEduModal bloqueado durante guardado
+  ---
+  duration_ms: 0.667605
+  type: 'test'
+  ...
+# Subtest: F24: closeSkillsModal bloqueado durante guardado
+ok 11 - F24: closeSkillsModal bloqueado durante guardado
+  ---
+  duration_ms: 0.250318
+  type: 'test'
+  ...
+# Subtest: F03: borrador solo en sessionStorage
+ok 12 - F03: borrador solo en sessionStorage
+  ---
+  duration_ms: 122.948292
+  type: 'test'
+  ...
+# Subtest: F04: no persiste contrasenas
+ok 13 - F04: no persiste contrasenas
+  ---
+  duration_ms: 37.473965
+  type: 'test'
+  ...
+# Subtest: F05: elimina borrador antiguo persistente
+ok 14 - F05: elimina borrador antiguo persistente
+  ---
+  duration_ms: 35.595168
+  type: 'test'
+  ...
+# Subtest: F06: restauracion obliga a revalidar credenciales
+ok 15 - F06: restauracion obliga a revalidar credenciales
+  ---
+  duration_ms: 27.499323
+  type: 'test'
+  ...
+# Subtest: F07: no recrea borrador despues del registro
+ok 16 - F07: no recrea borrador despues del registro
+  ---
+  duration_ms: 19.677439
+  type: 'test'
+  ...
+# Subtest: F08: bloquea navegacion mientras envia
+ok 17 - F08: bloquea navegacion mientras envia
+  ---
+  duration_ms: 17.836229
+  type: 'test'
+  ...
+# Subtest: F09: handleNext bloquea segundo envio
+ok 18 - F09: handleNext bloquea segundo envio
+  ---
+  duration_ms: 16.765304
+  type: 'test'
+  ...
+# Subtest: F29: ruta antigua redirige al perfil real protegido
+ok 19 - F29: ruta antigua redirige al perfil real protegido
+  ---
+  duration_ms: 0.508156
+  type: 'test'
+  ...
+# Subtest: F30: ruta empresarial usa companyGuard
+ok 20 - F30: ruta empresarial usa companyGuard
+  ---
+  duration_ms: 0.530722
+  type: 'test'
+  ...
+# Subtest: F10: carga del perfil mediante servicio
+ok 21 - F10: carga del perfil mediante servicio
+  ---
+  duration_ms: 2.827849
+  type: 'test'
+  ...
+# Subtest: F11: campos obligatorios
+ok 22 - F11: campos obligatorios
+  ---
+  duration_ms: 1.594557
+  type: 'test'
+  ...
+# Subtest: F12: RUC invalido
+ok 23 - F12: RUC invalido
+  ---
+  duration_ms: 0.567103
+  type: 'test'
+  ...
+# Subtest: F13: sector fuera del catalogo
+ok 24 - F13: sector fuera del catalogo
+  ---
+  duration_ms: 0.454199
+  type: 'test'
+  ...
+# Subtest: F14: URL invalida o protocolo no permitido
+ok 25 - F14: URL invalida o protocolo no permitido
+  ---
+  duration_ms: 0.509888
+  type: 'test'
+  ...
+# Subtest: F15: descripcion mayor a 250 caracteres
+ok 26 - F15: descripcion mayor a 250 caracteres
+  ---
+  duration_ms: 0.478007
+  type: 'test'
+  ...
+# Subtest: F16: payload sin identificadores ni credenciales
+ok 27 - F16: payload sin identificadores ni credenciales
+  ---
+  duration_ms: 2.236359
+  type: 'test'
+  ...
+# Subtest: F17: bloqueo de doble guardado
+ok 28 - F17: bloqueo de doble guardado
+  ---
+  duration_ms: 0.606336
+  type: 'test'
+  ...
+# Subtest: F18: exito solamente despues de respuesta
+ok 29 - F18: exito solamente despues de respuesta
+  ---
+  duration_ms: 1.224919
+  type: 'test'
+  ...
+# Subtest: F19: error 422 asociado al campo RUC
+ok 30 - F19: error 422 asociado al campo RUC
+  ---
+  duration_ms: 1.350691
+  type: 'test'
+  ...
+# Subtest: F20: conserva datos ante error del servidor
+ok 31 - F20: conserva datos ante error del servidor
+  ---
+  duration_ms: 0.503535
+  type: 'test'
+  ...
+# Subtest: F21: cancelar restaura el ultimo perfil confirmado
+ok 32 - F21: cancelar restaura el ultimo perfil confirmado
+  ---
+  duration_ms: 0.224435
+  type: 'test'
+  ...
+# Subtest: F22: error de conexion durante guardado
+ok 33 - F22: error de conexion durante guardado
+  ---
+  duration_ms: 0.248778
+  type: 'test'
+  ...
+# Subtest: F25: carga fallida permite reintentar
+ok 34 - F25: carga fallida permite reintentar
+  ---
+  duration_ms: 0.155513
+  type: 'test'
+  ...
+# Subtest: F26: no guarda perfil que todavia no fue cargado
+ok 35 - F26: no guarda perfil que todavia no fue cargado
+  ---
+  duration_ms: 0.076747
+  type: 'test'
+  ...
+# Subtest: F27: cancelar bloqueado durante guardado
+ok 36 - F27: cancelar bloqueado durante guardado
+  ---
+  duration_ms: 0.123255
+  type: 'test'
+  ...
+# Subtest: F28: evita recargas simultaneas
+ok 37 - F28: evita recargas simultaneas
+  ---
+  duration_ms: 0.146646
+  type: 'test'
+  ...
+1..37
+# tests 37
+# suites 0
+# pass 37
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 982.169068

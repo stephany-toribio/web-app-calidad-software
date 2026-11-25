@@ -5,7 +5,8 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse } from './models/api-response.model';
 import {
   EmpresaRegistrada,
-  RegistroEmpresaPayload
+  RegistroEmpresaPayload,
+  ActualizarEmpresaPayload
 } from './models/registro-empresa.model';
 
 @Injectable({ providedIn: 'root' })
@@ -36,6 +37,18 @@ export class EmpresasService {
   miEmpresa(): Observable<EmpresaRegistrada> {
     return this.http
       .get<ApiResponse<EmpresaRegistrada>>(`${this.empresasUrl}/me`)
+      .pipe(map(respuesta => respuesta.data));
+  }
+
+  /** Actualiza exclusivamente la empresa autenticada. */
+  actualizarMiEmpresa(
+    payload: ActualizarEmpresaPayload
+  ): Observable<EmpresaRegistrada> {
+    return this.http
+      .put<ApiResponse<EmpresaRegistrada>>(
+        `${this.empresasUrl}/me`,
+        payload
+      )
       .pipe(map(respuesta => respuesta.data));
   }
 }

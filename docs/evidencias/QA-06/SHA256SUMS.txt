@@ -1,0 +1,15 @@
+fa17d1eb1ef2ba48cd10904cc8e10656bfb477bcc6894d5eec228f6dcc2dbe26  ./RESULTADOS.md
+1002b7811106fc94f312e691c6ddd08e8a952fc5fd9b85a5a6a0290f08f37452  ./frontend/build-perfil-empresa.txt
+d50cd1387ad766291b180e7a9a64e9d037dbe23b3dc783e64c074e7c41a27351  ./frontend/final/build-android.txt
+5f06893ef1b31fa86b3e56b99c2a93d2635d14daa0d1faca960f78aa1edc0818  ./frontend/final/build-estandar.txt
+b4f5915f5c8d838d42eb826ad0817c4bb190773a0af370c281404c457f4f6db7  ./frontend/final/build-qa.txt
+13cc6e2d7f638685b90cee8a113a440c2db9fee62a0874e9ebb22afec46abe9d  ./frontend/final/regresion-qa05.txt
+44ff05e0e39dbeeca4c74cb81a5f4a35fd30e33a94ac47f77526826b5bb7f351  ./frontend/final/regresion-qa06.txt
+858124f04db12d02d3e6906087ebbe5943c7f152adc31e901d71ae8bb79e7935  ./frontend/final/regresion-qa07.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./frontend/final/typescript.txt
+3f3e36eafa281ccc14907478b11658baa779dfe43cd3d6a8e31487b2b254bd8b  ./frontend/pruebas-qa06-01.txt
+58e3733fd63f54039dc04fbdce0c8669d89f425b91aae8c67b05531ec6801189  ./frontend/pruebas-qa06-02.txt
+1b2fccdcfbfec5edcbf0352873c2aef47acb540c553e0dd6686df82730a1ef14  ./frontend/regresion-qa05-01.txt
+079e525f55fdaf160ca6591ee8ce93ed95c9422627afdb095348834653ba1f99  ./frontend/regresion-qa07-01.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./frontend/typescript-01.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./frontend/typescript-02.txt
