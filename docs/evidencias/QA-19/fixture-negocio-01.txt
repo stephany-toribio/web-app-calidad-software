@@ -1,0 +1,20 @@
+===== PREFLIGHT QA-19 =====
+PASS: Preflight QA-19
+Run ID: db4706cf-a7bb-40da-8c24-86dafb66f8d7
+Traceback (most recent call last):
+  File "/home/steph/projects/web-app-calidad-software/qa/selenium/scripts/fixtures.py", line 231, in <module>
+    resultado = preparar()
+  File "/home/steph/projects/web-app-calidad-software/qa/selenium/scripts/fixtures.py", line 205, in preparar
+    "vacante": publicar_vacante()
+               ~~~~~~~~~~~~~~~~^^
+  File "/home/steph/projects/web-app-calidad-software/qa/selenium/scripts/fixtures.py", line 124, in publicar_vacante
+    empresa = registrar("empresa")
+  File "/home/steph/projects/web-app-calidad-software/qa/selenium/scripts/fixtures.py", line 106, in registrar
+    "usuario_id": creado["usuario_id"]
+                  ~~~~~~^^^^^^^^^^^^^^
+KeyError: 'usuario_id'
+===== LIMPIEZA QA-19 =====
+PASS: Fixtures eliminados: 4
+PASS: Fixtures restantes: 0
+PASS: Limpieza QA-19
+Reportes privados: /tmp/tmp.F4qOEkBGjY

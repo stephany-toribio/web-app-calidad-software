@@ -43,8 +43,8 @@ public class LoginPage extends BasePage {
         click(ingresar);
     }
 
-    public void esperarDashboardCandidato() {
-        esperarUrl("/creo/candidate-dashboard");
+    public void esperarPerfilCandidato() {
+        esperarUrl("/creo/candidate-profile");
     }
 
     public void esperarInicioEmpresa() {
