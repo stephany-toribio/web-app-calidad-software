@@ -6,6 +6,7 @@ import { ApiResponse } from './models/api-response.model';
 import {
   MotivoRechazo,
   TableroKanban,
+  HistorialKanban,
   MovimientoPostulacionRespuesta
 } from './models/kanban.model';
 import { PerfilPostulante } from './models/perfil-postulante.model';
@@ -30,9 +31,9 @@ export class KanbanService {
   }
 
   /** HU-06: Historial de postulantes de una vacante */
-  historial(vacanteId: number): Observable<any> {
+  historial(vacanteId: number): Observable<HistorialKanban> {
     return this.http
-      .get<ApiResponse<any>>(`${this.baseUrl}/empresas/me/vacantes/${vacanteId}/postulaciones/historial`)
+      .get<ApiResponse<HistorialKanban>>(`${this.baseUrl}/empresas/me/vacantes/${vacanteId}/postulaciones/historial`)
       .pipe(map(res => res.data));
   }
 

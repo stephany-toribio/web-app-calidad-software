@@ -40,3 +40,28 @@ export interface MovimientoPostulacionRespuesta {
   estado: EtapaPostulacion;
   motivo_rechazo: string | null;
 }
+
+export interface MovimientoHistorialKanban {
+  id: number;
+  estado: EtapaPostulacion;
+  motivo_rechazo: string | null;
+  fecha_cambio: string | null;
+}
+
+export interface PostulacionHistorialKanban {
+  id: number;
+  candidato: {
+    nombre: string;
+    apellidos: string;
+  };
+  fecha_postulacion: string | null;
+  estado: EtapaPostulacion;
+  retirada: boolean;
+  retirada_en: string | null;
+  movimientos: MovimientoHistorialKanban[];
+}
+
+export interface HistorialKanban {
+  vacante: VacanteKanbanInfo;
+  postulaciones: PostulacionHistorialKanban[];
+}
