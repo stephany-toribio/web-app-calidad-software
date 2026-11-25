@@ -87,6 +87,13 @@ export const routes: Routes = [
         loadComponent: () => import('./screens/creo/company-home/company-home.component').then(m => m.CompanyHomeComponent)
       },
       {
+        path: 'company-profile',
+        canActivate: [companyGuard],
+        loadComponent: () =>
+          import('./screens/creo/company-profile/company-profile.component')
+            .then(m => m.CompanyProfileComponent)
+      },
+      {
         path: 'company-jobs',
         canActivate: [companyGuard],
         loadComponent: () => import('./screens/creo/company-jobs/company-jobs.component').then(m => m.CompanyJobsComponent)
@@ -114,8 +121,8 @@ export const routes: Routes = [
       },
       {
         path: 'edit-profile',
-        canActivate: [candidatoGuard],
-        loadComponent: () => import('./screens/creo/creo-edit-profile/creo-edit-profile.component').then(m => m.CreoEditProfileComponent)
+        redirectTo: 'candidate-profile',
+        pathMatch: 'full'
       },
       {
         path: 'forgot-password',

@@ -19,3 +19,9 @@ export interface EmpresaRegistrada {
   sitio_web: string | null;
   descripcion: string | null;
 }
+
+// PUT /empresas/me: la identidad procede del token.
+export type ActualizarEmpresaPayload = Omit<
+  RegistroEmpresaPayload,
+  'correo' | 'password'
+>;

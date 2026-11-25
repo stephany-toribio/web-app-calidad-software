@@ -127,6 +127,7 @@ export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
   errors: Record<string, string> = {};
 
   private readonly DRAFT_KEY = 'creo_candidate_register_draft';
+  private registroCompletado = false;
 
   ngOnInit() {
     this.recargarCatalogos();
@@ -429,6 +430,7 @@ export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
 
   /** Tras el 201 inicia sesión con las mismas credenciales (HU-10). Si falla, la cuenta ya existe y puede entrar desde el landing */
   private iniciarSesion() {
+    this.registroCompletado = true;
     this.limpiarBorrador();
     const irAExito = () => this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
 
@@ -498,10 +500,14 @@ export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
   }
 
   goToLogin() {
+    if (this.enviando) return;
+
     this.router.navigate(['/creo/landing']);
   }
 
   goBack() {
+    if (this.enviando) return;
+
     if (this.step === 0) {
       this.router.navigate(['/creo/landing']);
     } else {
@@ -510,6 +516,8 @@ export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
   }
 
   goToStep(step: number) {
+    if (this.enviando || this.registroCompletado) return;
+
     this.step = step;
     if (step === 1) {
       this._carreras = [...this._carreras];
@@ -523,6 +531,8 @@ export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
   }
 
   guardarBorrador() {
+    if (this.registroCompletado) return;
+
     try {
       const draft = {
         step: this.step,
@@ -544,7 +554,7 @@ export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
         skills: this.skills,
         softSkills: this.softSkills,
       };
-      localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+      sessionStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
     } catch (e) {
       console.error('Error guardando borrador:', e);
     }
@@ -552,11 +562,20 @@ export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
 
   cargarBorrador() {
     try {
-      const data = localStorage.getItem(this.DRAFT_KEY);
+      // Eliminar el borrador persistente de versiones anteriores.
+      try {
+        localStorage.removeItem(this.DRAFT_KEY);
+      } catch {}
+
+      const data = sessionStorage.getItem(this.DRAFT_KEY);
       if (!data) return;
       const draft = JSON.parse(data);
       if (draft) {
-        if (typeof draft.step === 'number') this.step = draft.step;
+        // Las contrasenas nunca se persisten.
+        // Revalidar el primer paso al restaurar un borrador.
+        this.step = 0;
+        this.password = '';
+        this.passwordConfirm = '';
         if (draft.firstName) this.firstName = draft.firstName;
         if (draft.lastName) this.lastName = draft.lastName;
         if (draft.birthDay) this.birthDay = draft.birthDay;
@@ -586,7 +605,7 @@ export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
 
   limpiarBorrador() {
     try {
-      localStorage.removeItem(this.DRAFT_KEY);
+      sessionStorage.removeItem(this.DRAFT_KEY);
     } catch (e) {}
   }
 

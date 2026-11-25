@@ -5,7 +5,7 @@ import { CreoWordmarkComponent } from '../creo-wordmark/creo-wordmark.component'
 import { AuthService } from '../../../core/api/auth.service';
 import { EmpresasService } from '../../../core/api/empresas.service';
 
-export type CompanyScreen = "company-home" | "company-jobs" | "company-kanban" | "company-analytics";
+export type CompanyScreen = "company-home" | "company-jobs" | "company-kanban" | "company-analytics" | "company-profile";
 
 interface NavItem {
   id: CompanyScreen;
@@ -44,6 +44,7 @@ export class CompanyShellComponent implements OnInit {
     { id: "company-jobs", label: "Mis Ofertas", icon: "briefcase" },
     { id: "company-kanban", label: "Candidatos", icon: "kanban" },
     { id: "company-analytics", label: "Analítica", icon: "chart" },
+    { id: "company-profile", label: "Mi Perfil", icon: "profile" },
   ];
 
   /** Aún no existe un endpoint de notificaciones para la empresa */

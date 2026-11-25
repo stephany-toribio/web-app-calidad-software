@@ -230,26 +230,26 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   }
 
   // Datos personales
-  openEditModal() {
+  openEditModal() { if (this.guardando) return;
     const { firstName, lastName, email, phone, dni, birthDate } = this.candidate;
     this.editForm = { firstName, lastName, email, phone, dni, birthDate };
     this.abrirModal();
     this.showEditModal = true;
   }
-  closeEditModal() { this.cerrarModal(); }
+  closeEditModal() { if (this.guardando) return; this.cerrarModal(); }
   saveProfile() { this.guardar(payloadDatosPerfil(this.editForm)); }
 
   // Experiencia: sin experiencias => busca_primer_empleo = true (el backend borra las guardadas)
-  openExpModal() { this.abrirModal(); this.showExpModal = true; }
-  closeExpModal() { this.cerrarModal(); }
+  openExpModal() { if (this.guardando) return; this.abrirModal(); this.showExpModal = true; }
+  closeExpModal() { if (this.guardando) return; this.cerrarModal(); }
   saveExp() {
     const { experience } = this.candidate;
     this.guardar(payloadExperiencia(experience.length > 0, experience, this.catalogos));
   }
 
   // Estudios e idiomas comparten modal
-  openEduModal() { this.abrirModal(); this.showEduModal = true; }
-  closeEduModal() { this.cerrarModal(); }
+  openEduModal() { if (this.guardando) return; this.abrirModal(); this.showEduModal = true; }
+  closeEduModal() { if (this.guardando) return; this.cerrarModal(); }
   saveEdu() {
     this.guardar(payloadEstudiosIdiomas(this.candidate.education, this.candidate.languages, this.catalogos));
   }
@@ -271,12 +271,12 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   }
 
   // Habilidades (técnicas + blandas en una sola lista de IDs)
-  openSkillsModal() {
+  openSkillsModal() { if (this.guardando) return;
     this.recargarHabilidadesPerfil();
     this.abrirModal();
     this.showSkillsModal = true;
   }
-  closeSkillsModal() { this.cerrarModal(); }
+  closeSkillsModal() { if (this.guardando) return; this.cerrarModal(); }
   saveSkills() {
     this.guardar(payloadHabilidades([...this.candidate.hardSkills, ...this.candidate.softSkills], this.catalogos));
   }
