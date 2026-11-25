@@ -1,0 +1,21 @@
+{
+  "incidencia": "INC-QA28-02",
+  "entorno": "local",
+  "run_id": "732833d7-79d1-4be8-9ca8-74623a488228",
+  "escenario": "recorridoCompletoCandidato",
+  "pruebas": 1,
+  "aprobadas": 1,
+  "fallos": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "duracion_segundos": 26.63,
+  "qa11_node": {
+    "pruebas": 24,
+    "aprobadas": 24,
+    "fallos": 0
+  },
+  "fixtures_eliminados": 5,
+  "fixtures_restantes": 0,
+  "escaneo_credenciales": "PASS",
+  "resultado": "PASS"
+}

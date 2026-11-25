@@ -30,11 +30,16 @@ export const apiNetworkInterceptor: HttpInterceptorFn = (request, next) => {
       }));
     }
     if (write) connection.beginWrite();
-    // Query parameter bypasses NGSW without adding a CORS request header.
-    // Private API responses are never managed by the service worker.
-    const networkOnly = request.clone({
-      setParams: { 'ngsw-bypass': 'true' }
-    });
+    // Preserve the API contract: bypass NGSW through a header,
+    // never through additional query parameters.
+    // Same-origin web requests do not require CORS preflight.
+    // External API requests (including Android) remain unchanged.
+    const sameOrigin = target.origin === new URL(document.baseURI).origin;
+    const networkOnly = sameOrigin
+      ? request.clone({
+          setHeaders: { 'ngsw-bypass': 'true' }
+        })
+      : request;
     return defer(() => next(networkOnly)).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status === 0 || error.status >= 500) connection.requestFailed(write);

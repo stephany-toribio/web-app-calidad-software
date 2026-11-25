@@ -22,3 +22,5 @@ logs/
 
 # Configuracion Android generada durante el build
 src/environments/environment.android.generated.ts
+
+/ci-reportes/
