@@ -1,3 +1,6 @@
+import { AccessibleDialogDirective } from '../../../core/accessibility/accessible-dialog.directive';
+import { NativeSkillsService } from '../../../core/native/native-skills.service';
+import { validateSkillSelection } from '../../../core/native/skill-selection';
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -41,11 +44,32 @@ const MAX_HABILIDADES = 3;
 @Component({
   selector: 'app-candidate-jobs',
   standalone: true,
-  imports: [CommonModule, FormsModule, CandidateShellComponent, JobCardComponent],
+  imports: [AccessibleDialogDirective, CommonModule, FormsModule, CandidateShellComponent, JobCardComponent],
   templateUrl: './candidate-jobs.component.html',
   styleUrl: './candidate-jobs.component.css'
 })
 export class CandidateJobsComponent implements OnInit, OnDestroy {
+  readonly nativeSkills = inject(NativeSkillsService);
+  nativeSkillsBusy = false;
+  nativeSkillsError = '';
+  private destroyed = false;
+  async chooseNativeSkills(): Promise<void> {
+    if (this.nativeSkillsBusy || !this.nativeSkills.available || !navigator.onLine) return;
+    this.nativeSkillsBusy = true;
+    this.nativeSkillsError = '';
+    try {
+      const result = await this.nativeSkills.choose(this.skillOptions, [...this.selectedSkills]);
+      if (this.destroyed) return;
+      const ids = validateSkillSelection(result, this.skillOptions);
+      if (ids === null) return;
+      this.selectedSkills = new Set(ids);
+      this.skillLimitMessage = '';
+      this.aplicarFiltros();
+    } catch {
+      if (!this.destroyed) this.nativeSkillsError = 'No se pudo abrir o aplicar la selección Android. Tus filtros se conservaron.';
+    } finally { this.nativeSkillsBusy = false; }
+  }
+
   private catalogosService = inject(CatalogosService);
   private vacantesService = inject(VacantesService);
 
@@ -166,6 +190,7 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.subs.unsubscribe();
     if (this.toastTimer) clearTimeout(this.toastTimer);
 
@@ -208,7 +233,7 @@ export class CandidateJobsComponent implements OnInit, OnDestroy {
   private refrescarSiSePuede(): void {
     if (document.hidden) return;
     if (this.loading) return;
-    if (this.sidebarOpen) return;
+    if (this.sidebarOpen || this.nativeSkillsBusy) return;
 
     this.refrescar$.next();
   }

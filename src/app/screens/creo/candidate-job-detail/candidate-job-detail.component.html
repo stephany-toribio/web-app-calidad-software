@@ -131,7 +131,7 @@
           <button
             *ngIf="!vacanteRetirada"
             type="button"
-            (click)="openApplyModal()"
+            data-testid="job-apply" (click)="openApplyModal()"
             [disabled]="applied || retirada || !puedePostular || submittingApply || loading"
             class="px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm cursor-pointer disabled:opacity-50"
             [style.backgroundColor]="applied ? '#DCFCE7' : '#F2B705'"
@@ -213,8 +213,8 @@
     (click)="closeApplyModal()"
   >
     <div
-      class="w-full max-w-md rounded-2xl border p-6 shadow-2xl bg-white border-[#E8E3D9]"
-      (click)="$event.stopPropagation()"
+      class="w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl border p-6 shadow-2xl bg-white border-[#E8E3D9]"
+      appAccessibleDialog aria-label="Confirmar postulación" (dialogDismiss)="closeApplyModal()" (click)="$event.stopPropagation()"
     >
       <div class="flex items-start justify-between pb-3 border-b border-[#F5F0E8] mb-4">
         <div>
@@ -254,7 +254,7 @@
         </button>
         <button
           type="button"
-          (click)="closeApplyModal()"
+          data-testid="cancel-apply" (click)="closeApplyModal()"
           [disabled]="submittingApply"
           class="px-5 py-3 rounded-xl font-semibold text-sm border border-[#E8E3D9] text-[#6B6560] hover:bg-[#F5F0E8] cursor-pointer"
         >

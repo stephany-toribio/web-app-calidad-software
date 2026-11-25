@@ -1,3 +1,4 @@
+import { AccessibleDialogDirective } from '../../../core/accessibility/accessible-dialog.directive';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MarkdownPipe } from '../../../core/pipes/markdown.pipe';
 import { CommonModule } from '@angular/common';
@@ -14,7 +15,7 @@ import { Job, avatarColor, companyInitial } from '../../../data/creo-data';
 @Component({
   selector: 'app-candidate-job-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, CandidateShellComponent, MarkdownPipe],
+  imports: [AccessibleDialogDirective, CommonModule, FormsModule, CandidateShellComponent, MarkdownPipe],
   templateUrl: './candidate-job-detail.component.html',
   styleUrl: './candidate-job-detail.component.css'
 })

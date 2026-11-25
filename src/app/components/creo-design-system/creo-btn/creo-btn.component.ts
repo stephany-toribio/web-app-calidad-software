@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './creo-btn.component.css'
 })
 export class CreoBtnComponent {
+  @Input() testId = '';
   @Input() type: 'button' | 'submit' | 'reset' = 'button';
   @Input() variant: 'primary' | 'secondary' | 'ghost' = 'primary';
   @Input() size: 'sm' | 'md' | 'lg' = 'md';

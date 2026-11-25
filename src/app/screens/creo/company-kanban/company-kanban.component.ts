@@ -1,3 +1,4 @@
+import { AccessibleDialogDirective } from '../../../core/accessibility/accessible-dialog.directive';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -31,7 +32,7 @@ interface StatusConfig {
 @Component({
   selector: 'app-company-kanban',
   standalone: true,
-  imports: [CommonModule, FormsModule, CompanyShellComponent],
+  imports: [AccessibleDialogDirective, CommonModule, FormsModule, CompanyShellComponent],
   templateUrl: './company-kanban.component.html',
   styleUrl: './company-kanban.component.css'
 })
