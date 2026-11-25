@@ -1,0 +1,248 @@
+
+> creo-angular@1.0.0 test:qa08
+> node --test tests/qa08/*.test.mjs
+
+TAP version 13
+# Subtest: F01: cancelar antes de confirmar no envia solicitudes
+ok 1 - F01: cancelar antes de confirmar no envia solicitudes
+  ---
+  duration_ms: 3.813878
+  type: 'test'
+  ...
+# Subtest: F02: cierre durante POST conserva bloqueo
+not ok 2 - F02: cierre durante POST conserva bloqueo
+  ---
+  duration_ms: 6.254821
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:73:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    false !== true
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:80:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: F03: vacante no disponible impide confirmar
+not ok 3 - F03: vacante no disponible impide confirmar
+  ---
+  duration_ms: 0.587449
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:88:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:96:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F04: candidato retirado no puede volver a postular
+not ok 4 - F04: candidato retirado no puede volver a postular
+  ---
+  duration_ms: 0.534205
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:99:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:108:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F05: exito solo tras respuesta del servidor
+ok 5 - F05: exito solo tras respuesta del servidor
+  ---
+  duration_ms: 0.346053
+  type: 'test'
+  ...
+# Subtest: F06: conflicto no permite nuevo envio
+not ok 6 - F06: conflicto no permite nuevo envio
+  ---
+  duration_ms: 0.445728
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:135:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    2 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:153:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F07: respuesta anterior no cambia otra vacante
+not ok 7 - F07: respuesta anterior no cambia otra vacante
+  ---
+  duration_ms: 1.408593
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:157:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    true !== false
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:173:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F08: cancelar retiro no genera solicitud
+ok 8 - F08: cancelar retiro no genera solicitud
+  ---
+  duration_ms: 0.761118
+  type: 'test'
+  ...
+# Subtest: F09: cierre durante PATCH conserva bloqueo
+not ok 9 - F09: cierre durante PATCH conserva bloqueo
+  ---
+  duration_ms: 1.248815
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:257:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    false !== true
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:266:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F10: impide retirar postulacion no autorizada
+not ok 10 - F10: impide retirar postulacion no autorizada
+  ---
+  duration_ms: 1.061632
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:274:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:284:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F11: retiro conserva etapa confirmada por API
+not ok 11 - F11: retiro conserva etapa confirmada por API
+  ---
+  duration_ms: 1.643475
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:287:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'recibido'
+    - 'entrevista'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'entrevista'
+  actual: 'recibido'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa08/postulaciones.test.mjs:309:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F12: error de retiro no simula exito
+ok 12 - F12: error de retiro no simula exito
+  ---
+  duration_ms: 0.335566
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 4
+# fail 8
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1412.495238

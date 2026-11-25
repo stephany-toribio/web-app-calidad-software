@@ -14,7 +14,8 @@
     "build:android": "node scripts/build-android.mjs",
     "test:qa05": "node --test tests/qa05/*.test.mjs",
     "test:qa07": "node --test tests/qa07/*.test.mjs",
-    "test:qa06": "node --test tests/qa06/*.test.mjs"
+    "test:qa06": "node --test tests/qa06/*.test.mjs",
+    "test:qa08": "node --test tests/qa08/*.test.mjs"
   },
   "dependencies": {
     "@angular/common": "^19.2.0",

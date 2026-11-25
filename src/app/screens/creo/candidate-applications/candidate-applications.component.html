@@ -283,6 +283,7 @@
                   *ngIf="app.puede_retirar"
                   type="button"
                   (click)="openWithdraw(app, $event)"
+                  [disabled]="submittingWithdraw || !!withdrawTargetApp"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition-all bg-[#FFF5F5] border-[#FCA5A5]/60 text-[#DC2626] hover:bg-[#FEE2E2] hover:border-[#F87171] shadow-xs"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -386,6 +387,7 @@
         <button
           type="button"
           (click)="confirmWithdraw()"
+          data-testid="confirm-withdraw"
           [disabled]="submittingWithdraw"
           class="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all bg-[#E5140D] text-white hover:opacity-90 shadow-sm disabled:opacity-50"
         >

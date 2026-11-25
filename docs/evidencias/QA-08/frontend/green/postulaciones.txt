@@ -1,0 +1,86 @@
+
+> creo-angular@1.0.0 test:qa08
+> node --test tests/qa08/*.test.mjs
+
+TAP version 13
+# Subtest: F01: cancelar antes de confirmar no envia solicitudes
+ok 1 - F01: cancelar antes de confirmar no envia solicitudes
+  ---
+  duration_ms: 3.174089
+  type: 'test'
+  ...
+# Subtest: F02: cierre durante POST conserva bloqueo
+ok 2 - F02: cierre durante POST conserva bloqueo
+  ---
+  duration_ms: 0.707048
+  type: 'test'
+  ...
+# Subtest: F03: vacante no disponible impide confirmar
+ok 3 - F03: vacante no disponible impide confirmar
+  ---
+  duration_ms: 0.281101
+  type: 'test'
+  ...
+# Subtest: F04: candidato retirado no puede volver a postular
+ok 4 - F04: candidato retirado no puede volver a postular
+  ---
+  duration_ms: 0.256322
+  type: 'test'
+  ...
+# Subtest: F05: exito solo tras respuesta del servidor
+ok 5 - F05: exito solo tras respuesta del servidor
+  ---
+  duration_ms: 1.089076
+  type: 'test'
+  ...
+# Subtest: F06: conflicto no permite nuevo envio
+ok 6 - F06: conflicto no permite nuevo envio
+  ---
+  duration_ms: 0.725075
+  type: 'test'
+  ...
+# Subtest: F07: respuesta anterior no cambia otra vacante
+ok 7 - F07: respuesta anterior no cambia otra vacante
+  ---
+  duration_ms: 0.577235
+  type: 'test'
+  ...
+# Subtest: F08: cancelar retiro no genera solicitud
+ok 8 - F08: cancelar retiro no genera solicitud
+  ---
+  duration_ms: 0.742643
+  type: 'test'
+  ...
+# Subtest: F09: cierre durante PATCH conserva bloqueo
+ok 9 - F09: cierre durante PATCH conserva bloqueo
+  ---
+  duration_ms: 1.389455
+  type: 'test'
+  ...
+# Subtest: F10: impide retirar postulacion no autorizada
+ok 10 - F10: impide retirar postulacion no autorizada
+  ---
+  duration_ms: 0.988478
+  type: 'test'
+  ...
+# Subtest: F11: retiro conserva etapa confirmada por API
+ok 11 - F11: retiro conserva etapa confirmada por API
+  ---
+  duration_ms: 0.570166
+  type: 'test'
+  ...
+# Subtest: F12: error de retiro no simula exito
+ok 12 - F12: error de retiro no simula exito
+  ---
+  duration_ms: 0.555192
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1454.815016

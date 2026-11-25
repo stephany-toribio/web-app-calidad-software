@@ -1,0 +1,182 @@
+
+> creo-angular@1.0.0 test:qa08
+> node --test tests/qa08/*.test.mjs
+
+TAP version 13
+# Subtest: F01: cancelar antes de confirmar no envia solicitudes
+ok 1 - F01: cancelar antes de confirmar no envia solicitudes
+  ---
+  duration_ms: 2.748424
+  type: 'test'
+  ...
+# Subtest: F02: cierre durante POST conserva bloqueo
+ok 2 - F02: cierre durante POST conserva bloqueo
+  ---
+  duration_ms: 0.514532
+  type: 'test'
+  ...
+# Subtest: F03: vacante no disponible impide confirmar
+ok 3 - F03: vacante no disponible impide confirmar
+  ---
+  duration_ms: 0.343553
+  type: 'test'
+  ...
+# Subtest: F04: candidato retirado no puede volver a postular
+ok 4 - F04: candidato retirado no puede volver a postular
+  ---
+  duration_ms: 0.209019
+  type: 'test'
+  ...
+# Subtest: F05: exito solo tras respuesta del servidor
+ok 5 - F05: exito solo tras respuesta del servidor
+  ---
+  duration_ms: 0.38564
+  type: 'test'
+  ...
+# Subtest: F06: conflicto no permite nuevo envio
+ok 6 - F06: conflicto no permite nuevo envio
+  ---
+  duration_ms: 0.31146
+  type: 'test'
+  ...
+# Subtest: F07: respuesta anterior no cambia otra vacante
+ok 7 - F07: respuesta anterior no cambia otra vacante
+  ---
+  duration_ms: 0.327827
+  type: 'test'
+  ...
+# Subtest: F08: cancelar retiro no genera solicitud
+ok 8 - F08: cancelar retiro no genera solicitud
+  ---
+  duration_ms: 0.650124
+  type: 'test'
+  ...
+# Subtest: F09: cierre durante PATCH conserva bloqueo
+ok 9 - F09: cierre durante PATCH conserva bloqueo
+  ---
+  duration_ms: 0.789474
+  type: 'test'
+  ...
+# Subtest: F10: impide retirar postulacion no autorizada
+ok 10 - F10: impide retirar postulacion no autorizada
+  ---
+  duration_ms: 0.90907
+  type: 'test'
+  ...
+# Subtest: F11: retiro conserva etapa confirmada por API
+ok 11 - F11: retiro conserva etapa confirmada por API
+  ---
+  duration_ms: 1.267285
+  type: 'test'
+  ...
+# Subtest: F12: error de retiro no simula exito
+ok 12 - F12: error de retiro no simula exito
+  ---
+  duration_ms: 0.725555
+  type: 'test'
+  ...
+# Subtest: F13: vacante historica no permite postular
+ok 13 - F13: vacante historica no permite postular
+  ---
+  duration_ms: 0.356985
+  type: 'test'
+  ...
+# Subtest: F14: HTTP 404 bloquea nueva postulacion
+ok 14 - F14: HTTP 404 bloquea nueva postulacion
+  ---
+  duration_ms: 0.61918
+  type: 'test'
+  ...
+# Subtest: F15: error de conexion no confirma postulacion
+ok 15 - F15: error de conexion no confirma postulacion
+  ---
+  duration_ms: 0.338258
+  type: 'test'
+  ...
+# Subtest: F16: error antiguo no modifica otra vacante
+ok 16 - F16: error antiguo no modifica otra vacante
+  ---
+  duration_ms: 0.150211
+  type: 'test'
+  ...
+# Subtest: F17: no permite retirar un recurso fuera del listado
+ok 17 - F17: no permite retirar un recurso fuera del listado
+  ---
+  duration_ms: 0.115999
+  type: 'test'
+  ...
+# Subtest: F18: conflicto de retiro solicita estado actualizado
+ok 18 - F18: conflicto de retiro solicita estado actualizado
+  ---
+  duration_ms: 0.16393
+  type: 'test'
+  ...
+# Subtest: F19: error de conexion en retiro solicita reconciliacion
+ok 19 - F19: error de conexion en retiro solicita reconciliacion
+  ---
+  duration_ms: 0.143581
+  type: 'test'
+  ...
+# Subtest: F20: retiro modifica solamente la postulacion objetivo
+ok 20 - F20: retiro modifica solamente la postulacion objetivo
+  ---
+  duration_ms: 0.568012
+  type: 'test'
+  ...
+# Subtest: F21: refresco antiguo no sobrescribe retiro confirmado
+ok 21 - F21: refresco antiguo no sobrescribe retiro confirmado
+  ---
+  duration_ms: 4.833726
+  type: 'test'
+  ...
+# Subtest: F22: consulta mas reciente prevalece
+ok 22 - F22: consulta mas reciente prevalece
+  ---
+  duration_ms: 0.701711
+  type: 'test'
+  ...
+# Subtest: F23: no refresca durante confirmacion o retiro
+ok 23 - F23: no refresca durante confirmacion o retiro
+  ---
+  duration_ms: 0.660664
+  type: 'test'
+  ...
+# Subtest: F24: error de refresco silencioso conserva listado
+ok 24 - F24: error de refresco silencioso conserva listado
+  ---
+  duration_ms: 1.406118
+  type: 'test'
+  ...
+# Subtest: F25: conflicto de retiro reconcilia estado con GET
+ok 25 - F25: conflicto de retiro reconcilia estado con GET
+  ---
+  duration_ms: 2.681314
+  type: 'test'
+  ...
+# Subtest: F26: detalle disponible utiliza ID de vacante
+ok 26 - F26: detalle disponible utiliza ID de vacante
+  ---
+  duration_ms: 5.555912
+  type: 'test'
+  ...
+# Subtest: F27: detalle historico utiliza ID de postulacion
+ok 27 - F27: detalle historico utiliza ID de postulacion
+  ---
+  duration_ms: 0.680355
+  type: 'test'
+  ...
+# Subtest: F28: detalle no autorizado no genera navegacion
+ok 28 - F28: detalle no autorizado no genera navegacion
+  ---
+  duration_ms: 0.246051
+  type: 'test'
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1110.951877
