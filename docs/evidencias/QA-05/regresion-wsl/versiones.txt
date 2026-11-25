@@ -1,0 +1,8 @@
+===== NODE =====
+v22.22.1
+===== NPM =====
+9.2.0
+===== PYTHON =====
+Python 3.14.4
+===== PLAYWRIGHT =====
+Version 1.65.2

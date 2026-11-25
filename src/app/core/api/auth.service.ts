@@ -34,11 +34,17 @@ export class AuthService {
 
   /** Revoca el token en el backend (Sanctum) y limpia la sesión local, aunque la petición falle */
   logout(): Observable<void> {
+    const token = this.getToken();
+
     return this.http
       .post<ApiResponse<null>>(this.logoutUrl, {})
       .pipe(
         map(() => undefined),
-        finalize(() => this.clearSession())
+        finalize(() => {
+          if (token !== null && token === this.getToken()) {
+            this.clearSession();
+          }
+        })
       );
   }
 

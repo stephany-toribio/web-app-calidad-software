@@ -1,0 +1,51 @@
+
+===== LOGIN DE LOS TRES ROLES =====
+
+[PASS] QA05-W01: Login candidato | Esperado=200 Obtenido=200
+[PASS] QA05-W02: Login empresa | Esperado=200 Obtenido=200
+[PASS] QA05-W03: Login admin | Esperado=200 Obtenido=200
+[PASS] QA05-W01: Identidad del servidor: candidato | Esperado=200 Obtenido=200
+[PASS] QA05-W02: Identidad del servidor: empresa | Esperado=200 Obtenido=200
+[PASS] QA05-W03: Identidad del servidor: admin | Esperado=200 Obtenido=200
+
+===== PERFILES =====
+
+[PASS] QA05-W01: Perfil candidato | Esperado=200 Obtenido=200
+[PASS] QA05-W02: Perfil empresa | Esperado=200 Obtenido=200
+
+===== PERSISTENCIA DE TOKEN =====
+
+[PASS] QA05-W04: Identidad del servidor: candidato | Esperado=200 Obtenido=200
+[PASS] QA05-W04: Identidad del servidor: empresa | Esperado=200 Obtenido=200
+[PASS] QA05-W04: Identidad del servidor: admin | Esperado=200 Obtenido=200
+
+===== TOKEN INVALIDO =====
+
+[PASS] QA05-W05: Token invalido | Esperado=401 Obtenido=401
+
+===== CUENTA SUSPENDIDA =====
+
+[PASS] QA05-W06: Rechazo de cuenta suspendida | Esperado=403 Obtenido=403
+
+===== AUTORIZACION POR ROLES =====
+
+[PASS] QA05-W07: Candidato accede a perfil empresa | Esperado=403 Obtenido=403
+[PASS] QA05-W07: Empresa accede a perfil candidato | Esperado=403 Obtenido=403
+[PASS] QA05-W07: Candidato consulta vacantes privadas | Esperado=403 Obtenido=403
+[PASS] QA05-W07: Admin accede a ruta exclusiva candidato | Esperado=403 Obtenido=403
+[PASS] QA05-W07: Admin accede a ruta exclusiva empresa | Esperado=403 Obtenido=403
+
+===== LOGOUT DE LOS TRES ROLES =====
+
+[PASS] QA05-W08: Logout candidato | Esperado=200 Obtenido=200
+[PASS] QA05-W08: Revocacion del token: candidato | Esperado=401 Obtenido=401
+[PASS] QA05-W09: Logout empresa | Esperado=200 Obtenido=200
+[PASS] QA05-W09: Revocacion del token: empresa | Esperado=401 Obtenido=401
+[PASS] QA05-W10: Logout admin | Esperado=200 Obtenido=200
+[PASS] QA05-W10: Revocacion del token: admin | Esperado=401 Obtenido=401
+
+===== RESUMEN =====
+Total: 24
+PASS: 24
+FAIL: 0
+Reporte: /home/steph/projects/qa-backups/QA-05/frontend/regresion-http.json
