@@ -1,0 +1,54 @@
+{
+  "run_id": "e263aa23-8d48-4dc4-acb2-2bdb41320278",
+  "candidato": "A",
+  "postulacion_id": 186,
+  "vacante_id": 341,
+  "estado_mysql": "Entrevista",
+  "estado_api_candidato": {
+    "codigo": "entrevista",
+    "nombre": "Entrevista"
+  },
+  "historial_mysql": [
+    {
+      "id": 205,
+      "postulacion_id": 186,
+      "estado_postulacion_id": 2,
+      "motivo_rechazo_id": null,
+      "fecha_cambio": "2026-11-25 21:18:41",
+      "created_at": "2026-11-25 21:18:41",
+      "updated_at": "2026-11-25 21:18:41",
+      "estado_nombre": "En Revisión"
+    },
+    {
+      "id": 206,
+      "postulacion_id": 186,
+      "estado_postulacion_id": 3,
+      "motivo_rechazo_id": null,
+      "fecha_cambio": "2026-11-25 21:18:44",
+      "created_at": "2026-11-25 21:18:44",
+      "updated_at": "2026-11-25 21:18:44",
+      "estado_nombre": "Entrevista"
+    }
+  ],
+  "historial_api": [
+    {
+      "id": 205,
+      "estado": {
+        "codigo": "en_revision",
+        "nombre": "En Revisión"
+      },
+      "motivo_rechazo": null,
+      "fecha_cambio": "2026-11-25T21:18:41.000000Z"
+    },
+    {
+      "id": 206,
+      "estado": {
+        "codigo": "entrevista",
+        "nombre": "Entrevista"
+      },
+      "motivo_rechazo": null,
+      "fecha_cambio": "2026-11-25T21:18:44.000000Z"
+    }
+  ],
+  "resultado": "PASS"
+}

@@ -1,0 +1,21 @@
+Modo QA-20: full
+===== PREFLIGHT QA-20 =====
+PASS: Preflight QA-20
+Run ID: 1bf5fe5f-3e2f-47a1-b2a5-f96f2e47c502
+PASS: Empresa sintetica preparada
+PASS: Administrador sintetico preparado
+PASS: Dos candidatos sinteticos preparados
+PASS: Vacante pendiente sin revision ni pago
+===== SELENIUM QA-20 =====
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.56 s -- in creo.tests.CompanyAdminAuthTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+Exit code Maven: 0
+PASS: Cantidad de pruebas: 4
+PASS: Escaneo de credenciales y tokens
+PASS: Ejecucion Selenium QA-20
+===== LIMPIEZA QA-20 =====
+PASS: Fixtures eliminados: 4
+PASS: Fixtures restantes: 0
+PASS: Limpieza QA-20
+Reportes privados: /tmp/tmp.g7hC45l5o9

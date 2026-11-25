@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="creo.tests.AdminModerationTest" time="16.875" tests="2" errors="0" skipped="0" failures="0">
+  <testcase name="rechazarVacanteConMotivoObligatorio" classname="creo.tests.AdminModerationTest" time="9.845">
+    </testcase>
+  <testcase name="aprobarVacanteSinPublicacionAutomatica" classname="creo.tests.AdminModerationTest" time="7.023">
+    </testcase>
+</testsuite>

@@ -1,0 +1,20 @@
+Modo QA-20: full
+===== PREFLIGHT QA-20 =====
+PASS: Preflight QA-20
+Run ID: 1e5f3fd1-ed01-49ca-b2f0-a6df0d36d0c3
+PASS: Vacante Kanban publicada
+PASS: Dos postulaciones independientes preparadas
+PASS: Empresa sintetica preparada
+PASS: Administrador sintetico preparado
+PASS: Dos candidatos sinteticos preparados
+PASS: Vacante pendiente sin revision ni pago
+===== SELENIUM QA-20 =====
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 22.11 s <<< FAILURE! -- in creo.tests.CompanyKanbanTest
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+[INFO] BUILD FAILURE
+Exit code Maven: 1
+===== LIMPIEZA QA-20 =====
+PASS: Fixtures eliminados: 4
+PASS: Fixtures restantes: 0
+PASS: Limpieza QA-20
+Reportes privados: /tmp/tmp.CLwGdxl72S

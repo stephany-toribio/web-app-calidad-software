@@ -1,0 +1,37 @@
+
+> creo-angular@1.0.0 build:qa
+> ng build --configuration qa
+
+❯ Building...
+✔ Building...
+Initial chunk files   | Names                             |  Raw size | Estimated transfer size
+chunk-DKPYVEBC.js     | -                                 | 155.22 kB |                45.51 kB
+chunk-3IDPGZ4Q.js     | -                                 | 119.86 kB |                30.70 kB
+styles-TV6P2LJJ.css   | styles                            |  50.75 kB |                 8.25 kB
+polyfills-5CFQRCPP.js | polyfills                         |  34.59 kB |                11.33 kB
+main-3EUDPR2D.js      | main                              |  18.85 kB |                 5.96 kB
+chunk-KTRGWEGY.js     | -                                 |   1.41 kB |               558 bytes
+
+                      | Initial total                     | 380.68 kB |               102.31 kB
+
+Lazy chunk files      | Names                             |  Raw size | Estimated transfer size
+chunk-P76DXAAH.js     | creo-admin-skills-component       |  85.14 kB |                12.10 kB
+chunk-I3LT7HZN.js     | -                                 |  83.63 kB |                14.79 kB
+chunk-U5FDLS3R.js     | company-create-job-component      |  68.56 kB |                14.14 kB
+chunk-SGH6DI4L.js     | company-kanban-component          |  64.07 kB |                14.02 kB
+chunk-PD7XZRRC.js     | company-jobs-component            |  46.87 kB |                10.63 kB
+chunk-IGLQNGWK.js     | -                                 |  41.05 kB |                10.56 kB
+chunk-CISXQQB4.js     | creo-register-candidate-component |  39.73 kB |                 9.65 kB
+chunk-UXQOWWIH.js     | admin-moderation-component        |  39.49 kB |                 9.33 kB
+chunk-EG5GUSAS.js     | -                                 |  38.90 kB |                 8.05 kB
+chunk-ZGA42A2C.js     | candidate-profile-component       |  34.66 kB |                 7.68 kB
+chunk-5OBLKAKI.js     | candidate-jobs-component          |  30.96 kB |                 7.88 kB
+chunk-YCS7M2TY.js     | creo-register-company-component   |  27.09 kB |                 7.02 kB
+chunk-4O7BJ6TY.js     | candidate-applications-component  |  26.42 kB |                 6.40 kB
+chunk-E7TTCLXC.js     | candidate-job-detail-component    |  21.75 kB |                 5.77 kB
+chunk-ZKNHZMLO.js     | creo-forgot-password-component    |  20.80 kB |                 5.59 kB
+...and 32 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [13.888 seconds]
+
+Output location: /home/steph/projects/web-app-calidad-software/dist/creo-angular-qa

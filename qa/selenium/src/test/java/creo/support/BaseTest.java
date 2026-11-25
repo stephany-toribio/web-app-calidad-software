@@ -34,6 +34,20 @@ public abstract class BaseTest {
 
         ChromeOptions options = new ChromeOptions();
 
+        org.openqa.selenium.logging.LoggingPreferences logs =
+            new org.openqa.selenium.logging.LoggingPreferences();
+
+        logs.enable(
+            org.openqa.selenium.logging.LogType.BROWSER,
+            java.util.logging.Level.ALL
+        );
+
+        options.setCapability(
+            "goog:loggingPrefs",
+            logs
+        );
+
+
         options.addArguments(
             "--window-size=1440,1000",
             "--disable-notifications",
