@@ -12,7 +12,8 @@
     "build:qa": "ng build --configuration qa",
     "start:qa": "ng serve --configuration qa --host 127.0.0.1 --port 4201",
     "build:android": "node scripts/build-android.mjs",
-    "test:qa05": "node --test tests/qa05/*.test.mjs"
+    "test:qa05": "node --test tests/qa05/*.test.mjs",
+    "test:qa07": "node --test tests/qa07/*.test.mjs"
   },
   "dependencies": {
     "@angular/common": "^19.2.0",

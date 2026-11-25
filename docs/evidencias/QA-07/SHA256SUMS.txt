@@ -1,0 +1,13 @@
+180521c667461db28d110b174717a7672f5e1f56b754f40b16d9b9aa8e2a2ff3  ./RESULTADOS.md
+582a2ac26678b3a2513778244d8d84f89612a3d2fc6804228e97c2fadd038404  ./frontend/build-android.txt
+7ebafec3c034b885475dfabb5e81c7b4e8230b8800963444851c4661c5ca239f  ./frontend/build-estandar.txt
+7d7b3d055ecd0d3aa4c75abe5d10c111559d5ef1747d9be35553b71c3b733dc5  ./frontend/build-qa.txt
+6f7d29ce17b5a8fa87516cd01e29620892d5a2127b49dbe352e6e9012e155f69  ./frontend/final/build-android.txt
+0548c13bdcd87ddb4981b877a378a14ce2da7216273f3f517009a53564db70e6  ./frontend/final/build-estandar.txt
+2886d652748224f11b4f75e578b2fc774e2cb16caf3eb8a2fc521d822f78f835  ./frontend/final/build-qa.txt
+43eb7583c2d0417d8e3ea0c28882377c25f0217c40ece846f5173f5222b5603e  ./frontend/final/regresion-qa05.txt
+f0c39733b2f7485c7e250e568b33d8ad63e7ad1db65b5494989bb53f1d314c24  ./frontend/final/regresion-qa07.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./frontend/final/typescript.txt
+2739e99351bae89ecb05e0c1160b491b0a94c060dbd16ea7f6c6ce8c4f271cf5  ./frontend/payment-flow.txt
+d8eb15644d8cb65d4949c6f9e25d72c15808e7f778f63b2a8d757b06ef3319d9  ./frontend/regresion-qa05.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./frontend/typescript.txt

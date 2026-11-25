@@ -375,8 +375,13 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
     }, 4000);
   }
 
+  private paymentRequestVersion = 0;
+
   openPayment(job: ManagedJob, event?: Event): void {
     if (event) event.stopPropagation();
+    if (this.paymentProcessing) return;
+
+    const requestVersion = ++this.paymentRequestVersion;
     this.payingJob = job;
     this.paymentProcessing = false;
     this.cardName = '';
@@ -393,6 +398,7 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
     if (!isNaN(numericId) && numericId > 0) {
       this.vacantesService.resumenPago(numericId).subscribe({
         next: (resumen) => {
+          if (requestVersion !== this.paymentRequestVersion) return;
           this.paymentAmount = resumen.monto;
           // 9.5: el formulario se habilita con puede_pagar, no con el estado local
           this.puedePagar = resumen.puede_pagar;
@@ -404,6 +410,7 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
+          if (requestVersion !== this.paymentRequestVersion) return;
           this.puedePagar = false;
           this.pagoAviso = err?.error?.message
             || 'No se pudo obtener el resumen de pago. Intentalo nuevamente.';
@@ -492,15 +499,26 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
     return Object.keys(errs).length === 0;
   }
 
+  private limpiarDatosTarjeta(): void {
+    this.cardName = '';
+    this.cardNumber = '';
+    this.cardExpiry = '';
+    this.cardCvv = '';
+    this.cardErrors = {};
+  }
+
   cancelPayment(): void {
     if (!this.paymentProcessing) {
+      ++this.paymentRequestVersion;
+      this.limpiarDatosTarjeta();
+      this.puedePagar = false;
       this.payingJob = null;
       this.showToast('Pago postergado. La oferta permanece aprobada y el pago es reintentable.');
     }
   }
 
   confirmJobPayment(): void {
-    if (!this.payingJob || this.paymentProcessing) return;
+    if (!this.payingJob || this.paymentProcessing || !this.puedePagar) return;
     if (!this.validarTarjeta()) return;
 
     this.paymentProcessing = true;
@@ -515,6 +533,8 @@ export class CompanyJobsComponent implements OnInit, OnDestroy {
     this.vacantesService.pagarVacante(Number(this.payingJob.id), payload).subscribe({
       next: (resp) => {
         this.paymentProcessing = false;
+        this.limpiarDatosTarjeta();
+        this.puedePagar = false;
         this.payingJob = null;
         this.reemplazarVacante(resp.vacante);
         const porIniciar = resp.vacante.estado.general === 'por_iniciar';

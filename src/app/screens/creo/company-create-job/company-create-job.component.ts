@@ -124,10 +124,6 @@ export class CompanyCreateJobComponent implements OnInit, OnDestroy {
   showSuggestions = false;
   skillsTab: 'technical' | 'soft' = 'technical';
 
-  cardNumber = '4532 8921 4455 1209';
-  cardExpiry = '08/28';
-  cardCvv = '842';
-
   readonly modalities: string[] = ['Remoto', 'Presencial', 'Híbrido'];
   readonly weightCycle: SkillWeight[] = ['required', 'preferred'];
 
