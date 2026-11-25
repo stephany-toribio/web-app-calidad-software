@@ -51,3 +51,24 @@
 - Duración: 14.80 segundos.
 - Usuarios eliminados: 5.
 - Registros residuales: 0.
+
+## INC-QA19-SEC-01 — Detector de tokens
+
+Durante la auditoria de QA-20 se identifico un defecto
+en los escapes de la expresion regular heredada de QA-19.
+
+### Correccion
+
+- Ajuste de la expresion regular.
+- Prueba positiva con token sintetico.
+- Prueba negativa con texto ordinario.
+- Nuevo escaneo de evidencias consolidadas.
+- Verificacion de JSON e integridad SHA256.
+
+Resultado del escaneo posterior: PASS.
+
+No se modificaron los escenarios funcionales ni sus
+resultados historicos.
+
+El detector cubre el formato de token evaluado;
+no constituye una auditoria integral de secretos.

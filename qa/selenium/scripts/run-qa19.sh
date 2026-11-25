@@ -211,7 +211,7 @@ assert totales["skipped"] == 0
 password = os.environ["SELENIUM_FIXTURE_PASSWORD"].encode()
 
 token = re.compile(
-    rb'\\b[0-9]+\\|[A-Za-z0-9]{30,}\\b'
+    b'\\b[0-9]+\\|[A-Za-z0-9]{30,}\\b'
 )
 
 for archivo in base.rglob("*"):
