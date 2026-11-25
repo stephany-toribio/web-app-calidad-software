@@ -1,5 +1,5 @@
 6dd0c180886ef1e5eb2ad51073af081e206ccf5485ec318454f9a054c2425f18  ./INCIDENCIAS.md
-50912468ff908cb5eaec04e7d39a50893310276b97c0a0db2e119a1f5ba52205  ./RESULTADOS.md
+c57c7ef0421fc2ce6fb50836b25480d4eeb338fe000509b54fb4bcf92fb5493d  ./RESULTADOS.md
 80d4c24581219c4036ea7104421dd0f4c27cacc56b79d6907bfecbcbf31e13d8  ./reportes/ci-full-01/QA-18/junit/TEST-creo.tests.SmokeTest.xml
 7ed4e8139494ae98794c99f138eb0f4b8bd63d92bae538d6461f5f811942495c  ./reportes/ci-full-01/QA-18/resultado.json
 ca9b371bce96b3f12fea3d0e31104f94f76f89adcaced7970a368a39238a3541  ./reportes/ci-full-01/QA-18/smoke-frontend.png

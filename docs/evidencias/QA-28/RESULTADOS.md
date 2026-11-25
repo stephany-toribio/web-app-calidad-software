@@ -105,3 +105,22 @@ automatizada aprobaron satisfactoriamente.
 
 No se eliminaron escenarios ni se redujeron
 aserciones para obtener este resultado.
+
+
+## Trazabilidad de integracion
+
+| Referencia | Commit |
+|---|---|
+| Rama de implementacion | 4630cbea8beacebd9246ef9becb2a65f27912959 |
+| Checkout efectivo probado en CI | d62784517161b2ddf601188e7220db09bad49c67 |
+| Integracion en develop mediante PR #31 | bca1868471ac33177d9966d3b6b403c332917c93 |
+
+La auditoria posterior verifico:
+
+- Integridad SHA256 de los 71 archivos del build Angular.
+- Nueve reportes JUnit.
+- Veinte escenarios Selenium aprobados.
+- Ausencia de fallos, errores y omisiones.
+- Sanitizacion de reportes XML.
+- Escaneo textual de credenciales.
+- Limpieza de fixtures.
