@@ -1,0 +1,5 @@
+{
+  "appId": "edu.upch.creo.qa",
+  "appName": "Creo Empleos QA",
+  "webDir": "dist/creo-angular-android/browser"
+}
