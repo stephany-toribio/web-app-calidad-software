@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="creo.tests.CandidateProfileRegistrationTest" time="19.018" tests="4" errors="0" skipped="0" failures="0">
+  <testcase name="registroDatosInvalidos" classname="creo.tests.CandidateProfileRegistrationTest" time="3.179"/>
+  <testcase name="registroCamposObligatoriosVacios" classname="creo.tests.CandidateProfileRegistrationTest" time="2.18"/>
+  <testcase name="registroDobleEnvioNoAvanzaDosPasos" classname="creo.tests.CandidateProfileRegistrationTest" time="6.314">
+    <system-out><![CDATA[PASS: Registro parcial no persistido
+]]></system-out>
+  </testcase>
+  <testcase name="editarPerfilYPersistirCambios" classname="creo.tests.CandidateProfileRegistrationTest" time="7.337">
+    <system-out><![CDATA[PASS: Perfil persistido en MySQL
+]]></system-out>
+  </testcase>
+</testsuite>

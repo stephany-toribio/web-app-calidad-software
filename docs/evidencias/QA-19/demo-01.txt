@@ -1,0 +1,20 @@
+Modo QA-19: demo
+===== PREFLIGHT QA-19 =====
+PASS: Preflight QA-19
+Run ID: 29705ea4-7c0b-46ec-8749-3b29c59d6eda
+PASS: Vacante sintetica publicada
+PASS: Candidatos sinteticos preparados
+===== SELENIUM QA-19 =====
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 24.14 s -- in creo.tests.CandidateBusinessTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.695 s -- in creo.tests.CandidateAuthTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+Exit code Maven: 0
+PASS: Cantidad de pruebas: 2
+PASS: Escaneo de credenciales y tokens
+PASS: Ejecucion Selenium QA-19
+===== LIMPIEZA QA-19 =====
+PASS: Fixtures eliminados: 5
+PASS: Fixtures restantes: 0
+PASS: Limpieza QA-19
+Reportes privados: /tmp/tmp.nV6lPfHJ3I

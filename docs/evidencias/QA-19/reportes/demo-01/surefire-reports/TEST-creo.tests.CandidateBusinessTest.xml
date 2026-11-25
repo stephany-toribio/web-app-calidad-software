@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="creo.tests.CandidateBusinessTest" time="24.139" tests="1" errors="0" skipped="0" failures="0">
+  <testcase name="recorridoCompletoCandidato" classname="creo.tests.CandidateBusinessTest" time="24.092">
+    <system-out><![CDATA[PASS: MySQL postulacion cancelada
+PASS: MySQL postulacion creada
+PASS: MySQL postulacion persistida
+PASS: MySQL postulacion retirada
+]]></system-out>
+    <system-err><![CDATA[Nov 25, 2026 3:20:27 PM org.openqa.selenium.remote.tracing.opentelemetry.OpenTelemetryTracer createTracer
+INFO: Using OpenTelemetry for tracing
+]]></system-err>
+  </testcase>
+</testsuite>

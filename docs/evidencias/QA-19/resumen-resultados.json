@@ -1,0 +1,174 @@
+[
+  {
+    "ejecucion": "full-01",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "segundos": 61.834,
+    "evidencias_mysql": 6,
+    "registros_residuales": 0,
+    "resultado": "PASS",
+    "casos": [
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "loginConPasswordIncorrecto",
+        "segundos": 3.268
+      },
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "candidatoNoAccedeARutaEmpresarial",
+        "segundos": 4.472
+      },
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "accesoSinSesionRedirigeAlLogin",
+        "segundos": 1.618
+      },
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "loginValidoCandidato",
+        "segundos": 3.466
+      },
+      {
+        "clase": "creo.tests.CandidateBusinessTest",
+        "metodo": "busquedaSinResultados",
+        "segundos": 6.162
+      },
+      {
+        "clase": "creo.tests.CandidateBusinessTest",
+        "metodo": "recorridoCompletoCandidato",
+        "segundos": 23.79
+      },
+      {
+        "clase": "creo.tests.CandidateProfileRegistrationTest",
+        "metodo": "registroDatosInvalidos",
+        "segundos": 3.179
+      },
+      {
+        "clase": "creo.tests.CandidateProfileRegistrationTest",
+        "metodo": "registroCamposObligatoriosVacios",
+        "segundos": 2.18
+      },
+      {
+        "clase": "creo.tests.CandidateProfileRegistrationTest",
+        "metodo": "registroDobleEnvioNoAvanzaDosPasos",
+        "segundos": 6.314
+      },
+      {
+        "clase": "creo.tests.CandidateProfileRegistrationTest",
+        "metodo": "editarPerfilYPersistirCambios",
+        "segundos": 7.337
+      }
+    ]
+  },
+  {
+    "ejecucion": "full-02",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "segundos": 67.317,
+    "evidencias_mysql": 6,
+    "registros_residuales": 0,
+    "resultado": "PASS",
+    "casos": [
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "loginConPasswordIncorrecto",
+        "segundos": 3.144
+      },
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "candidatoNoAccedeARutaEmpresarial",
+        "segundos": 3.9
+      },
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "accesoSinSesionRedirigeAlLogin",
+        "segundos": 1.71
+      },
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "loginValidoCandidato",
+        "segundos": 3.077
+      },
+      {
+        "clase": "creo.tests.CandidateBusinessTest",
+        "metodo": "busquedaSinResultados",
+        "segundos": 6.624
+      },
+      {
+        "clase": "creo.tests.CandidateBusinessTest",
+        "metodo": "recorridoCompletoCandidato",
+        "segundos": 26.863
+      },
+      {
+        "clase": "creo.tests.CandidateProfileRegistrationTest",
+        "metodo": "registroDatosInvalidos",
+        "segundos": 3.404
+      },
+      {
+        "clase": "creo.tests.CandidateProfileRegistrationTest",
+        "metodo": "registroCamposObligatoriosVacios",
+        "segundos": 3.774
+      },
+      {
+        "clase": "creo.tests.CandidateProfileRegistrationTest",
+        "metodo": "registroDobleEnvioNoAvanzaDosPasos",
+        "segundos": 6.592
+      },
+      {
+        "clase": "creo.tests.CandidateProfileRegistrationTest",
+        "metodo": "editarPerfilYPersistirCambios",
+        "segundos": 8.171
+      }
+    ]
+  },
+  {
+    "ejecucion": "demo-01",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "segundos": 27.834,
+    "evidencias_mysql": 4,
+    "registros_residuales": 0,
+    "resultado": "PASS",
+    "casos": [
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "loginValidoCandidato",
+        "segundos": 3.691
+      },
+      {
+        "clase": "creo.tests.CandidateBusinessTest",
+        "metodo": "recorridoCompletoCandidato",
+        "segundos": 24.092
+      }
+    ]
+  },
+  {
+    "ejecucion": "demo-02",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "segundos": 26.912,
+    "evidencias_mysql": 4,
+    "registros_residuales": 0,
+    "resultado": "PASS",
+    "casos": [
+      {
+        "clase": "creo.tests.CandidateAuthTest",
+        "metodo": "loginValidoCandidato",
+        "segundos": 3.606
+      },
+      {
+        "clase": "creo.tests.CandidateBusinessTest",
+        "metodo": "recorridoCompletoCandidato",
+        "segundos": 23.261
+      }
+    ]
+  }
+]

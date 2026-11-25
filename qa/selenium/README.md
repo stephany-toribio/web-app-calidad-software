@@ -65,3 +65,63 @@ Revisar las capturas autenticadas antes de publicarlas.
     docker compose -f qa/selenium/compose.yaml down
 
 Este comando no elimina los servicios de la API QA.
+
+## QA-19 — Automatización funcional del candidato
+
+La suite implementa diez escenarios funcionales mediante
+Selenium WebDriver y JUnit 5, organizados con Page Objects.
+
+### Ejecución completa
+
+Desde la raíz del repositorio:
+
+    qa/selenium/scripts/run-qa19.sh full
+
+### Demostración en vivo
+
+    qa/selenium/scripts/run-qa19.sh demo
+
+La demostración ejecuta dos escenarios reales:
+
+1. Autenticación válida del candidato.
+2. Recorrido completo de búsqueda, postulación y retiro,
+   con comprobaciones de persistencia en MySQL.
+
+### Visualización del navegador
+
+Abrir en el navegador del equipo anfitrión:
+
+    http://127.0.0.1:7900
+
+### Ejecución selectiva
+
+    QA19_TESTS='CandidateBusinessTest#recorridoCompletoCandidato' \
+        qa/selenium/scripts/run-qa19.sh
+
+### Gestión de datos
+
+Cada ejecución utiliza un UUID, candidatos sintéticos,
+una empresa, un administrador y una vacante publicada
+mediante pago simulado.
+
+El runner reutiliza los fixtures protegidos de QA-15,
+QA-16 y QA-17 del repositorio backend.
+
+Por defecto, el backend debe estar disponible en:
+
+    ~/projects/recruitment-api-calidad-software
+
+La ruta puede configurarse mediante QA_BACKEND_DIR.
+
+Las credenciales se generan temporalmente y no deben
+versionarse. La limpieza se ejecuta automáticamente
+al finalizar, incluso ante errores.
+
+Ejecutar las suites de manera coordinada para evitar que
+otros procesos modifiquen los fixtures de una corrida.
+
+### Documentación y evidencias
+
+- [Casos de prueba](../../docs/evidencias/QA-19/CASOS_DE_PRUEBA.md)
+- [Resultados](../../docs/evidencias/QA-19/RESULTADOS.md)
+- [Incidencias](../../docs/evidencias/QA-19/INCIDENCIAS.md)

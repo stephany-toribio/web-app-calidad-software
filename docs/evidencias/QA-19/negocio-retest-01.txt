@@ -1,0 +1,15 @@
+===== PREFLIGHT QA-19 =====
+PASS: Preflight QA-19
+Run ID: e9695658-e37d-4e73-a333-3a8069a28038
+PASS: Vacante sintetica publicada
+PASS: Candidatos sinteticos preparados
+===== SELENIUM QA-19 =====
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 26.27 s <<< FAILURE! -- in creo.tests.CandidateBusinessTest
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+[INFO] BUILD FAILURE
+Exit code Maven: 1
+===== LIMPIEZA QA-19 =====
+PASS: Fixtures eliminados: 5
+PASS: Fixtures restantes: 0
+PASS: Limpieza QA-19
+Reportes privados: /tmp/tmp.B3Q4ZIiUaU
