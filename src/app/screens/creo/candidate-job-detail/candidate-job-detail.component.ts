@@ -44,6 +44,7 @@ export class CandidateJobDetailComponent implements OnInit, OnDestroy {
   private toastTimeout: any;
   private subs = new Subscription();
   private detalleSub?: Subscription;
+  private detalleVersion = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -65,7 +66,18 @@ export class CandidateJobDetailComponent implements OnInit, OnDestroy {
           // HU-13: detalle por ID de vacante
           this.cargarDetalle(this.postulacionesService.obtenerVacanteDisponible(id));
         } else {
+          this.detalleSub?.unsubscribe();
+          this.detalleVersion++;
+          this.numericVacanteId = null;
+          this.puedePostular = false;
+          this.applied = false;
+          this.retirada = false;
+          this.showApplyModal = false;
+          this.submittingApply = false;
+          this.applyError = '';
+          this.loading = false;
           this.job = null;
+          this.vacanteDetalle = null;
           this.loadError = 'La vacante solicitada no existe.';
         }
       })
@@ -89,6 +101,15 @@ export class CandidateJobDetailComponent implements OnInit, OnDestroy {
 
   private cargarDetalle(peticion: Observable<VacanteDetalle>): void {
     this.detalleSub?.unsubscribe();
+    const version = ++this.detalleVersion;
+
+    this.numericVacanteId = null;
+    this.puedePostular = false;
+    this.applied = false;
+    this.retirada = false;
+    this.showApplyModal = false;
+    this.submittingApply = false;
+    this.applyError = '';
     this.loading = true;
     this.loadError = '';
     this.job = null;
@@ -96,10 +117,14 @@ export class CandidateJobDetailComponent implements OnInit, OnDestroy {
 
     this.detalleSub = peticion.subscribe({
       next: (detalle) => {
+        if (version !== this.detalleVersion) return;
+
         this.loading = false;
         this.setDetalleFromApi(detalle);
       },
       error: (err: HttpErrorResponse) => {
+        if (version !== this.detalleVersion) return;
+
         this.loading = false;
         // Inexistente y no disponible responden igual (404) para no filtrar información
         this.loadError = err.status === 404
@@ -192,51 +217,106 @@ export class CandidateJobDetailComponent implements OnInit, OnDestroy {
   }
 
   openApplyModal(): void {
-    if (this.applied || !this.puedePostular) return;
+    if (
+      this.loading ||
+      this.submittingApply ||
+      this.applied ||
+      this.retirada ||
+      !this.puedePostular ||
+      !this.numericVacanteId ||
+      this.modoConsulta === 'historico'
+    ) return;
+
     this.applyError = '';
     this.showApplyModal = true;
   }
 
   closeApplyModal(): void {
+    if (this.submittingApply) return;
+
     this.showApplyModal = false;
     this.applyError = '';
-    this.submittingApply = false;
   }
 
   /**
-   * HU-05: Confirmar postulación.
-   * POST /api/v1/candidatos/me/postulaciones con payload estricto { vacante_id: id }.
+   * HU-05: Confirmar una unica postulacion.
+   * La identidad del candidato procede del token.
    */
   confirmApply(): void {
-    if (!this.numericVacanteId || this.submittingApply) return;
+    if (
+      !this.showApplyModal ||
+      !this.numericVacanteId ||
+      this.loading ||
+      this.submittingApply ||
+      this.applied ||
+      this.retirada ||
+      !this.puedePostular ||
+      this.modoConsulta === 'historico'
+    ) return;
+
+    const vacanteId = this.numericVacanteId;
+    const version = this.detalleVersion;
 
     this.submittingApply = true;
     this.applyError = '';
 
-    this.postulacionesService.postular(this.numericVacanteId).subscribe({
-      next: () => {
-        this.submittingApply = false;
-        this.applied = true;
-        this.puedePostular = false;
-        this.closeApplyModal();
-        this.showToast('¡Postulación registrada con éxito! La empresa evaluará tu perfil.');
-      },
-      error: (err: HttpErrorResponse) => {
-        this.submittingApply = false;
-        if (err.status === 409) {
-          this.applyError = err.error?.message || 'Ya te has postulado previamente a esta vacante laboral.';
+    this.subs.add(
+      this.postulacionesService.postular(vacanteId).subscribe({
+        next: () => {
+          if (
+            version !== this.detalleVersion ||
+            vacanteId !== this.numericVacanteId
+          ) return;
+
+          this.submittingApply = false;
           this.applied = true;
           this.puedePostular = false;
-        } else if (err.status === 404) {
-          this.applyError = 'La vacante no existe o ya no está disponible para postulaciones.';
-          this.puedePostular = false;
-        } else if (err.status === 403) {
-          this.applyError = 'No tienes permisos para postular. Completa tu perfil de candidato para continuar.';
-        } else {
-          this.applyError = err.error?.message || 'No fue posible registrar la postulación.';
+          this.closeApplyModal();
+
+          this.showToast(
+            '¡Postulación registrada con éxito! La empresa evaluará tu perfil.'
+          );
+        },
+
+        error: (err: HttpErrorResponse) => {
+          if (
+            version !== this.detalleVersion ||
+            vacanteId !== this.numericVacanteId
+          ) return;
+
+          this.submittingApply = false;
+
+          if (
+            err.status === 409 &&
+            err.error?.error_code === 'DUPLICATE_APPLICATION'
+          ) {
+            this.applyError = err.error?.message ||
+              'Ya te has postulado previamente a esta vacante laboral.';
+
+            this.applied = true;
+            this.puedePostular = false;
+
+          } else if (err.status === 404) {
+            this.applyError =
+              'La vacante no existe o ya no está disponible para postulaciones.';
+
+            this.puedePostular = false;
+
+          } else if (err.status === 403) {
+            this.applyError = err.error?.message ||
+              'No tienes permisos para postular.';
+
+          } else if (err.status === 0) {
+            this.applyError =
+              'No se pudo confirmar el resultado. Revisa tus postulaciones antes de volver a intentarlo.';
+
+          } else {
+            this.applyError = err.error?.message ||
+              'No fue posible registrar la postulación.';
+          }
         }
-      }
-    });
+      })
+    );
   }
 
   showToast(msg: string): void {

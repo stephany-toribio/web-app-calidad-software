@@ -56,6 +56,7 @@ export class CandidateApplicationsComponent implements OnInit, OnDestroy {
 
   private subs = new Subscription();
   private refrescoSub?: Subscription;
+  private consultaVersion = 0;
   private readonly intervaloRefresco = 45_000;
   private refrescoTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -121,10 +122,16 @@ export class CandidateApplicationsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * GET /postulaciones/mias. En modo silencioso no muestra el esqueleto de
+   * GET /candidatos/me/postulaciones. En modo silencioso no muestra el esqueleto de
    * carga ni borra lo que ya hay en pantalla: lo usa el refresco de fondo.
    */
   cargarPostulaciones(silencioso = false): void {
+    if (this.submittingWithdraw || this.withdrawTargetApp) return;
+
+    const version = ++this.consultaVersion;
+
+    this.refrescoSub?.unsubscribe();
+
     if (!silencioso) {
       this.loading = true;
       this.errorMessage = '';
@@ -134,11 +141,20 @@ export class CandidateApplicationsComponent implements OnInit, OnDestroy {
 
     const peticion = this.postulacionesService.misPostulaciones().subscribe({
       next: (apps) => {
+        if (
+          version !== this.consultaVersion ||
+          this.submittingWithdraw
+        ) return;
+
         this.applications = apps || [];
         this.loading = false;
         if (silencioso) this.avisarCambios(anteriores);
       },
       error: (err) => {
+        if (version !== this.consultaVersion) return;
+
+        this.loading = false;
+
         // Un fallo del refresco de fondo no debe vaciar la pantalla
         if (silencioso) return;
 
@@ -151,12 +167,7 @@ export class CandidateApplicationsComponent implements OnInit, OnDestroy {
       }
     });
 
-    if (silencioso) {
-      this.refrescoSub?.unsubscribe();
-      this.refrescoSub = peticion;
-    } else {
-      this.subs.add(peticion);
-    }
+    this.refrescoSub = peticion;
   }
 
   /** Avisa si la empresa movió el Kanban con la pantalla abierta */
@@ -238,43 +249,101 @@ export class CandidateApplicationsComponent implements OnInit, OnDestroy {
 
   openWithdraw(app: MiPostulacion, event?: Event): void {
     if (event) event.stopPropagation();
-    this.withdrawTargetApp = app;
+
+    if (this.submittingWithdraw || this.withdrawTargetApp) return;
+
+    const actual = this.applications.find(
+      item => item.id === app.id
+    );
+
+    if (
+      !actual ||
+      actual.retirada ||
+      !actual.puede_retirar
+    ) return;
+
+    this.consultaVersion++;
+    this.refrescoSub?.unsubscribe();
+    this.loading = false;
+
+    this.withdrawTargetApp = actual;
   }
 
   closeWithdraw(): void {
+    if (this.submittingWithdraw) return;
+
     this.withdrawTargetApp = null;
-    this.submittingWithdraw = false;
   }
 
   confirmWithdraw(): void {
-    if (!this.withdrawTargetApp || this.submittingWithdraw) return;
+    if (
+      !this.withdrawTargetApp ||
+      this.submittingWithdraw
+    ) return;
+
+    const actual = this.applications.find(
+      app => app.id === this.withdrawTargetApp?.id
+    );
+
+    if (
+      !actual ||
+      actual.retirada ||
+      !actual.puede_retirar
+    ) return;
+
+    this.consultaVersion++;
+    this.refrescoSub?.unsubscribe();
 
     this.submittingWithdraw = true;
-    const targetId = this.withdrawTargetApp.id;
 
-    this.postulacionesService.retirar(targetId).subscribe({
-      next: (resultado) => {
-        this.submittingWithdraw = false;
-        this.closeWithdraw();
-        this.showToast('Te retiraste de la postulación exitosamente.');
-        // Actualizar el estado local inmediatamente
-        this.applications = this.applications.map(app =>
-          app.id === targetId
-            ? {
-                ...app,
-                retirada: true,
-                retirada_en: resultado.retirada_en,
-                puede_retirar: false
-              }
-            : app
-        );
-      },
-      error: (err) => {
-        this.submittingWithdraw = false;
-        const msg = err.error?.message || 'No fue posible retirar la postulación.';
-        this.showToast(msg);
-      }
-    });
+    const targetId = actual.id;
+
+    this.subs.add(
+      this.postulacionesService.retirar(targetId).subscribe({
+        next: (resultado) => {
+          this.submittingWithdraw = false;
+          this.closeWithdraw();
+
+          this.applications = this.applications.map(app =>
+            app.id === targetId
+              ? {
+                  ...app,
+                  estado: resultado.estado,
+                  retirada: resultado.retirada,
+                  retirada_en: resultado.retirada_en,
+                  puede_retirar: false
+                }
+              : app
+          );
+
+          this.showToast(
+            'Te retiraste de la postulación exitosamente.'
+          );
+        },
+
+        error: (err) => {
+          this.submittingWithdraw = false;
+
+          const msg = err.status === 0
+            ? 'No se pudo confirmar el retiro. Consulta el estado actualizado.'
+            : err.error?.message ||
+              'No fue posible retirar la postulación.';
+
+          this.showToast(msg);
+
+          if (
+            err.status === 409 ||
+            err.status === 404 ||
+            err.status === 403 ||
+            err.status === 0
+          ) {
+            this.closeWithdraw();
+
+            this.cargarPostulaciones();
+          }
+        }
+      })
+    );
   }
 
   viewJobDetail(app: MiPostulacion, event?: Event): void {
