@@ -64,7 +64,11 @@ for archivo in reportes:
                 "metodo": caso.attrib.get("name"),
                 "tipo": tipo,
                 "excepcion": clase_error,
-                "marcadores": marcadores
+                "marcadores": marcadores,
+                "diagnostico_postulacion": re.findall(
+                    r"(?m)^QA_APPLY: [A-Z_]+$",
+                    consola
+                )
             })
 
 if diagnosticos:

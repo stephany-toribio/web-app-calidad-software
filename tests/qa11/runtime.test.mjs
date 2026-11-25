@@ -65,7 +65,7 @@ for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
   });
 }
 
-test('API preserves payload, bypasses NGSW, and does not add a new CORS header', async () => {
+test('API preserves payload and bypasses NGSW without modifying the query', async () => {
   const env = setup();
   let captured;
   const payload = { vacante_id: 9101 };
@@ -74,9 +74,10 @@ test('API preserves payload, bypasses NGSW, and does not add a new CORS header',
     assert.equal(env.connection.pendingWrites(), 1);
     return of(new HttpResponse({ status: 201 }));
   }));
-  assert.equal(captured.params.get('ngsw-bypass'), 'true');
+  assert.equal(captured.params.has('ngsw-bypass'), false);
+  assert.equal(captured.urlWithParams, '/api/v1/postulaciones');
   assert.deepEqual(captured.body, payload);
-  assert.equal(captured.headers.keys().length, 0);
+  assert.equal(captured.headers.get('ngsw-bypass'), 'true');
   assert.equal(env.connection.pendingWrites(), 0);
   env.destroy();
 });
@@ -215,3 +216,43 @@ test('false without an event is a failed check, while actual version events keep
   assert.equal(env.counts().reloads, 0);
   env.destroy();
 });
+
+// INC-QA28-02: strict backend validation must not receive
+// service-worker control parameters as API input.
+for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+  test(`QA28 regression: ${method} preserves API contract`, async () => {
+    const env = setup();
+
+    try {
+      const payload = method === 'GET' ? null : { vacante_id: 9101 };
+
+      const original = new HttpRequest(
+        method,
+        '/api/v1/candidatos/me/postulaciones',
+        payload,
+        {
+          params: new (await import('@angular/common/http')).HttpParams()
+            .set('pagina', '1'),
+          headers: new (await import('@angular/common/http')).HttpHeaders()
+            .set('Accept', 'application/json')
+        }
+      );
+
+      let captured;
+
+      await firstValueFrom(env.request(original, req => {
+        captured = req;
+        return of(new HttpResponse({ status: 200 }));
+      }));
+
+      assert.equal(captured.urlWithParams, original.urlWithParams);
+      assert.equal(captured.params.has('ngsw-bypass'), false);
+      assert.deepEqual(captured.body, original.body);
+      assert.equal(captured.headers.get('ngsw-bypass'), 'true');
+      assert.equal(captured.headers.get('Accept'), 'application/json');
+      assert.equal(env.connection.pendingWrites(), 0);
+    } finally {
+      env.destroy();
+    }
+  });
+}

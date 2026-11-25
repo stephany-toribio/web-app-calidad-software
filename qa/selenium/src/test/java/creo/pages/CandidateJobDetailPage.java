@@ -54,7 +54,53 @@ public class CandidateJobDetailPage extends BasePage {
 
         click(confirmar);
 
+        System.out.println("QA_APPLY: CLICK_COMPLETADO");
+
+        wait.until(d -> {
+
+            for (WebElement error :
+                d.findElements(testId("apply-error"))) {
+
+                if (error.isDisplayed()
+                    && !error.getText().isBlank()) {
+
+                    String mensaje = error.getText();
+
+                    String categoria =
+                        mensaje.contains("permisos")
+                            ? "PERMISOS"
+                        : mensaje.contains("disponible")
+                            ? "NO_DISPONIBLE"
+                        : mensaje.contains("previamente")
+                            ? "DUPLICADA"
+                        : mensaje.contains("confirmar el resultado")
+                            ? "RED_INCIERTA"
+                        : "OTRO_ERROR_API";
+
+                    System.out.println(
+                        "QA_APPLY: " + categoria
+                    );
+
+                    throw new AssertionError(
+                        "Postulacion rechazada: " + categoria
+                    );
+                }
+            }
+
+            return d.findElements(testId("job-apply"))
+                .stream()
+                .anyMatch(e ->
+                    e.isDisplayed()
+                    && !e.isEnabled()
+                    && "Ya postulado".equals(e.getText())
+                );
+        });
+
+        System.out.println("QA_APPLY: ESTADO_POSTULADO");
+
         esperarPostulado();
+
+        System.out.println("QA_APPLY: MODAL_CERRADO");
     }
 
     public void esperarPostulado() {
