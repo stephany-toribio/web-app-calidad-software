@@ -1,0 +1,6 @@
+Vacante 9104: pendiente_pago
+Registros de pago: 0
+Postulaciones actuales de la vacante 9101:
+{"postulacion_id":9201,"estado_id":1,"retirada":false}
+{"postulacion_id":9202,"estado_id":2,"retirada":false}
+{"postulacion_id":9206,"estado_id":1,"retirada":false}

@@ -1,0 +1,5 @@
+Publicado QA11-A en /workspace/scratch/8023a00a508a/qa11-work/dist/creo-angular-qa/browser. Mantener Nginx y tunel activos.
+Publicado QA11-B en /workspace/scratch/8023a00a508a/qa11-work/dist/creo-angular-qa/browser. Mantener Nginx y tunel activos.
+A: 9df49bfc9a68c093c4d4770d09b161f7932430a3 B: e5bfca5d507cf77ae89edb82049e1e150370ddee
+PASS: versiones distintas, etiquetas compiladas A/B presentes y todos los archivos/hash publicados correctos.
+Esta comprobacion local no acredita la actualizacion de una PWA instalada en Android.
