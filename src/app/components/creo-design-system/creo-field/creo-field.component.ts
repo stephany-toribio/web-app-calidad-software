@@ -1,6 +1,8 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+let nextControlId = 0;
+
 @Component({
   selector: 'app-creo-field',
   standalone: true,
@@ -9,6 +11,13 @@ import { CommonModule } from '@angular/common';
   styleUrl: './creo-field.component.css'
 })
 export class CreoFieldComponent {
+  @Input() testId = '';
+  @Input() autocomplete = 'off';
+  private readonly fallbackId = 'creo-control-' + 'creo-field-' + ++nextControlId;
+  get controlId(): string { return this.testId ? 'creo-' + this.testId : this.fallbackId; }
+  get descriptionId(): string | null {
+    return this.error ? this.controlId + '-error' : this.hint ? this.controlId + '-hint' : null;
+  }
   @Input() label: string = '';
   @Input() type: string = 'text';
   @Input() value: string = '';

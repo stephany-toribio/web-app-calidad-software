@@ -1,4 +1,5 @@
 <div
+  [attr.data-testid]="'job-card-' + job.id"
   *ngIf="!compact"
   (click)="onCardClick()"
   class="rounded-2xl border transition-all flex flex-col cursor-pointer bg-white border-[#E8E3D9] hover:border-[#F2B705] hover:shadow-[0_4px_20px_rgba(242,183,5,0.10)]"
@@ -75,6 +76,7 @@
       </span>
       <button
         type="button"
+        [attr.data-testid]="'job-open-' + job.id" [attr.aria-label]="'Ver empleo: ' + job.title"
         (click)="onCardClick()"
         class="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer bg-[#F2B705] text-[#111111] hover:opacity-90"
       >

@@ -87,11 +87,11 @@
         <app-creo-alert type="error" message="Corrige los campos indicados para continuar"></app-creo-alert>
       </div>
 
-      <form (submit)="handleSubmit($event)" class="flex flex-col gap-4">
-        <app-creo-field label="Correo electrónico" type="email" [value]="email()" (valueChange)="setEmail($event)"
+      <form (submit)="handleSubmit($event)" class="flex flex-col gap-4" data-testid="login-form">
+        <app-creo-field testId="login-email" autocomplete="username" label="Correo electrónico" type="email" [value]="email()" (valueChange)="setEmail($event)"
           placeholder="correo@ejemplo.com" [error]="errors()['email']" [required]="true"></app-creo-field>
 
-        <app-creo-field label="Contraseña" type="password" [value]="password()" (valueChange)="setPassword($event)"
+        <app-creo-field testId="login-password" autocomplete="current-password" label="Contraseña" type="password" [value]="password()" (valueChange)="setPassword($event)"
           placeholder="••••••••" [error]="errors()['password']" [required]="true"></app-creo-field>
 
         <div class="flex items-center justify-end">
@@ -101,7 +101,7 @@
           </button>
         </div>
 
-        <app-creo-btn type="submit" [fullWidth]="true" [disabled]="isSubmitting()">
+        <app-creo-btn testId="login-submit" type="submit" [fullWidth]="true" [disabled]="isSubmitting()">
           Iniciar sesión
           <svg icon-right width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M3 7h8M8 4l3 3-3 3" stroke="#111111" stroke-width="1.5" stroke-linecap="round"

@@ -17,7 +17,8 @@
     "test:qa06": "node --test tests/qa06/*.test.mjs",
     "test:qa08": "node --test tests/qa08/*.test.mjs",
     "test:qa09": "node --test tests/qa09/*.test.mjs",
-    "test:qa11": "node --import ./tests/qa11/register.mjs --test tests/qa11/*.test.mjs"
+    "test:qa11": "node --import ./tests/qa11/register.mjs --test tests/qa11/*.test.mjs",
+    "test:qa12": "node --import ./tests/qa12/register.mjs --test tests/qa12/*.test.mjs"
   },
   "dependencies": {
     "@angular/common": "^19.2.0",

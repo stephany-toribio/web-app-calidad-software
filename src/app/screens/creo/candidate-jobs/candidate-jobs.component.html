@@ -14,16 +14,16 @@
 
   <!-- Search + sort bar -->
   <div class="sticky top-14 z-30 border-b bg-white border-[#E8E3D9]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-3">
       <!-- Search input -->
-      <div class="relative flex-1">
+      <div class="relative flex-1 min-w-0">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="15" height="15"
           viewBox="0 0 24 24" fill="none" stroke="#9A948C" stroke-width="2.2" stroke-linecap="round"
           stroke-linejoin="round">
           <circle cx="11" cy="11" r="8" />
           <path d="M21 21l-4.35-4.35" />
         </svg>
-        <input type="search" [(ngModel)]="search" (ngModelChange)="onSearchChange()" maxlength="100"
+        <input data-testid="jobs-search" aria-label="Buscar empleos por título" type="search" [(ngModel)]="search" (ngModelChange)="onSearchChange()" maxlength="100"
           placeholder="Buscar por título del puesto…"
           class="w-full pl-9 pr-4 py-2 rounded-xl border text-sm outline-none transition-all"
           style="background-color: #F8F7F4; border-color: #E8E3D9; color: #111111; font-family: Inter, system-ui, sans-serif;"
@@ -32,7 +32,7 @@
       </div>
 
       <!-- Mobile filter toggle button -->
-      <button type="button" (click)="sidebarOpen = !sidebarOpen"
+      <button data-testid="jobs-filter-toggle" [attr.aria-expanded]="sidebarOpen" aria-controls="jobs-filter-dialog" type="button" (click)="sidebarOpen = !sidebarOpen"
         class="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium cursor-pointer"
         [style.borderColor]="hasFilters ? '#F2B705' : '#E8E3D9'"
         [style.backgroundColor]="hasFilters ? '#FEF9C3' : '#F8F7F4'" style="color: #333333;">
@@ -47,12 +47,20 @@
     </div>
   </div>
 
+  <div *ngIf="nativeSkills.available" class="px-4 sm:px-6 py-2 bg-white">
+    <button type="button" data-testid="jobs-native-skills" class="qa12-touch px-3 border rounded-xl text-sm"
+      [disabled]="nativeSkillsBusy || !skillOptions.length" (click)="chooseNativeSkills()">
+      Elegir habilidades en Android (máx. 3)
+    </button>
+    <p data-testid="jobs-native-selection" class="text-sm" aria-live="polite">{{ selectedSkills.size }} habilidades seleccionadas<span *ngFor="let skill of skillsElegidas"> · {{ skill.label }}</span></p>
+    <p *ngIf="nativeSkillsError" role="alert">{{ nativeSkillsError }}</p>
+  </div>
   <!-- Mobile filter drawer modal -->
   <div *ngIf="sidebarOpen" class="md:hidden fixed inset-0 z-50 flex" (click)="sidebarOpen = false">
-    <div class="w-full max-w-xs overflow-y-auto px-4 py-6 bg-white shadow-2xl" (click)="$event.stopPropagation()">
+    <div id="jobs-filter-dialog" appAccessibleDialog (dialogDismiss)="sidebarOpen = false" aria-label="Filtros de empleo" class="w-full max-w-xs overflow-y-auto px-4 py-6 bg-white shadow-2xl" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-4 pb-2 border-b border-[#E8E3D9]">
         <h3 class="font-bold text-[#111111]">Filtros</h3>
-        <button (click)="sidebarOpen = false" class="text-gray-500 hover:text-gray-900 p-1 rounded-lg cursor-pointer">
+        <button type="button" aria-label="Cerrar filtros" (click)="sidebarOpen = false" class="text-gray-500 hover:text-gray-900 p-1 rounded-lg cursor-pointer">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
