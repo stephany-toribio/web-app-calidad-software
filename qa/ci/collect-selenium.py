@@ -29,6 +29,52 @@ reportes = sorted(
     (target / "surefire-reports").glob("TEST-*.xml")
 )
 
+diagnosticos = []
+
+for archivo in reportes:
+
+    raiz_original = ET.parse(archivo).getroot()
+
+    for caso in raiz_original.iter("testcase"):
+
+        for tipo in ("error", "failure"):
+
+            defecto = caso.find(tipo)
+
+            if defecto is None:
+                continue
+
+            clase_error = defecto.attrib.get("type", "")
+
+            if not re.fullmatch(
+                r"[A-Za-z0-9_.$]+",
+                clase_error
+            ):
+                clase_error = "No disponible"
+
+            consola = caso.findtext("system-out", "")
+
+            marcadores = re.findall(
+                r"(?m)^QA_STEP(?:_PASS)?: [0-9]{2}_[A-Z_]+$",
+                consola
+            )
+
+            diagnosticos.append({
+                "clase": caso.attrib.get("classname"),
+                "metodo": caso.attrib.get("name"),
+                "tipo": tipo,
+                "excepcion": clase_error,
+                "marcadores": marcadores
+            })
+
+if diagnosticos:
+
+    (base / "diagnostico.json").write_text(
+        json.dumps(diagnosticos, indent=2) + chr(10)
+    )
+
+    print(json.dumps(diagnosticos, indent=2))
+
 total = 0
 fallos = 0
 errores = 0
