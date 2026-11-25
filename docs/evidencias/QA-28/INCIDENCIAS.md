@@ -48,7 +48,7 @@ controlados para identificar la causa exacta.
 
 No se eliminan escenarios ni se reducen aserciones.
 
-Estado: corregida y verificada en local; CI pendiente.
+Estado: corregida y verificada en local y CI.
 
 
 ### Causa raiz confirmada — INC-QA28-02
@@ -100,3 +100,19 @@ Retest local: PASS.
 
 Pendiente: regresion completa en GitHub Actions
 y verificacion del APK mediante Appium.
+
+
+### Retest remoto definitivo
+
+- Run ID: 45719731928.
+- Job ID: 139574725786.
+- Resultado: SUCCESS.
+- Node: 171/171.
+- Selenium: 20/20.
+- QA-19: 10/10.
+- Limpieza y escaneo: PASS.
+
+INC-QA28-02: cerrada para el entorno web.
+
+La validacion Android se mantiene como actividad
+de regresion movil independiente.
