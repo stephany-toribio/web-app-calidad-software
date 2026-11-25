@@ -29,3 +29,20 @@ SHA256 APK: E4E74B09B6DD858947CD8CAF40CE8C315237189A1FE0365DA82B0AFD613EB7E2
 - Revisión cruzada e integración del PR pendientes.
 - El túnel HTTPS es temporal.
 - QA-12 permanece abierto hasta completar su condición de cierre.
+
+## Confirmación final de CP-25
+
+El ejecutor confirma resultados satisfactorios:
+- 360x800 y 412x915: registro, login, búsqueda, detalle,
+  postulación y Kanban utilizables, sin desbordamiento global.
+- Android: rotación y teclado virtual permiten acceder
+  a los campos y acciones principales.
+- PC: foco visible con Tab, activación con Enter
+  y cierre de diálogos con Escape.
+- Selector nativo: Cancelar, Aplicar, máximo tres habilidades
+  y desplazamiento con selección funcionan correctamente.
+
+Esta actualización sustituye los pendientes anteriores
+de confirmación manual de tamaños, teclado, foco y orientación.
+Las comprobaciones fueron manuales; no se declara Appium ejecutado.
+La revisión cruzada e integración se registrarán en el PR.
