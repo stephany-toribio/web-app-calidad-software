@@ -1,0 +1,39 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> creo-angular@1.0.0 build:android
+> node scripts/build-android.mjs
+
+Configuracion Android generada correctamente.
+❯ Building...
+✔ Building...
+Initial chunk files   | Names                             |  Raw size | Estimated transfer size
+chunk-MP4BH4XX.js     | -                                 | 155.74 kB |                45.70 kB
+chunk-F3BTSML4.js     | -                                 | 119.87 kB |                30.67 kB
+polyfills-5CFQRCPP.js | polyfills                         |  34.59 kB |                11.33 kB
+main-BKUFMUMJ.js      | main                              |  26.82 kB |                 8.24 kB
+styles-7DJ54CXR.css   | styles                            |  21.52 kB |                 4.70 kB
+chunk-SV4M4BQA.js     | -                                 |   1.43 kB |               573 bytes
+
+                      | Initial total                     | 359.98 kB |               101.23 kB
+
+Lazy chunk files      | Names                             |  Raw size | Estimated transfer size
+chunk-Y43T2WV6.js     | creo-admin-skills-component       |  85.14 kB |                12.07 kB
+chunk-CZJGCNWM.js     | -                                 |  83.63 kB |                14.78 kB
+chunk-43HGV2O3.js     | company-create-job-component      |  68.56 kB |                14.05 kB
+chunk-M5OHPSXH.js     | company-kanban-component          |  63.99 kB |                13.96 kB
+chunk-3S2EORGD.js     | company-jobs-component            |  46.87 kB |                10.59 kB
+chunk-IGLQNGWK.js     | -                                 |  41.05 kB |                10.56 kB
+chunk-RKB2ISSO.js     | creo-register-candidate-component |  39.73 kB |                 9.66 kB
+chunk-ECYXSTE2.js     | admin-moderation-component        |  39.49 kB |                 9.29 kB
+chunk-NNM7WTIJ.js     | -                                 |  38.90 kB |                 8.05 kB
+chunk-O2YVJAW2.js     | candidate-profile-component       |  34.66 kB |                 7.68 kB
+chunk-OKG3CYUA.js     | candidate-jobs-component          |  30.96 kB |                 7.91 kB
+chunk-6PQ3GRKN.js     | creo-register-company-component   |  27.09 kB |                 7.00 kB
+chunk-SPPXJMZI.js     | candidate-applications-component  |  26.42 kB |                 6.39 kB
+chunk-VU4KRQ6L.js     | candidate-job-detail-component    |  21.75 kB |                 5.76 kB
+chunk-5H3725HV.js     | creo-forgot-password-component    |  20.80 kB |                 5.57 kB
+...and 32 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [10.640 seconds]
+
+Output location: /workspace/scratch/8023a00a508a/qa11-work/dist/creo-angular-android
