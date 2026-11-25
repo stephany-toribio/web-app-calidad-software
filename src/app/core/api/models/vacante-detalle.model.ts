@@ -32,7 +32,7 @@ export interface VacanteDetalle {
   nivel_puesto: CatalogoItem;
   area_profesional: CatalogoItem;
   tipo_empleo: string;
-  ubicacion: string;
+  ubicacion: string | null;
   salario_min: number | null;
   salario_max: number | null;
   fecha_inicio_vigencia: string;
