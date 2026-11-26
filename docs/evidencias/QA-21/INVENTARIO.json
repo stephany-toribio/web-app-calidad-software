@@ -1,0 +1,27 @@
+{
+    "Fecha":  "2026-11-25T19:52:59.9531001-05:00",
+    "CommitBase":  "285611f9b8c9f0bf2d2c2fcd62b6fdd3d642d307",
+    "Node":  "v24.18.0",
+    "Npm":  "12.2.1",
+    "Android":  "16",
+    "API":  "36",
+    "Modelo":  "SM-X900",
+    "Appium":  "4.0.1",
+    "UiAutomator2":  "10.4.0",
+    "UiAutomator2Server":  "11.6.1",
+    "Chrome":  "158.0.8127.42",
+    "WebView":  "157.0.8103.50",
+    "Chromedrivers":  [
+                          {
+                              "Version":  "ChromeDriver 157.0.8103.78 (4b3d0dabb8250b6f152d2d85d79e7706e309d087-refs/branch-heads/8103@{#1573})",
+                              "SHA256":  "E32106ADB49B38ED290B89A9E5B039F48A1FB652C0BD94DD880B8D896EE0C966"
+                          },
+                          {
+                              "Version":  "ChromeDriver 158.0.8127.88 (0cefb18236a23db1ebb6b2bc040fbbaf8cbe759e-refs/branch-heads/8127_36@{#32})",
+                              "SHA256":  "B690A6BC9E6FF1E77A4933A4F060C7A99BE093CC0C2ADD1F5D30EC6EDBA803D2"
+                          }
+                      ],
+    "ApiQA":  "https://maybe-partial-penguin-gadgets.trycloudflare.com/api/v1",
+    "PwaQA":  "https://maybe-partial-penguin-gadgets.trycloudflare.com",
+    "ApkInstaladoSHA256":  "E4E74B09B6DD858947CD8CAF40CE8C315237189A1FE0365DA82B0AFD613EB7E2"
+}

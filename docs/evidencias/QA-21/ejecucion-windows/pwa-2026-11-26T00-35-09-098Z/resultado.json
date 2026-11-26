@@ -1,0 +1,19 @@
+{
+  "started": "2026-11-26T00:35:09.106Z",
+  "scope": "PWA",
+  "launchPackage": "org.chromium.webapk.a7c47793e9fbea460_v2",
+  "expectedOrigin": "https://maybe-partial-penguin-gadgets.trycloudflare.com",
+  "steps": [
+    "NATIVE_APP"
+  ],
+  "outcome": "FAIL",
+  "appium": "4.0.1",
+  "launchedByAppium": true,
+  "contexts": [
+    "NATIVE_APP",
+    "WEBVIEW_chrome"
+  ],
+  "error": "A new session could not be created. Details: session not created\nfrom unknown error: unable to discover open pages",
+  "sessionClosed": true,
+  "finished": "2026-11-26T00:36:26.411Z"
+}
