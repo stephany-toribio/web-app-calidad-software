@@ -1,0 +1,16 @@
+{
+  "platformName": "Android",
+  "appium:automationName": "UiAutomator2",
+  "appium:deviceName": "Android QA",
+  "appium:appPackage": "edu.upch.creo.qa",
+  "appium:appActivity": "edu.upch.creo.qa.MainActivity",
+  "appium:noReset": true,
+  "appium:forceAppLaunch": true,
+  "appium:autoWebview": false,
+  "appium:newCommandTimeout": 120,
+  "appium:adbExecTimeout": 60000,
+  "appium:uiautomator2ServerInstallTimeout": 120000,
+  "appium:uiautomator2ServerLaunchTimeout": 120000,
+  "appium:ensureWebviewsHavePages": true,
+  "appium:enableWebviewDetailsCollection": true
+}

@@ -1,0 +1,10 @@
+{
+  "name": "creo-qa21-appium",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "appium": "4.0.1",
+    "appium-uiautomator2-driver": "10.4.0"
+  }
+}
