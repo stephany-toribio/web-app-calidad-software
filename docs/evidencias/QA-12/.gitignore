@@ -1,0 +1,4 @@
+!resultados/
+!resultados/*.txt
+!appium/
+!appium/*

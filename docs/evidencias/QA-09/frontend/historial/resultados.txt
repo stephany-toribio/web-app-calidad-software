@@ -1,0 +1,170 @@
+
+> creo-angular@1.0.0 test:qa09
+> node --test tests/qa09/*.test.mjs
+
+TAP version 13
+# Subtest: H01: historial consulta vacante seleccionada
+ok 1 - H01: historial consulta vacante seleccionada
+  ---
+  duration_ms: 4.773279
+  type: 'test'
+  ...
+# Subtest: H02: historial conserva movimientos y motivo
+ok 2 - H02: historial conserva movimientos y motivo
+  ---
+  duration_ms: 0.974987
+  type: 'test'
+  ...
+# Subtest: H03: historial incluye postulaciones retiradas
+ok 3 - H03: historial incluye postulaciones retiradas
+  ---
+  duration_ms: 0.560946
+  type: 'test'
+  ...
+# Subtest: H04: historial vacio no inventa postulaciones
+ok 4 - H04: historial vacio no inventa postulaciones
+  ---
+  duration_ms: 0.360707
+  type: 'test'
+  ...
+# Subtest: H05: error 403 no conserva informacion previa
+ok 5 - H05: error 403 no conserva informacion previa
+  ---
+  duration_ms: 0.874634
+  type: 'test'
+  ...
+# Subtest: H06: cerrar historial invalida respuesta pendiente
+ok 6 - H06: cerrar historial invalida respuesta pendiente
+  ---
+  duration_ms: 0.626545
+  type: 'test'
+  ...
+# Subtest: H07: respuesta antigua no sobrescribe otra vacante
+ok 7 - H07: respuesta antigua no sobrescribe otra vacante
+  ---
+  duration_ms: 0.780446
+  type: 'test'
+  ...
+# Subtest: H08: movimiento pendiente impide abrir historial
+ok 8 - H08: movimiento pendiente impide abrir historial
+  ---
+  duration_ms: 0.380973
+  type: 'test'
+  ...
+# Subtest: H09: reintento recupera historial despues de error
+ok 9 - H09: reintento recupera historial despues de error
+  ---
+  duration_ms: 1.453579
+  type: 'test'
+  ...
+# Subtest: H10: identificador invalido no genera solicitud
+ok 10 - H10: identificador invalido no genera solicitud
+  ---
+  duration_ms: 1.195638
+  type: 'test'
+  ...
+# Subtest: F01: doble avance genera una sola solicitud
+ok 11 - F01: doble avance genera una sola solicitud
+  ---
+  duration_ms: 5.191434
+  type: 'test'
+  ...
+# Subtest: F02: doble confirmacion de rechazo genera una solicitud
+ok 12 - F02: doble confirmacion de rechazo genera una solicitud
+  ---
+  duration_ms: 0.601879
+  type: 'test'
+  ...
+# Subtest: F03: solo lectura impide avanzar desde el metodo
+ok 13 - F03: solo lectura impide avanzar desde el metodo
+  ---
+  duration_ms: 0.341525
+  type: 'test'
+  ...
+# Subtest: F04: respuesta antigua no reemplaza otra vacante
+ok 14 - F04: respuesta antigua no reemplaza otra vacante
+  ---
+  duration_ms: 0.937183
+  type: 'test'
+  ...
+# Subtest: F05: respuesta de perfil anterior no expone datos de otro candidato
+ok 15 - F05: respuesta de perfil anterior no expone datos de otro candidato
+  ---
+  duration_ms: 0.899555
+  type: 'test'
+  ...
+# Subtest: F06: cerrar rechazo durante solicitud conserva contexto
+ok 16 - F06: cerrar rechazo durante solicitud conserva contexto
+  ---
+  duration_ms: 0.449448
+  type: 'test'
+  ...
+# Subtest: F07: conflicto de contratacion actualiza tablero
+ok 17 - F07: conflicto de contratacion actualiza tablero
+  ---
+  duration_ms: 0.570082
+  type: 'test'
+  ...
+# Subtest: F08: respuesta API no elimina solo lectura de la ruta
+ok 18 - F08: respuesta API no elimina solo lectura de la ruta
+  ---
+  duration_ms: 0.325985
+  type: 'test'
+  ...
+# Subtest: F09: rechazo exige seleccion explicita de motivo
+ok 19 - F09: rechazo exige seleccion explicita de motivo
+  ---
+  duration_ms: 0.675518
+  type: 'test'
+  ...
+# Subtest: F10: no contratar cuando no existen cupos
+ok 20 - F10: no contratar cuando no existen cupos
+  ---
+  duration_ms: 0.792289
+  type: 'test'
+  ...
+# Subtest: F11: no permite saltar de recibido a contratado
+ok 21 - F11: no permite saltar de recibido a contratado
+  ---
+  duration_ms: 0.363399
+  type: 'test'
+  ...
+# Subtest: F12: estados finales no permiten avanzar
+ok 22 - F12: estados finales no permiten avanzar
+  ---
+  duration_ms: 0.262409
+  type: 'test'
+  ...
+# Subtest: F13: rechazo sin motivo no genera solicitud
+ok 23 - F13: rechazo sin motivo no genera solicitud
+  ---
+  duration_ms: 0.218394
+  type: 'test'
+  ...
+# Subtest: F14: motivo fuera del catalogo no genera rechazo
+ok 24 - F14: motivo fuera del catalogo no genera rechazo
+  ---
+  duration_ms: 0.131062
+  type: 'test'
+  ...
+# Subtest: F15: candidato de otra vacante no puede avanzar
+ok 25 - F15: candidato de otra vacante no puede avanzar
+  ---
+  duration_ms: 0.189566
+  type: 'test'
+  ...
+# Subtest: F16: cerrar perfil impide que respuesta tardia lo restaure
+ok 26 - F16: cerrar perfil impide que respuesta tardia lo restaure
+  ---
+  duration_ms: 0.199466
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1419.479577

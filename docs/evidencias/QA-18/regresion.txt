@@ -1,0 +1,54 @@
+===== PREFLIGHT SELENIUM =====
+PASS: Preflight Selenium
+===== SELENIUM full =====
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -------------------< pe.creo.qa:creo-selenium-tests >-------------------
+[INFO] Building creo-selenium-tests 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- clean:3.2.0:clean (default-clean) @ creo-selenium-tests ---
+[INFO] Deleting /home/steph/projects/web-app-calidad-software/qa/selenium/target
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ creo-selenium-tests ---
+[INFO] skip non existing resourceDirectory /home/steph/projects/web-app-calidad-software/qa/selenium/src/main/resources
+[INFO]
+[INFO] --- compiler:3.13.0:compile (default-compile) @ creo-selenium-tests ---
+[INFO] No sources to compile
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ creo-selenium-tests ---
+[INFO] skip non existing resourceDirectory /home/steph/projects/web-app-calidad-software/qa/selenium/src/test/resources
+[INFO]
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ creo-selenium-tests ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 5 source files with javac [debug release 21] to target/test-classes
+[INFO]
+[INFO] --- surefire:3.5.2:test (default-test) @ creo-selenium-tests ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO]
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running creo.tests.SmokeTest
+Nov 25, 2026 11:53:39 AM org.openqa.selenium.remote.tracing.opentelemetry.OpenTelemetryTracer createTracer
+INFO: Using OpenTelemetry for tracing
+PASS: Chrome conectado
+PASS: Frontend cargado
+URL: http://frontend/creo/landing
+Titulo: Creo - Portal de Empleos
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.804 s -- in creo.tests.SmokeTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.823 s
+[INFO] Finished at: 2026-11-25T11:53:42-05:00
+[INFO] ------------------------------------------------------------------------
+PASS: Ejecucion Selenium
+Reportes: qa/selenium/target/surefire-reports/
+Capturas: qa/selenium/target/qa-evidence/

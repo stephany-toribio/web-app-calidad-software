@@ -1,0 +1,29 @@
+{
+  "run_id": "388b7c86-e302-456e-b893-648cd74a26b7",
+  "vacante_id": 348,
+  "fase": "aprobada",
+  "estado_api": {
+    "general": "pendiente_pago",
+    "revision": "aprobada",
+    "motivo_no_aprobacion": null,
+    "pago": "sin_pago",
+    "disponibilidad": "activa",
+    "vigente": true,
+    "publicada_en": null
+  },
+  "revisiones_mysql": [
+    {
+      "id": 296,
+      "empleo_id": 348,
+      "admin_id": 1033,
+      "decision": "aprobada",
+      "motivo": null,
+      "invalidada_en": null,
+      "created_at": "2026-11-25 21:23:24",
+      "updated_at": "2026-11-25 21:23:24"
+    }
+  ],
+  "pagos_mysql": 0,
+  "postulaciones_mysql": 0,
+  "resultado": "PASS"
+}

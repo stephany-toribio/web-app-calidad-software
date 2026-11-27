@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+import { forkJoin, Observable } from 'rxjs';
 import { CreoWordmarkComponent } from '../../../components/creo-design-system/creo-wordmark/creo-wordmark.component';
 import { CreoBtnComponent } from '../../../components/creo-design-system/creo-btn/creo-btn.component';
 import { CreoFieldComponent } from '../../../components/creo-design-system/creo-field/creo-field.component';
@@ -8,160 +11,606 @@ import { CreoCardComponent } from '../../../components/creo-design-system/creo-c
 import { CreoAlertComponent } from '../../../components/creo-design-system/creo-alert/creo-alert.component';
 import { CreoStepIndicatorComponent } from '../../../components/creo-design-system/creo-step-indicator/creo-step-indicator.component';
 import { CreoSkillPickerComponent } from '../../../components/creo-design-system/creo-skill-picker/creo-skill-picker.component';
-import { CareerSelectorComponent, CareerEntry, SECUNDARIA_VALUE } from './career-selector/career-selector.component';
-import { CREO_SKILLS, AREA_SKILLS, SkillSection } from '../../../data/creo-skills.data';
+import { StudyListComponent, StudyEntry } from './study-list/study-list.component';
+import { LanguageListComponent, LanguageEntry } from './language-list/language-list.component';
+import { ExperienceListComponent, ExperienceEntry } from './experience-list/experience-list.component';
+import { CatalogosService } from '../../../core/api/catalogos.service';
+import { CandidatosService } from '../../../core/api/candidatos.service';
+import { AuthService } from '../../../core/api/auth.service';
+import { CAMPOS_PASO } from '../../../core/api/registro-candidato.pasos';
+import { RegistroCandidatoPayload } from '../../../core/api/models/registro-candidato.model';
+import { Habilidad } from '../../../core/api/models/catalogos.model';
+import { SkillSection } from '../../../data/creo-skills.data';
+import { erroresDesdeApi } from '../../../core/api/mappers/errores-api.mapper';
+import { AVISO_LISTA_ACTUALIZADA, corregirCatalogosRechazados } from '../../../core/api/mappers/catalogos-rechazados.mapper';
+import {
+  aId, CatalogosRegistro, esFechaAnteriorANacimiento, payloadCompleto, payloadDatosPersonales, payloadEstudiosIdiomas,
+  payloadExperiencia, payloadHabilidades,
+} from '../../../core/api/mappers/registro-candidato.mapper';
 
-const STEPS = ['Cuenta y datos', 'Formación', 'Habilidades'];
-const MAX_SKILLS = 15;
-const KNOWN_EMAILS = ['admin@creo.pe', 'valeria.rojas@ejemplo.com'];
+const STEPS = ['Cuenta y datos', 'Educación', 'Experiencia', 'Habilidades', 'Resumen'];
+const MAX_SKILLS = 15;          // el backend acepta 30 en total (técnicas + blandas)
 const GENDER_OPTIONS = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'];
+
+// Pantalla del formulario donde se corrige cada error (para volver a ella si falla el registro final)
+const PASO_DE_ERROR: Record<string, number> = {
+  firstName: 0, lastName: 0, birthdate: 0, dni: 0, dniTaken: 0, email: 0, emailTaken: 0,
+  phone: 0, phoneTaken: 0, password: 0, passwordConfirm: 0,
+  carreras: 1, idiomas: 1,
+  experiencia: 2,
+  skills: 3,
+};
 
 @Component({
   selector: 'app-creo-register-candidate',
   standalone: true,
   imports: [
-    CommonModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent,
+    CommonModule, FormsModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent,
     CreoCardComponent, CreoAlertComponent, CreoStepIndicatorComponent,
-    CreoSkillPickerComponent, CareerSelectorComponent
+    CreoSkillPickerComponent, StudyListComponent, LanguageListComponent, ExperienceListComponent
   ],
   templateUrl: './creo-register-candidate.component.html',
   styleUrl: './creo-register-candidate.component.css'
 })
-export class CreoRegisterCandidateComponent {
+export class CreoRegisterCandidateComponent implements OnInit, OnDestroy {
+  private pollInterval: any = null;
+  private router = inject(Router);
+  private catalogosService = inject(CatalogosService);
+  private candidatosService = inject(CandidatosService);
+  private authService = inject(AuthService);
+
+  // Solo existen mientras se muestra su paso (están dentro de un *ngIf)
+  @ViewChild(StudyListComponent) private studyList?: StudyListComponent;
+  @ViewChild(ExperienceListComponent) private experienceList?: ExperienceListComponent;
+  @ViewChild(LanguageListComponent) private languageList?: LanguageListComponent;
+
   steps = STEPS;
-  catalog = CREO_SKILLS;
   genderOptions = GENDER_OPTIONS;
   maxSkills = MAX_SKILLS;
+
+  /** true mientras se espera una respuesta de la API (deshabilita los botones) */
+  enviando = false;
+
+  // Catálogos que usa el mapper para convertir nombres en ids
+  private catalogos: CatalogosRegistro = {
+    paises: [], tiposEstudio: [], areasEstudio: [], idiomas: [], puestos: [], nivelesPuesto: [], habilidades: [],
+  };
+
+  // Habilidades seleccionables para las áreas de los estudios (GET /habilidades?areas[]=)
+  private habilidadesDisponibles: Habilidad[] = [];
 
   step = 0;
 
   // Paso 0 — Cuenta y datos personales
   firstName = '';
   lastName = '';
-  birthdate = '';
+  birthDay = '';
+  birthMonth = '';
+  birthYear = '';
   dni = '';
   gender = '';
   email = '';
   password = '';
+  passwordConfirm = '';
   phone = '';
+  showPassword = false;
+  showPasswordConfirm = false;
 
-  // Paso 1 — Formación
-  careers: CareerEntry[] = [];
+  dias = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+  mesesNac = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  anosNac = Array.from({ length: 100 }, (_, i) => (new Date().getFullYear() - i).toString());
 
-  // Paso 2 — Habilidades
+  // Paso 1 — Educación
+  private _carreras: StudyEntry[] = [];
+  private _educacionSuperior: StudyEntry[] = [];
+  idiomas: LanguageEntry[] = [];
+  salary = '';
+
+  get carreras(): StudyEntry[] { return this._carreras; }
+  set carreras(v: StudyEntry[]) { this._carreras = v; }
+
+  get educacionSuperior(): StudyEntry[] { return this._educacionSuperior; }
+  set educacionSuperior(v: StudyEntry[]) { this._educacionSuperior = v; }
+
+  private get estudios(): StudyEntry[] {
+    return [...this._carreras, ...this._educacionSuperior];
+  }
+
+  // Paso 2 — Experiencia
+  hasExperience: boolean | null = null;
+  experiencias: ExperienceEntry[] = [];
+
+  // Paso 3 — Habilidades (por nombre; el mapper las convierte a ids)
   skills: string[] = [];
+  softSkills: string[] = [];
 
   errors: Record<string, string> = {};
 
-  constructor(private router: Router) { }
+  private readonly DRAFT_KEY = 'creo_candidate_register_draft';
+  private registroCompletado = false;
+
+  ngOnInit() {
+    this.recargarCatalogos();
+    this.cargarBorrador();
+  }
+
+  ngOnDestroy() {
+  }
+
+  @HostListener('window:beforeunload')
+  onBeforeUnload() {
+    this.guardarBorrador();
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus() {
+    this.refrescarSegunPaso();
+  }
+
+  refrescarSegunPaso() {
+    if (this.step === 1) {
+      if (!this.studyList?.showModal) {
+        this.studyList?.recargarCatalogos();
+      }
+    } else if (this.step === 2) {
+      if (!this.experienceList?.showModal) {
+        this.experienceList?.recargarCatalogos();
+      }
+    } else if (this.step === 3) {
+      this.cargarHabilidades(true);
+    }
+  }
+
+  /** Catálogos fijos (para convertir nombres en ids). Se piden al abrir el registro y tras un rechazo por catálogo */
+  private recargarCatalogos() {
+    forkJoin({
+      paises: this.catalogosService.paises(),
+      tiposEstudio: this.catalogosService.tiposEstudio(),
+      areasEstudio: this.catalogosService.areasEstudio(),
+      idiomas: this.catalogosService.idiomas(),
+      puestos: this.catalogosService.puestos(),
+      nivelesPuesto: this.catalogosService.nivelesPuesto(),
+    }).subscribe({
+      next: c => this.catalogos = { ...c, habilidades: this.catalogos.habilidades },
+      error: (err: HttpErrorResponse) => this.errors = erroresDesdeApi(err),
+    });
+  }
+
+  /** "Sin estudios formales" (solo_area del catálogo): el resumen muestra solo el área */
+  esSoloArea(tipo: string): boolean {
+    return this.catalogos.tiposEstudio.find(t => t.nombre === tipo)?.solo_area ?? false;
+  }
+
+  // ---------------------------------------------------------------- Habilidades (paso 3)
+
+  /** Técnicas de las áreas de los estudios (regla C) */
+  get catalog(): string[] {
+    return this.habilidadesDisponibles.filter(h => h.tipo_habilidad === 'tecnica').map(h => h.nombre);
+  }
+
+  /** Técnicas agrupadas por área de estudio (se calcula al cargar, no en cada ciclo de detección de cambios) */
+  seccionesTecnicas: SkillSection[] = [];
+
+  private agruparPorArea(lista: Habilidad[]): SkillSection[] {
+    const grupos = new Map<string, string[]>();
+    for (const h of lista.filter(x => x.tipo_habilidad === 'tecnica')) {
+      const area = h.area_estudio?.nombre ?? 'Otras habilidades';
+      grupos.set(area, [...(grupos.get(area) ?? []), h.nombre]);
+    }
+    return [...grupos.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, 'es'))
+      .map(([label, skills]) => ({ label, skills }));
+  }
+
+  get softCatalog(): string[] {
+    return this.habilidadesDisponibles.filter(h => h.tipo_habilidad === 'blanda').map(h => h.nombre);
+  }
 
   get selectedAreas(): string[] {
-    return [...new Set(this.careers.map(c => c.area).filter(a => a !== SECUNDARIA_VALUE))];
+    return [...new Set(this.estudios.map(c => c.areaEstudio).filter(a => !!a))];
   }
 
-  get suggestedSections(): SkillSection[] {
-    return this.selectedAreas
-      .filter(a => AREA_SKILLS[a])
-      .map(a => ({ label: `Sugeridas para ${a}`, skills: AREA_SKILLS[a] }));
+  get hasAreaFilter(): boolean {
+    return this.selectedAreas.length > 0;
   }
 
-  setDni(v: string) {
-    this.dni = v.replace(/\D/g, '').slice(0, 8);
+  private ultCargaHabilidades = 0;
+
+  /** Al entrar a la pantalla de habilidades o al interactuar con el buscador/lista: pide las de las áreas estudiadas y quita las que ya no aplican */
+  cargarHabilidades(force = false) {
+    const ahora = Date.now();
+    if (!force && ahora - this.ultCargaHabilidades < 1000) return;
+    this.ultCargaHabilidades = ahora;
+
+    this.catalogosService.areasEstudio().subscribe(areas => {
+      this.catalogos = { ...this.catalogos, areasEstudio: areas };
+
+      const areaIds = this.selectedAreas
+        .map(nombre => aId(this.catalogos.areasEstudio, nombre))
+        .filter((id): id is number => id !== null);
+
+      this.catalogosService.habilidades(areaIds).subscribe({
+        next: lista => {
+          this.habilidadesDisponibles = lista;
+          this.seccionesTecnicas = this.agruparPorArea(lista);
+          this.catalogos = { ...this.catalogos, habilidades: lista };
+          const tecnicas = new Set(this.catalog);
+          const blandas = new Set(this.softCatalog);
+          this.skills = this.skills.filter(s => tecnicas.has(s));
+          this.softSkills = this.softSkills.filter(s => blandas.has(s));
+        },
+        error: (err: HttpErrorResponse) => this.errors = erroresDesdeApi(err),
+      });
+    });
   }
 
-  setEmail(v: string) {
-    this.email = v;
-    if (this.errors['emailTaken']) {
-      const { emailTaken, ...rest } = this.errors;
-      this.errors = rest;
-    }
+  private get totalHabilidades(): number {
+    return this.skills.length + this.softSkills.length;
   }
 
   toggleSkill(s: string) {
     if (this.skills.includes(s)) {
       this.skills = this.skills.filter(x => x !== s);
-      return;
+    } else {
+      if (this.skills.length >= MAX_SKILLS) return;
+      this.skills = [...this.skills, s];
     }
-    if (this.skills.length >= MAX_SKILLS) return;
-    this.skills = [...this.skills, s];
+    this.guardarBorrador();
   }
 
-  addCareer(c: CareerEntry) {
-    this.careers = [...this.careers, c];
+  toggleSoftSkill(s: string) {
+    if (this.softSkills.includes(s)) {
+      this.softSkills = this.softSkills.filter(x => x !== s);
+    } else {
+      if (this.softSkills.length >= MAX_SKILLS) return;
+      this.softSkills = [...this.softSkills, s];
+    }
+    this.guardarBorrador();
   }
 
-  removeCareer(c: CareerEntry) {
-    this.careers = this.careers.filter(x => x.area !== c.area || x.specialty !== c.specialty);
+  // ---------------------------------------------------------------- Datos personales (paso 0)
+
+  get passLength() { return this.password.length >= 8; }
+  get passUppercase() { return /[A-Z]/.test(this.password); }
+  get passNumber() { return /[0-9]/.test(this.password); }
+  get passSymbol() { return /[@#$%&]/.test(this.password); }
+
+  // Correo, DNI y teléfono duplicados ya no se revisan con listas falsas: los informa el backend (Precognition)
+  setDni(v: string) {
+    this.dni = v.replace(/\D/g, '').slice(0, 8);
+    delete this.errors['dniTaken'];
+  }
+
+  setPhone(v: string) {
+    this.phone = v.replace(/\D/g, '').slice(0, 9);
+    delete this.errors['phoneTaken'];
+  }
+
+  setEmail(v: string) {
+    this.email = v;
+    delete this.errors['emailTaken'];
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  togglePasswordConfirm() {
+    this.showPasswordConfirm = !this.showPasswordConfirm;
+  }
+
+  validateAge() {
+    if (this.birthDay && this.birthMonth && this.birthYear) {
+      const bd = parseInt(this.birthDay);
+      const bm = this.mesesNac.indexOf(this.birthMonth);
+      const by = parseInt(this.birthYear);
+
+      const today = new Date();
+      let age = today.getFullYear() - by;
+      if (today.getMonth() < bm || (today.getMonth() === bm && today.getDate() < bd)) {
+        age--;
+      }
+
+      if (age < 17) {
+        this.errors['birthdate'] = 'Debes tener al menos 17 años para registrarte';
+      } else if (this.errors['birthdate'] === 'Debes tener al menos 17 años para registrarte') {
+        delete this.errors['birthdate'];
+      }
+    }
   }
 
   validateStep0(): Record<string, string> {
     const e: Record<string, string> = {};
     if (!this.firstName.trim()) e['firstName'] = 'El nombre es obligatorio';
     if (!this.lastName.trim()) e['lastName'] = 'El apellido es obligatorio';
-    if (!this.birthdate.trim()) e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    if (!this.birthDay || !this.birthMonth || !this.birthYear) {
+      e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    } else {
+      this.validateAge();
+      if (this.errors['birthdate']) e['birthdate'] = this.errors['birthdate'];
+    }
 
     if (!this.dni.trim()) e['dni'] = 'El DNI es obligatorio';
-    else if (!/^\d{8}$/.test(this.dni)) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
+    else if (this.dni.length !== 8) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
 
     if (!this.email.trim()) e['email'] = 'El correo es obligatorio';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
-    else if (KNOWN_EMAILS.includes(this.email.trim().toLowerCase())) e['emailTaken'] = 'duplicate';
 
     if (!this.password.trim()) e['password'] = 'La contraseña es obligatoria';
-    else if (this.password.length < 8) e['password'] = 'Mínimo 8 caracteres';
+    else if (!this.passLength || !this.passUppercase || !this.passNumber || !this.passSymbol) {
+      e['password'] = 'La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y uno de estos símbolos: @ # $ % &';
+    }
+
+    if (!this.passwordConfirm) e['passwordConfirm'] = 'Confirma tu contraseña';
+    else if (this.passwordConfirm !== this.password) e['passwordConfirm'] = 'Las contraseñas no coinciden';
 
     if (!this.phone.trim()) e['phone'] = 'El teléfono es obligatorio';
+    else if (this.phone.length !== 9) e['phone'] = 'El teléfono debe tener exactamente 9 dígitos';
 
     return e;
   }
 
+  // ---------------------------------------------------------------- Navegación entre pasos
+
+  /** Validaciones locales (rápidas, sin red) de cada pantalla */
+  private erroresLocales(step: number): Record<string, string> {
+    switch (step) {
+      case 0:
+        return this.validateStep0();
+      case 1: {
+        const e: Record<string, string> = {};
+        if (this._carreras.length === 0) e['carreras'] = 'Agrega al menos una carrera';
+        else if (this._carreras.some(s => esFechaAnteriorANacimiento(s.fechaInicioAno, s.fechaInicioMes, this.birthYear, this.birthMonth) || (!s.alPresente && s.fechaFinAno && esFechaAnteriorANacimiento(s.fechaFinAno, s.fechaFinMes, this.birthYear, this.birthMonth)))) {
+          e['carreras'] = 'Revisa las fechas de tus estudios: no pueden ser anteriores a tu fecha de nacimiento';
+        }
+        if (this.idiomas.length === 0) e['idiomas'] = 'Agrega al menos un idioma';
+        return e;
+      }
+      case 2:
+        if (this.hasExperience === null) return { experiencia: 'Selecciona una opción sobre tu experiencia' };
+        if (this.hasExperience && this.experiencias.length === 0) return { experiencia: 'Agrega al menos una experiencia laboral' };
+        if (this.hasExperience && this.experiencias.some(x => esFechaAnteriorANacimiento(x.fechaInicioAno, x.fechaInicioMes, this.birthYear, this.birthMonth) || (!x.alPresente && x.fechaFinAno && esFechaAnteriorANacimiento(x.fechaFinAno, x.fechaFinMes, this.birthYear, this.birthMonth)))) {
+          return { experiencia: 'Revisa las fechas de tu experiencia laboral: no pueden ser anteriores a tu fecha de nacimiento' };
+        }
+        return {};
+      case 3:
+        return this.totalHabilidades === 0 ? { skills: 'Selecciona al menos una habilidad (técnica o blanda)' } : {};
+      default:
+        return {};
+    }
+  }
+
+  /** Datos que se envían en el Precognition de cada pantalla */
+  private payloadDelPaso(step: number): Partial<RegistroCandidatoPayload> {
+    switch (step) {
+      case 0:
+        return payloadDatosPersonales(this);
+      case 1:
+        return payloadEstudiosIdiomas(this.estudios, this.idiomas, this.catalogos);
+      case 2:
+        return payloadExperiencia(this.hasExperience, this.experiencias, this.catalogos);
+      default:
+        // Habilidades + estudios: el backend valida que las técnicas sean de las áreas estudiadas (regla C)
+        return {
+          estudios: payloadEstudiosIdiomas(this.estudios, [], this.catalogos).estudios,
+          ...payloadHabilidades([...this.skills, ...this.softSkills], this.catalogos),
+        };
+    }
+  }
+
   handleNext(e: Event) {
     e.preventDefault();
+    if (this.enviando) return;
 
-    if (this.step === 0) {
-      this.errors = this.validateStep0();
-      if (Object.keys(this.errors).length === 0) {
-        this.errors = {};
-        this.step = 1;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+    this.errors = this.erroresLocales(this.step);
+    if (this.hasErrors()) return;
+
+    if (this.step === 4) {
+      this.registrar();
       return;
     }
 
-    if (this.step === 1) {
-      const errs: Record<string, string> = {};
-      if (this.careers.length === 0) errs['careers'] = 'Agrega al menos una opción de formación';
-      this.errors = errs;
-      if (Object.keys(errs).length === 0) {
-        this.errors = {};
-        this.step = 2;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      return;
-    }
+    // Precognition: el backend valida solo los campos de esta pantalla y no guarda nada (204 = válido)
+    const paso = this.step as 0 | 1 | 2 | 3;
+    this.llamarApi(this.candidatosService.validarPaso(this.payloadDelPaso(paso), CAMPOS_PASO[paso]), () => {
+      if (paso === 2) this.cargarHabilidades();     // la siguiente pantalla es la de habilidades
+      this.goToStep(paso + 1);
+    });
+  }
 
-    // step === 2
-    const errs: Record<string, string> = {};
-    if (this.skills.length === 0) errs['skills'] = 'Selecciona al menos una habilidad';
-    this.errors = errs;
-    if (Object.keys(errs).length === 0) {
-      this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
+  /** Paso 4: registro real (201). El backend vuelve a validar todo */
+  private registrar() {
+    const payload = payloadCompleto(
+      this, this.estudios, this.idiomas, this.hasExperience, this.experiencias,
+      [...this.skills, ...this.softSkills], this.catalogos,
+    );
+
+    this.llamarApi(this.candidatosService.registrar(payload), () => this.iniciarSesion());
+  }
+
+  /** Tras el 201 inicia sesión con las mismas credenciales (HU-10). Si falla, la cuenta ya existe y puede entrar desde el landing */
+  private iniciarSesion() {
+    this.registroCompletado = true;
+    this.limpiarBorrador();
+    const irAExito = () => this.router.navigate(['/creo/success/candidate'], { state: { name: this.firstName } });
+
+    this.enviando = true;
+    this.authService.login({ correo: this.email.trim(), password: this.password }).subscribe({
+      next: sesion => {
+        this.authService.saveSession(sesion);
+        irAExito();
+      },
+      error: () => irAExito(),
+    });
+  }
+
+  /** Llama a la API con el botón en "cargando"; si falla, muestra los errores y vuelve a la pantalla con problemas */
+  private llamarApi(peticion: Observable<unknown>, alTerminar: () => void) {
+    this.enviando = true;
+    peticion.subscribe({
+      next: () => {
+        this.enviando = false;
+        this.errors = {};
+        alTerminar();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.enviando = false;
+        this.errors = erroresDesdeApi(err);
+        this.corregirCatalogosRechazados(err);
+        const pasoConError = Object.keys(this.errors)
+          .map(clave => PASO_DE_ERROR[clave])
+          .filter(p => p !== undefined)
+          .sort((a, b) => a - b)[0];
+        if (pasoConError !== undefined && pasoConError < this.step) this.goToStep(pasoConError);
+      },
+    });
+  }
+
+  /**
+   * Si la API rechazó un valor de catálogo (p. ej. un puesto que el admin desactivó mientras se llenaba el formulario),
+   * vuelve a pedir los catálogos y vacía ese campo para que el candidato lo elija de nuevo de la lista actualizada.
+   */
+  private corregirCatalogosRechazados(err: HttpErrorResponse) {
+    const correccion = corregirCatalogosRechazados(err, this.estudios, this.experiencias, this.idiomas);
+    if (!correccion) return;
+
+    // estudios = carreras + educación superior (en ese orden, igual que el payload)
+    const enCarreras = this._carreras.length;
+    this._carreras = correccion.estudios.slice(0, enCarreras);
+    this._educacionSuperior = correccion.estudios.slice(enCarreras);
+    this.experiencias = correccion.experiencias;
+    this.idiomas = correccion.idiomas;
+
+    this.recargarCatalogos();
+    if (correccion.recargarEstudios) {
+      this.studyList?.recargarCatalogos();
+      if (this.errors['carreras']) this.errors['carreras'] += AVISO_LISTA_ACTUALIZADA;
+    }
+    if (correccion.recargarIdiomas) {
+      this.languageList?.recargarCatalogos();
+      if (this.errors['idiomas']) this.errors['idiomas'] += AVISO_LISTA_ACTUALIZADA;
+    }
+    if (correccion.recargarExperiencias) {
+      this.experienceList?.recargarCatalogos();
+      if (this.errors['experiencia']) this.errors['experiencia'] += AVISO_LISTA_ACTUALIZADA;
+    }
+    if (correccion.recargarHabilidades) {
+      this.cargarHabilidades();                     // también quita de lo seleccionado las que ya no están
     }
   }
 
   goToLogin() {
+    if (this.enviando) return;
+
     this.router.navigate(['/creo/landing']);
   }
 
   goBack() {
+    if (this.enviando) return;
+
     if (this.step === 0) {
       this.router.navigate(['/creo/landing']);
     } else {
-      this.step -= 1;
+      this.goToStep(this.step - 1);
     }
   }
 
+  goToStep(step: number) {
+    if (this.enviando || this.registroCompletado) return;
+
+    this.step = step;
+    if (step === 1) {
+      this._carreras = [...this._carreras];
+      this._educacionSuperior = [...this._educacionSuperior];
+    }
+    if (step === 3) {
+      this.cargarHabilidades();
+    }
+    this.guardarBorrador();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  guardarBorrador() {
+    if (this.registroCompletado) return;
+
+    try {
+      const draft = {
+        step: this.step,
+        firstName: this.firstName,
+        lastName: this.lastName,
+        birthDay: this.birthDay,
+        birthMonth: this.birthMonth,
+        birthYear: this.birthYear,
+        dni: this.dni,
+        gender: this.gender,
+        email: this.email,
+        phone: this.phone,
+        _carreras: this._carreras,
+        _educacionSuperior: this._educacionSuperior,
+        idiomas: this.idiomas,
+        salary: this.salary,
+        hasExperience: this.hasExperience,
+        experiencias: this.experiencias,
+        skills: this.skills,
+        softSkills: this.softSkills,
+      };
+      sessionStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+    } catch (e) {
+      console.error('Error guardando borrador:', e);
+    }
+  }
+
+  cargarBorrador() {
+    try {
+      // Eliminar el borrador persistente de versiones anteriores.
+      try {
+        localStorage.removeItem(this.DRAFT_KEY);
+      } catch {}
+
+      const data = sessionStorage.getItem(this.DRAFT_KEY);
+      if (!data) return;
+      const draft = JSON.parse(data);
+      if (draft) {
+        // Las contrasenas nunca se persisten.
+        // Revalidar el primer paso al restaurar un borrador.
+        this.step = 0;
+        this.password = '';
+        this.passwordConfirm = '';
+        if (draft.firstName) this.firstName = draft.firstName;
+        if (draft.lastName) this.lastName = draft.lastName;
+        if (draft.birthDay) this.birthDay = draft.birthDay;
+        if (draft.birthMonth) this.birthMonth = draft.birthMonth;
+        if (draft.birthYear) this.birthYear = draft.birthYear;
+        if (draft.dni) this.dni = draft.dni;
+        if (draft.gender) this.gender = draft.gender;
+        if (draft.email) this.email = draft.email;
+        if (draft.phone) this.phone = draft.phone;
+        if (Array.isArray(draft._carreras)) this._carreras = draft._carreras;
+        if (Array.isArray(draft._educacionSuperior)) this._educacionSuperior = draft._educacionSuperior;
+        if (Array.isArray(draft.idiomas)) this.idiomas = draft.idiomas;
+        if (draft.salary) this.salary = draft.salary;
+        if (draft.hasExperience !== undefined) this.hasExperience = draft.hasExperience;
+        if (Array.isArray(draft.experiencias)) this.experiencias = draft.experiencias;
+        if (Array.isArray(draft.skills)) this.skills = draft.skills;
+        if (Array.isArray(draft.softSkills)) this.softSkills = draft.softSkills;
+
+        if (this.step >= 3) {
+          this.cargarHabilidades(true);
+        }
+      }
+    } catch (e) {
+      console.error('Error cargando borrador:', e);
+    }
+  }
+
+  limpiarBorrador() {
+    try {
+      sessionStorage.removeItem(this.DRAFT_KEY);
+    } catch (e) {}
+  }
+
+  /** Errores de campos (el error general 'api' se muestra aparte) */
   hasErrors(): boolean {
-    return Object.keys(this.errors).length > 0;
+    return Object.keys(this.errors).some(clave => clave !== 'api');
   }
 }

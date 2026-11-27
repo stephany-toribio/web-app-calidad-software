@@ -1,86 +1,51 @@
-# Guía de contribución
+# Contribución — Calidad de Software
 
-Este repositorio forma parte del proyecto Portal de Empleos — 2026-II.
+## Ramas
 
-## Estrategia de ramas
+- `main`: entrega estable coordinada de frontend y API.
+- `develop`: integración del proyecto.
+- `feature/QA-NN-descripcion`, `bugfix/QA-NN-descripcion` o `test/QA-NN-descripcion`: ramas temporales desde develop.
 
-El proyecto utiliza Gitflow.
+Puede haber una rama temporal por tarea activa de cada integrante. No hacen falta ramas permanentes de deploy o release. La rama documental actual es temporal y se elimina después de integrar su PR.
 
-### Ramas permanentes
+## Flujo de una tarea
 
-- `main`: contiene versiones estables.
-- `develop`: integra el trabajo del equipo durante el desarrollo.
+1. Abrir la issue, comprobar dependencias y cumplir Definition of Ready.
+2. Crear rama desde develop; relacionar requisito y casos CP.
+3. Verificar primero el código existente, reproducir el fallo y cambiar solo lo necesario.
+4. Ejecutar las comprobaciones apropiadas y conservar resultado/evidencia.
+5. Abrir PR hacia develop, con issue, cambios, riesgos y pruebas realizadas.
+6. Solicitar revisión de otro integrante; el autor no aprueba su propio cambio.
+7. Resolver observaciones, hacer retest/regresión y registrar evidencia.
+8. Integrar, cerrar conscientemente la issue cuando cumpla Done y eliminar la rama temporal.
 
-### Ramas temporales
+Usar `Refs #N` mientras quede validación. Usar `Closes #N` solo si el merge realmente cumple todos los criterios de cierre de esa issue. La fusión de un PR no demuestra por sí sola que pasó el flujo de negocio.
 
-- `feature/*`: desarrollo de nuevas funcionalidades.
-- `bugfix/*`: correcciones durante el desarrollo.
-- `release/*`: preparación de versiones o entregas.
-- `hotfix/*`: correcciones urgentes sobre una versión estable.
+## Commits
 
-## Creación de ramas
+`tipo(QA-NN): descripción` con tipos `feat`, `fix`, `test`, `docs`, `refactor`, `chore`.
 
-Las ramas `feature/*` y `bugfix/*` deben crearse desde `develop`.
+## Pruebas y documentación
 
-Formato:
+Versionar las suites en las rutas previstas del README. Registrar comando, caso, commit, ambiente y resultado; distinguir no ejecutado de aprobado. No escribir pruebas que solo repitan la implementación ni rehacer módulos que ya cumplen con evidencia.
 
-`tipo/ID-descripcion-corta`
+Las pruebas usan datos ficticios y un entorno aislado. Mantener fuera del repositorio credenciales reales, tokens y artefactos con datos privados. Los cambios de alcance se reflejan en ambos README, la matriz y el [plan maestro](https://github.com/stephany-toribio/recruitment-api-calidad-software/issues/3).
 
-Ejemplos:
+Consultar [docs/GESTION_PROYECTO.md](docs/GESTION_PROYECTO.md) para roles, hitos, estados, criterios y dependencias.
 
-`feature/HU-01-registro-candidato`
+## Cumplimiento de la rúbrica
 
-`feature/D1-07-angular-base`
+Consultar [RUBRICA_EVALUACION.md](docs/RUBRICA_EVALUACION.md)
+antes de implementar una tarea de automatización.
 
-`bugfix/HU-03-validacion-vacante`
+- Identificar los requisitos, escenarios CP y controles RUB.
+- Vincular el ticket Jira cuando corresponda.
+- Registrar los resultados reales de cada ejecución.
+- No declarar PASS sin evidencia verificable.
+- Solicitar revisión cruzada.
+- Conservar los hallazgos y resultados de regresión.
+- No almacenar secretos ni datos personales reales.
+- Actualizar documentación e issues ante cambios de alcance.
 
-## Convención de commits
-
-Se utilizará el formato:
-
-`tipo(ID): descripción`
-
-Tipos principales:
-
-- `feat`: nueva funcionalidad.
-- `fix`: corrección de errores.
-- `docs`: documentación.
-- `test`: pruebas.
-- `refactor`: refactorización.
-- `chore`: tareas de mantenimiento.
-
-Ejemplos:
-
-`feat(HU-01): add candidate registration`
-
-`fix(HU-05): prevent duplicate applications`
-
-`docs(D1-02): document gitflow workflow`
-
-## Pull Requests
-
-Todo cambio debe integrarse mediante Pull Request.
-
-Flujo normal:
-
-`feature/* → develop`
-
-Reglas:
-
-- No desarrollar directamente sobre `main`.
-- No desarrollar directamente sobre `develop`.
-- Relacionar el Pull Request con el Issue correspondiente.
-- Solicitar revisión de al menos otro integrante.
-- No integrar cambios con errores conocidos.
-- El autor no debe considerar su propia revisión como aprobación.
-- Eliminar la rama temporal después del merge.
-
-## Releases
-
-Las entregas se preparan mediante ramas:
-
-`release/*`
-
-Las correcciones urgentes de una versión estable utilizan:
-
-`hotfix/*`
+Las ramas `docs/QA-NN-descripcion` se utilizarán para
+actualizaciones documentales controladas.

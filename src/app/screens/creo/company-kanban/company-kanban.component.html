@@ -1,6 +1,861 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Tablero Kanban de Reclutamiento</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Seguimiento por estados de candidatos - Creo Portal</p>
+<app-company-shell activeScreen="company-kanban">
+  <!-- Toast Notificación Automática -->
+  <div
+    *ngIf="autoNotificationToast"
+    class="fixed top-6 right-6 z-[80] max-w-md p-4 rounded-xl shadow-xl border bg-white border-[#86EFAC] text-[#111111] flex items-start gap-3 transition-all"
+  >
+    <div class="w-8 h-8 rounded-full bg-[#DCFCE7] flex items-center justify-center flex-shrink-0 text-[#15803D]">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+        <polyline points="22,6 12,13 2,6" />
+      </svg>
+    </div>
+    <div class="flex-1 text-xs">
+      <p class="font-bold text-sm text-[#15803D] mb-0.5">Notificación automática por correo</p>
+      <p class="text-[#4A4540]">{{ autoNotificationToast }}</p>
+    </div>
+    <button (click)="autoNotificationToast = null" class="text-[#9A948C] hover:text-[#111111] p-1 cursor-pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Read-only Banner for Finalized/Closed job (HU14-T13) -->
+  <div *ngIf="isReadOnly" class="p-3.5 bg-[#FFFBEB] border-b border-[#FDE68A] text-xs text-[#92400E] flex items-center justify-between px-6 shadow-sm">
+    <div class="flex items-center gap-2.5">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#92400E]">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+      <span>
+        <strong>Vacante Finalizada (Vista de Solo Lectura):</strong>
+        Esta convocatoria ha sido finalizada. Las tarjetas y estados de los candidatos se conservan de forma inmutable para consulta histórica; no se permiten movimientos ni alteraciones.
+      </span>
+    </div>
+    <span class="font-bold px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">
+      HISTÓRICO
+    </span>
+  </div>
+
+  <!-- Paused Banner -->
+  <div *ngIf="selectedJob?.status === 'paused' && !isReadOnly" class="p-3.5 bg-[#FEF3C7] border-b border-[#FDE68A] text-xs text-[#92400E] flex items-center justify-between px-6 shadow-sm">
+    <div class="flex items-center gap-2.5">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#92400E]">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="10" y1="15" x2="10" y2="9" />
+        <line x1="14" y1="15" x2="14" y2="9" />
+      </svg>
+      <span>
+        <strong>Convocatoria Pausada:</strong>
+        La recepción de nuevos postulantes está bloqueada. Puedes seguir gestionando los candidatos ya recibidos en este tablero.
+      </span>
+    </div>
+    <span class="font-bold px-2.5 py-0.5 rounded-full bg-[#FDE68A] text-[#92400E]">
+      PAUSADA
+    </span>
+  </div>
+
+  <!-- Pending Review Banner -->
+  <div *ngIf="selectedJob?.status === 'pending_review' && !isReadOnly" class="p-3.5 bg-[#FEF9C3] border-b border-[#FEF08A] text-xs text-[#854D0E] flex items-center justify-between px-6 shadow-sm">
+    <div class="flex items-center gap-2.5">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#854D0E]">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+      <span>
+        <strong>En Revisión por Moderación:</strong>
+        Esta vacante está en cola de aprobación por el administrador antes de ser publicada en el portal.
+      </span>
+    </div>
+    <span class="font-bold px-2.5 py-0.5 rounded-full bg-[#FEF08A] text-[#854D0E]">
+      EN REVISIÓN
+    </span>
+  </div>
+
+  <!-- Approved Pending Payment Banner -->
+  <div *ngIf="selectedJob?.status === 'approved_pending_payment' && !isReadOnly" class="p-3.5 bg-[#EEF2FF] border-b border-[#C7D2FE] text-xs text-[#3730A3] flex items-center justify-between px-6 shadow-sm">
+    <div class="flex items-center gap-2.5">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#3730A3]">
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <line x1="2" y1="10" x2="22" y2="10" />
+      </svg>
+      <span>
+        <strong>Oferta Aprobada (Pago pendiente):</strong>
+        Esta oferta fue aprobada por moderación. Se requiere procesar el pago para activarla en el portal.
+      </span>
+    </div>
+    <button (click)="navigate('company-jobs')" class="px-3 py-1 rounded-lg text-xs font-bold bg-[#F2B705] text-[#111111] hover:opacity-90">
+      Ir a Mis Ofertas
+    </button>
+  </div>
+
+  <!-- Rejected by Moderation Banner -->
+  <div *ngIf="selectedJob?.status === 'rejected_by_moderation' && !isReadOnly" class="p-3.5 bg-[#FEF2F2] border-b border-[#FCA5A5] text-xs text-[#991B1B] flex items-center justify-between px-6 shadow-sm">
+    <div class="flex items-center gap-2.5">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#991B1B]">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+      <span>
+        <strong>Oferta No Aprobada:</strong>
+        {{ selectedJob?.moderationReason || 'La vacante no cumple con las políticas de publicación de empleo de la plataforma.' }}
+      </span>
+    </div>
+    <button (click)="navigate('company-create-job')" class="px-3 py-1 rounded-lg text-xs font-bold bg-[#DC2626] text-white hover:opacity-90">
+      Editar y Reenviar
+    </button>
+  </div>
+
+  <!-- Kanban Header Banner -->
+  <div class="border-b bg-white border-[#E8E3D9]">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between flex-wrap gap-4">
+      <div class="flex flex-col gap-1.5 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#9A948C]">Panel Kanban</p>
+          <span class="text-xs text-[#D1C9BC]">•</span>
+          <span class="text-xs font-medium text-[#6B6560]">Oferta activa:</span>
+        </div>
+
+        <div class="flex items-center gap-3 flex-wrap">
+          <!-- Job Selector Dropdown -->
+          <div class="relative inline-flex items-center">
+            <select aria-label="Vacante del tablero" data-testid="kanban-job-select"
+              [ngModel]="selectedJobId"
+              (ngModelChange)="onSelectJob($event)"
+              class="appearance-none text-sm font-bold text-[#111111] bg-white hover:bg-[#F8F7F4] border border-[#E8E3D9] hover:border-[#D1C9BC] rounded-xl pl-3.5 pr-8 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F2B705] cursor-pointer transition-all max-w-[240px] sm:max-w-xs md:max-w-sm truncate"
+            >
+              <option *ngIf="loadingJobs" value="">Cargando vacantes...</option>
+              <option *ngIf="!loadingJobs && jobs.length === 0" value="">Sin vacantes</option>
+              <option *ngFor="let j of jobs" [value]="j.id">
+                {{ j.title }} ({{ getCandidateCountForJob(j.id) }} candidatos)
+              </option>
+            </select>
+            <div class="pointer-events-none absolute right-2.5 text-[#6B6560]">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Job Status Pill -->
+          <span
+            *ngIf="selectedJob"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
+            [style.backgroundColor]="getStatusConfig(selectedJob.status).bg"
+            [style.color]="getStatusConfig(selectedJob.status).text"
+          >
+            <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="getStatusConfig(selectedJob.status).dotColor"></span>
+            {{ getStatusConfig(selectedJob.status).label }}
+          </span>
+
+          <!-- Hire limit badge -->
+          <span
+            class="text-xs font-bold px-3 py-1 rounded-full border whitespace-nowrap"
+            [ngClass]="hiredCount >= hireLimit ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5]' : 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]'"
+          >
+            Cupos: {{ hiredCount }}/{{ hireLimit }} contratados {{ hiredCount >= hireLimit ? '(Completo)' : '' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          (click)="navigate('company-jobs')"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all bg-[#F8F7F4] hover:bg-[#F2EFE9] border border-[#E8E3D9] text-[#4A4540] cursor-pointer"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Mis Ofertas
+        </button>
       </div>
     </div>
+  </div>
+
+  <div class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-6" *ngIf="jobsError || tableroError || (!loadingJobs && jobs.length === 0) || loadingTablero">
+    <div *ngIf="jobsError" class="p-4 rounded-xl border bg-[#FEF2F2] border-[#FCA5A5] flex items-center justify-between gap-4">
+      <p class="text-sm text-[#DC2626]">{{ jobsError }}</p>
+      <button type="button" (click)="cargarVacantes()" class="text-sm font-semibold hover:underline text-[#111111] cursor-pointer">
+        Reintentar
+      </button>
+    </div>
+
+    <div *ngIf="!jobsError && !loadingJobs && jobs.length === 0" class="p-4 rounded-xl border bg-white border-[#E8E3D9]">
+      <p class="text-sm text-[#6B6560]">Aún no tienes vacantes publicadas con postulantes.</p>
+    </div>
+
+    <div *ngIf="tableroError" class="p-4 rounded-xl border bg-[#FEF2F2] border-[#FCA5A5] flex items-center justify-between gap-4">
+      <p class="text-sm text-[#DC2626]">{{ tableroError }}</p>
+      <button type="button" (click)="reintentarTablero()" class="text-sm font-semibold hover:underline text-[#111111] cursor-pointer">
+        Reintentar
+      </button>
+    </div>
+
+    <p *ngIf="loadingTablero" class="text-sm text-[#9A948C]">Cargando postulantes...</p>
+  </div>
+
+  <!-- Board Columns -->
+  <div data-testid="kanban-board" role="region" aria-label="Tablero de candidatos, desplazamiento horizontal" tabindex="0" class="overflow-x-auto max-w-full min-w-0" *ngIf="selectedJob && !tableroError">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+      <div class="flex gap-4" style="min-width: 900px;">
+        <div
+          *ngFor="let col of columns" [attr.data-testid]="'kanban-column-' + col.id"
+          class="flex-1 flex flex-col min-w-[200px] rounded-xl overflow-hidden transition-all"
+          [style.boxShadow]="'inset 0 3px 0 0 ' + col.dot"
+          (dragover)="onDragOver(col.id, $event)"
+          (dragleave)="onDragLeave(col.id, $event)"
+          (drop)="onDrop(col.id, $event)"
+        >
+          <!-- Column Header -->
+          <div
+            class="px-3 py-2.5 mb-3 flex items-center justify-between transition-all rounded-b-xl"
+            [style.backgroundColor]="dragOverCol === col.id ? col.dot + '22' : col.dot + '0F'"
+            [style.outline]="dragOverCol === col.id ? '2px dashed ' + col.dot : 'none'"
+            style="outline-offset: -2px;"
+          >
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full" [style.backgroundColor]="col.dot"></span>
+              <span class="text-xs font-bold" [style.color]="col.color">{{ col.label }}</span>
+            </div>
+            <span
+              class="text-[11px] font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center"
+              [style.backgroundColor]="col.dot + '28'"
+              [style.color]="col.color"
+            >
+              {{ col.id === 'hired' ? (hiredCount + '/' + hireLimit) : getCandidates(col.id).length }}
+            </span>
+          </div>
+
+          <!-- Drop zone hint -->
+          <div
+            *ngIf="dragOverCol === col.id"
+            class="rounded-xl border-2 border-dashed mb-3 h-16 flex items-center justify-center"
+            [style.borderColor]="col.dot"
+            [style.backgroundColor]="col.dot + '11'"
+          >
+            <p class="text-xs font-semibold" [style.color]="col.color">Soltar aquí</p>
+          </div>
+
+          <!-- Cards Stack -->
+          <div class="flex flex-col gap-2 flex-1">
+            <!-- Empty column hint -->
+            <div
+              *ngIf="getCandidates(col.id).length === 0"
+              class="h-24 flex flex-col items-center justify-center text-center p-3 rounded-xl border border-dashed border-[#E8E3D9] text-[#9A948C] bg-white/40"
+            >
+              <p class="text-xs font-medium">Sin candidatos</p>
+            </div>
+
+            <div
+              *ngFor="let cand of getCandidates(col.id)" [attr.data-testid]="'kanban-card-' + cand.id"
+              [attr.draggable]="!isCandidateLocked(cand)"
+              (dragstart)="onDragStart(cand, $event)"
+              (dragend)="onDragEnd()"
+              (click)="openProfile(cand, $event)"
+              class="rounded-xl border p-3 transition-all select-none group bg-white border-[#E8E3D9] hover:border-[#F2B705] hover:shadow-md"
+              [class.cursor-grab]="!isCandidateLocked(cand)"
+              [class.active:cursor-grabbing]="!isCandidateLocked(cand)"
+              [class.cursor-pointer]="isCandidateLocked(cand)"
+              [class.opacity-90]="isCandidateLocked(cand)"
+              [class.bg-[#FAF8F5]]="isCandidateLocked(cand)"
+              [class.opacity-40]="draggingId === cand.id"
+            >
+              <!-- Card Header -->
+              <div class="flex items-start gap-2.5">
+                <div
+                  class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 text-[#111111]"
+                  [style.backgroundColor]="avatarBg(cand.name)"
+                >
+                  {{ initials(cand.name) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold truncate text-[#111111]">{{ cand.name }}</p>
+                  <p *ngIf="cand.experience" class="text-[11px] mt-0.5 truncate text-[#9A948C]">{{ cand.experience }}</p>
+                  <p *ngIf="!cand.experience && cand.appliedDate" class="text-[11px] mt-0.5 text-[#9A948C]">Postulado {{ cand.appliedDate }}</p>
+                </div>
+                <span
+                  *ngIf="cand.match > 0"
+                  class="text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                  [style.backgroundColor]="matchColor(cand.match).bg"
+                  [style.color]="matchColor(cand.match).text"
+                >
+                  {{ cand.match }}%
+                </span>
+              </div>
+
+              <!-- Skills tags -->
+              <div *ngIf="cand.skills && cand.skills.length > 0" class="flex flex-wrap gap-1 mt-2">
+                <span
+                  *ngFor="let s of cand.skills.slice(0, 3)"
+                  class="text-[10px] px-1.5 py-0.5 rounded"
+                  [ngClass]="isSkillMatched(s) ? 'bg-[#DCFCE7] text-[#15803D] font-medium' : 'bg-[#F5F0E8] text-[#6B6560]'"
+                >
+                  {{ s }}
+                </span>
+                <span
+                  *ngIf="cand.skills.length > 3"
+                  class="text-[10px] px-1.5 py-0.5 rounded bg-[#F5F0E8] text-[#9A948C]"
+                >
+                  +{{ cand.skills.length - 3 }}
+                </span>
+              </div>
+
+              <!-- Rejection reason if in rejected column -->
+              <p
+                *ngIf="cand.column === 'rejected' && cand.rejectReason"
+                class="text-[10px] mt-2 truncate italic text-[#EF4444]"
+              >
+                Motivo: {{ cand.rejectReason }}
+              </p>
+
+              <!-- Locked Final State Indicator -->
+              <div
+                *ngIf="isCandidateLocked(cand)"
+                class="flex items-center gap-1 mt-2 text-[10px] font-semibold"
+                [ngClass]="cand.column === 'hired' ? 'text-[#15803D]' : 'text-[#DC2626]'"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <span>Estado final inmutable (bloqueado)</span>
+              </div>
+
+              <!-- Footer with date & quick reject / drag handle -->
+              <div class="flex items-center justify-between mt-2.5">
+                <span class="text-[10px] text-[#C4BDB5]">
+                  {{ cand.appliedDate }}
+                </span>
+                <div class="flex items-center gap-1" (click)="$event.stopPropagation()">
+                  <!-- Quick reject button on hover (disabled if already rejected or hired) -->
+                  <button
+                    *ngIf="puedeRechazar(cand)"
+                    type="button"
+                    (click)="openRejectModal(cand, $event)"
+                    class="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[#EF4444] hover:bg-[#FEF2F2]"
+                    title="Rechazar candidato"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                    </svg>
+                  </button>
+
+                  <!-- Drag handle icon (hidden if locked) -->
+                  <svg *ngIf="!isCandidateLocked(cand)" width="12" height="12" viewBox="0 0 12 12" fill="none" class="text-[#D1CBC3]">
+                    <circle cx="4" cy="3" r="1" fill="currentColor" />
+                    <circle cx="8" cy="3" r="1" fill="currentColor" />
+                    <circle cx="4" cy="6" r="1" fill="currentColor" />
+                    <circle cx="8" cy="6" r="1" fill="currentColor" />
+                    <circle cx="4" cy="9" r="1" fill="currentColor" />
+                    <circle cx="8" cy="9" r="1" fill="currentColor" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty column placeholder -->
+            <div
+              *ngIf="getCandidates(col.id).length === 0 && dragOverCol !== col.id"
+              class="rounded-xl border-2 border-dashed h-20 flex items-center justify-center border-[#E8E3D9]"
+            >
+              <p class="text-xs text-[#C4BDB5]">Sin candidatos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Candidate Profile Drawer (Side Modal) -->
+  <div
+    *ngIf="selectedCandidate"
+    class="fixed inset-0 z-50 flex items-center justify-end bg-black/45"
+    (click)="closeProfile()"
+  >
+    <div
+      class="h-full w-full max-w-md overflow-y-auto shadow-2xl bg-white"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Drawer Header -->
+      <div class="sticky top-0 z-10 border-b px-6 py-4 flex items-center justify-between bg-white border-[#E8E3D9]">
+        <p class="text-sm font-bold text-[#111111]">Perfil del postulante</p>
+        <button
+          type="button"
+          (click)="closeProfile()"
+          class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors text-[#9A948C] hover:bg-[#F5F0E8] hover:text-[#111111]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Loading State HU-17 -->
+      <div *ngIf="loadingPerfil" class="py-20 text-center text-[#9A948C]">
+        <div class="inline-block animate-spin w-8 h-8 border-3 border-[#F2B705] border-t-transparent rounded-full mb-3"></div>
+        <p class="text-sm font-medium">Cargando perfil del postulante...</p>
+      </div>
+
+      <!-- HU-17: Vista Oficial de Perfil Real desde API -->
+      <div *ngIf="perfilPostulante && !loadingPerfil" class="p-6 space-y-6">
+        <!-- Identity -->
+        <div class="flex items-start gap-4">
+          <div
+            class="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0 text-[#111111]"
+            [style.backgroundColor]="avatarBg(perfilPostulante.candidato.nombre)"
+          >
+            {{ initials(perfilPostulante.candidato.nombre + ' ' + perfilPostulante.candidato.apellidos) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-lg font-bold text-[#111111]">
+              {{ perfilPostulante.candidato.nombre }} {{ perfilPostulante.candidato.apellidos }}
+            </h2>
+            <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8]">
+                {{ perfilPostulante.postulacion.estado.nombre }}
+              </span>
+              <span *ngIf="perfilPostulante.candidato.busca_primer_empleo" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FEF9C3] text-[#854D0E]">
+                Primer empleo
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Box (Private data warning) -->
+        <div class="rounded-xl border p-4 space-y-3 bg-[#FFFBEB] border-[#FDE68A]">
+          <div class="flex items-center gap-2 mb-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-[#D97706]">
+              Datos de contacto (Solo visibles para la empresa)
+            </p>
+          </div>
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center gap-3">
+              <span class="w-6 h-6 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#D97706]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+              </span>
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9A948C]">Correo</p>
+                <p class="text-sm font-medium text-[#111111]">{{ perfilPostulante.candidato.correo }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-6 h-6 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#D97706]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+              </span>
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9A948C]">Teléfono / Celular</p>
+                <p class="text-sm font-medium text-[#111111]">{{ perfilPostulante.candidato.celular || 'No registrado' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Requisitos obligatorios de la vacante (Must-Have) -->
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wide text-[#9A948C] mb-2">Habilidades obligatorias de la vacante</p>
+          <div class="space-y-1.5">
+            <div *ngFor="let s of perfilPostulante.requisitos_vacante.must_have.posee"
+              class="flex items-center justify-between px-3 py-2 rounded-xl text-xs bg-[#DCFCE7]/60 border border-[#86EFAC]">
+              <span class="font-medium text-[#111111]">{{ s.nombre }}</span>
+              <span class="text-[11px] font-bold text-[#15803D] flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Lo cumple
+              </span>
+            </div>
+            <div *ngFor="let s of perfilPostulante.requisitos_vacante.must_have.faltan"
+              class="flex items-center justify-between px-3 py-2 rounded-xl text-xs bg-[#FEF2F2] border border-[#FCA5A5]">
+              <span class="font-medium text-[#111111]">{{ s.nombre }}</span>
+              <span class="text-[11px] font-bold text-[#DC2626] flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                No lo cumple
+              </span>
+            </div>
+          </div>
+          <p *ngIf="perfilPostulante.requisitos_vacante.must_have.posee.length === 0 && perfilPostulante.requisitos_vacante.must_have.faltan.length === 0"
+            class="text-xs px-3 py-2.5 rounded-xl border border-dashed text-[#9A948C] border-[#E8E3D9]">
+            La vacante no declaró habilidades obligatorias.
+          </p>
+        </div>
+
+        <!-- Requisitos deseables (Nice-to-Have) -->
+        <div *ngIf="perfilPostulante.requisitos_vacante.nice_to_have.length > 0">
+          <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Habilidades deseables</p>
+          <div class="flex flex-wrap gap-1.5">
+            <span *ngFor="let s of perfilPostulante.requisitos_vacante.nice_to_have"
+              class="text-[11px] font-medium px-2.5 py-1 rounded-full border"
+              [ngClass]="s.posee ? 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]' : 'bg-[#F8F7F4] border-[#E8E3D9] text-[#9A948C]'">
+              {{ s.nombre }}<span *ngIf="s.posee"> · Lo cumple</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Formación Académica -->
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Formación Académica</p>
+          <div *ngIf="perfilPostulante.estudios.length > 0; else sinEstudiosApi" class="space-y-2">
+            <div *ngFor="let est of perfilPostulante.estudios" class="p-3 rounded-xl border bg-[#F8F7F4] border-[#E8E3D9]">
+              <p class="text-xs font-bold text-[#111111]">{{ est.carrera?.nombre || 'Carrera no registrada' }}</p>
+              <p class="text-[11px] text-[#6B6560]">{{ est.institucion?.nombre || 'Institución no registrada' }} · {{ est.tipo_estudio.nombre || 'Tipo de estudio no registrado' }}</p>
+              <p class="text-[10px] text-[#9A948C] mt-1">
+                Estado: <strong class="font-semibold capitalize text-[#4A4540]">{{ est.estado ? est.estado.replace('_', ' ') : 'No registrado' }}</strong>
+                <span *ngIf="est.fecha_inicio"> · {{ est.fecha_inicio | date:'MMM yyyy' }} - {{ est.fecha_fin ? (est.fecha_fin | date:'MMM yyyy') : 'Al presente' }}</span>
+              </p>
+            </div>
+          </div>
+          <ng-template #sinEstudiosApi>
+            <p class="text-xs px-3 py-2 rounded-xl border border-dashed text-[#9A948C] border-[#E8E3D9]">Sin estudios registrados.</p>
+          </ng-template>
+        </div>
+
+        <!-- Experiencia Laboral -->
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Experiencia Laboral</p>
+          <div *ngIf="perfilPostulante.experiencias.length > 0; else sinExpApi" class="space-y-2">
+            <div *ngFor="let exp of perfilPostulante.experiencias" class="p-3 rounded-xl border bg-[#F8F7F4] border-[#E8E3D9]">
+              <p class="text-xs font-bold text-[#111111]">{{ exp.puesto.nombre }}</p>
+              <p class="text-[11px] text-[#6B6560]">{{ exp.organizacion.nombre }} · {{ exp.nivel.nombre }}</p>
+              <p class="text-[10px] text-[#9A948C] mt-0.5">
+                {{ exp.fecha_inicio | date:'MMM yyyy' }} - {{ exp.fecha_fin ? (exp.fecha_fin | date:'MMM yyyy') : 'Al presente' }}
+              </p>
+              <p *ngIf="exp.descripcion" class="text-xs text-[#4A4540] mt-1.5 leading-relaxed">{{ exp.descripcion }}</p>
+            </div>
+          </div>
+          <ng-template #sinExpApi>
+            <p class="text-xs px-3 py-2 rounded-xl border border-dashed text-[#9A948C] border-[#E8E3D9]">
+              {{ perfilPostulante.candidato.busca_primer_empleo ? 'En búsqueda de primer empleo (sin experiencia previa).' : 'Sin experiencia laboral registrada.' }}
+            </p>
+          </ng-template>
+        </div>
+
+        <!-- Idiomas -->
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Idiomas</p>
+          <div *ngIf="perfilPostulante.idiomas.length > 0; else sinIdiomasPerfil" class="space-y-1.5">
+            <div *ngFor="let idm of perfilPostulante.idiomas" class="px-3 py-2 rounded-xl border bg-[#F8F7F4] border-[#E8E3D9] flex items-center justify-between">
+              <span class="text-xs font-semibold text-[#111111]">{{ idm.idioma.nombre }}</span>
+              <span class="text-[11px] text-[#6B6560]">Oral: <strong>{{ idm.nivel_oral }}</strong> · Escrito: <strong>{{ idm.nivel_escrito }}</strong></span>
+            </div>
+          </div>
+          <ng-template #sinIdiomasPerfil>
+            <p class="text-xs px-3 py-2 rounded-xl border border-dashed text-[#9A948C] border-[#E8E3D9]">Sin idiomas registrados.</p>
+          </ng-template>
+        </div>
+
+        <!-- Habilidades del postulante -->
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wide mb-2 text-[#9A948C]">Habilidades del postulante</p>
+          <div class="flex flex-wrap gap-1.5">
+            <span *ngFor="let s of perfilPostulante.habilidades.tecnicas" class="text-[11px] font-medium px-2.5 py-1 rounded-full border bg-[#F0FDF4] border-[#86EFAC] text-[#15803D]">
+              {{ s.nombre }}
+            </span>
+            <span *ngFor="let s of perfilPostulante.habilidades.blandas" class="text-[11px] font-medium px-2.5 py-1 rounded-full border bg-[#F8F7F4] border-[#E8E3D9] text-[#4A4540]">
+              {{ s.nombre }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col gap-2 pt-2 border-t border-[#E8E3D9]">
+          <button
+            *ngIf="!isCandidateLocked(selectedCandidate) && getNextCol(selectedCandidate.column)"
+            type="button"
+            (click)="advanceCandidate(selectedCandidate)"
+            data-testid="kanban-advance"
+            [textContent]="getNextColLabel(selectedCandidate.column)"
+            [attr.aria-label]="getNextColLabel(selectedCandidate.column)"
+            [disabled]="procesandoMovimiento"
+            class="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all bg-[#F2B705] text-[#111111] hover:opacity-90 shadow-sm"
+          >
+          </button>
+          <button
+            *ngIf="puedeRechazar(selectedCandidate)"
+            type="button"
+            (click)="openRejectModal(selectedCandidate, $event)"
+            class="w-full py-2.5 rounded-xl text-sm font-semibold border cursor-pointer transition-colors border-[#FCA5A5] text-[#DC2626] hover:bg-[#FEF2F2]"
+          >
+            Rechazar candidato
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Error al cargar el perfil -->
+      <div *ngIf="perfilError && !loadingPerfil" class="p-6 space-y-3 text-center">
+        <p class="text-sm text-[#DC2626]">{{ perfilError }}</p>
+        <button
+          type="button"
+          (click)="openProfile(selectedCandidate)"
+          class="text-sm font-semibold hover:underline text-[#111111] cursor-pointer"
+        >
+          Reintentar
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <div
+    *ngIf="selectedJobId"
+    class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 flex justify-end"
+  >
+    <button
+      type="button"
+      data-testid="kanban-history"
+      (click)="abrirHistorial()"
+      [disabled]="procesandoMovimiento"
+      class="px-4 py-2.5 rounded-xl text-sm font-semibold border border-[#E8E3D9] bg-white text-[#111111] hover:bg-[#F8F7F4] disabled:opacity-50"
+    >
+      Ver historial de postulaciones
+    </button>
+  </div>
+
+  <!-- Reject Reason Modal -->
+  <div
+    *ngIf="rejectTarget"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50"
+    (click)="closeRejectModal()"
+  >
+    <div
+      class="w-full max-w-sm max-h-[90dvh] overflow-y-auto rounded-2xl border p-6 shadow-2xl bg-white border-[#E2E8F0]"
+      appAccessibleDialog aria-label="Rechazar candidato" (dialogDismiss)="closeRejectModal()" (click)="$event.stopPropagation()"
+    >
+      <div class="w-11 h-11 rounded-2xl flex items-center justify-center mb-4 bg-[#FEE2E2]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+        </svg>
+      </div>
+
+      <h3 class="text-base font-bold mb-1 text-[#111111]">Rechazar candidato</h3>
+      <p class="text-sm mb-4 text-[#64748B]">
+        <strong class="text-[#111111]">{{ rejectTarget.name }}</strong>
+      </p>
+
+      <label class="text-sm font-medium block mb-1.5 text-[#111111]">
+        Motivo del rechazo <span class="text-[#DC2626]">*</span>
+      </label>
+      <select
+        *ngIf="motivosRechazo.length > 0"
+        [(ngModel)]="selectedMotivoId"
+        data-testid="kanban-reject-reason"
+        [disabled]="procesandoMovimiento"
+        (ngModelChange)="rejectError = ''"
+        class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none mb-3 cursor-pointer bg-white"
+        [style.borderColor]="rejectError && !selectedMotivoId ? '#DC2626' : '#E2E8F0'"
+      >
+        <option [ngValue]="null">Selecciona un motivo…</option>
+        <option *ngFor="let r of motivosRechazo" [ngValue]="r.id">{{ r.motivo }}</option>
+      </select>
+
+      <p *ngIf="rejectError" class="text-xs mb-3 text-[#DC2626]">{{ rejectError }}</p>
+
+      <div class="flex gap-3">
+        <button
+          type="button"
+          (click)="confirmReject()"
+          data-testid="kanban-confirm-reject"
+          [disabled]="procesandoMovimiento || !selectedMotivoId"
+          class="flex-1 h-10 rounded-xl text-sm font-semibold transition-colors cursor-pointer bg-[#DC2626] text-white hover:bg-[#B91C1C]"
+        >
+          {{ procesandoMovimiento
+            ? 'Procesando...'
+            : 'Confirmar rechazo' }}
+        </button>
+        <button
+          type="button"
+          (click)="closeRejectModal()"
+          [disabled]="procesandoMovimiento"
+          class="flex-1 h-10 rounded-xl text-sm font-semibold border cursor-pointer transition-colors border-[#E2E8F0] text-[#111111] hover:bg-[#F8FAFC]"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historial empresarial QA-09 -->
+  <div
+    *ngIf="mostrarHistorial"
+    class="fixed inset-0 z-[70] flex justify-end bg-black/40"
+    (click)="cerrarHistorial()"
+  >
+    <section
+      role="dialog"
+      aria-modal="true"
+      appAccessibleDialog (dialogDismiss)="cerrarHistorial()" aria-labelledby="kanban-history-title"
+      data-testid="kanban-history-panel"
+      class="w-full max-w-2xl h-full overflow-y-auto bg-[#F8F7F4] shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="sticky top-0 z-10 bg-white border-b border-[#E8E3D9] p-5 flex items-center justify-between gap-3">
+        <div>
+          <h2 id="kanban-history-title" class="font-bold text-lg text-[#111111]">
+            Historial de postulaciones
+          </h2>
+          <p class="text-sm text-[#6B6560]">
+            {{ historial?.vacante?.titulo || jobTitle }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          aria-label="Cerrar historial"
+          data-testid="kanban-close-history"
+          (click)="cerrarHistorial()"
+          class="px-3 py-2 rounded-lg border border-[#E8E3D9] text-sm"
+        >
+          Cerrar
+        </button>
+      </header>
+
+      <div class="p-5 space-y-4">
+
+        <p
+          *ngIf="cargandoHistorial"
+          role="status"
+          class="text-sm text-[#6B6560]"
+        >
+          Cargando historial...
+        </p>
+
+        <div
+          *ngIf="historialError"
+          role="alert"
+          class="bg-[#FEF2F2] border border-[#FCA5A5] rounded-xl p-4"
+        >
+          <p class="text-sm text-[#DC2626]">
+            {{ historialError }}
+          </p>
+
+          <button
+            type="button"
+            (click)="abrirHistorial()"
+            class="mt-2 underline text-sm font-semibold"
+          >
+            Reintentar
+          </button>
+        </div>
+
+        <ng-container *ngIf="historial as datos">
+
+          <div class="grid grid-cols-3 gap-2 sm:gap-3">
+            <div class="bg-white border border-[#E8E3D9] rounded-xl p-3">
+              <p class="text-xs text-[#6B6560]">Postulantes</p>
+              <p class="text-xl font-bold">{{ datos.postulaciones.length }}</p>
+            </div>
+
+            <div class="bg-white border border-[#E8E3D9] rounded-xl p-3">
+              <p class="text-xs text-[#6B6560]">Contratados</p>
+              <p class="text-xl font-bold text-[#15803D]">
+                {{ datos.vacante.contratados }}
+              </p>
+            </div>
+
+            <div class="bg-white border border-[#E8E3D9] rounded-xl p-3">
+              <p class="text-xs text-[#6B6560]">Cupos</p>
+              <p class="text-xl font-bold">
+                {{ datos.vacante.cupos_disponibles }}
+              </p>
+            </div>
+          </div>
+
+          <p
+            *ngIf="datos.postulaciones.length === 0"
+            class="p-4 rounded-xl border border-[#E8E3D9] bg-white text-sm text-[#6B6560]"
+          >
+            Todavía no existen postulaciones registradas.
+          </p>
+
+          <article
+            *ngFor="let postulacion of datos.postulaciones"
+            [attr.data-testid]="'history-application-' + postulacion.id"
+            class="bg-white rounded-xl border border-[#E8E3D9] p-4"
+          >
+            <div class="flex flex-wrap justify-between gap-2">
+              <div>
+                <h3 class="font-bold text-[#111111]">
+                  {{ postulacion.candidato.nombre }}
+                  {{ postulacion.candidato.apellidos }}
+                </h3>
+
+                <p class="text-xs text-[#6B6560]">
+                  Postulación #{{ postulacion.id }}
+                </p>
+              </div>
+
+              <span class="text-xs font-semibold rounded-full bg-[#F8F7F4] px-3 py-1">
+                {{ postulacion.retirada ? 'Retirada' : postulacion.estado.nombre }}
+              </span>
+            </div>
+
+            <p class="text-xs text-[#6B6560] mt-3">
+              Fecha de postulación:
+              {{ (postulacion.fecha_postulacion | date:'dd/MM/yyyy HH:mm') || 'No registrada' }}
+            </p>
+
+            <div
+              *ngIf="postulacion.retirada"
+              class="mt-3 p-3 bg-[#F1F5F9] rounded-lg text-xs"
+            >
+              <p>Última etapa: {{ postulacion.estado.nombre }}</p>
+              <p>
+                Fecha de retiro:
+                {{ (postulacion.retirada_en | date:'dd/MM/yyyy HH:mm') || 'No registrada' }}
+              </p>
+            </div>
+
+            <div class="mt-4 border-t border-[#E8E3D9] pt-3">
+              <h4 class="text-xs uppercase font-bold text-[#6B6560] mb-3">
+                Movimientos registrados
+              </h4>
+
+              <p
+                *ngIf="postulacion.movimientos.length === 0"
+                class="text-xs text-[#6B6560]"
+              >
+                Sin movimientos adicionales registrados.
+              </p>
+
+              <ol class="border-l-2 border-[#E8E3D9] ml-2 pl-4 space-y-4">
+                <li
+                  *ngFor="let movimiento of postulacion.movimientos"
+                  class="relative"
+                  [attr.data-testid]="'history-movement-' + movimiento.id"
+                >
+                  <span class="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-[#F2B705]"></span>
+
+                  <p class="text-sm font-semibold">
+                    {{ movimiento.estado.nombre }}
+                  </p>
+
+                  <p class="text-xs text-[#6B6560]">
+                    {{ (movimiento.fecha_cambio | date:'dd/MM/yyyy HH:mm') || 'Fecha no registrada' }}
+                  </p>
+
+                  <p
+                    *ngIf="movimiento.motivo_rechazo"
+                    class="text-xs text-[#DC2626] mt-1"
+                  >
+                    Motivo: {{ movimiento.motivo_rechazo }}
+                  </p>
+                </li>
+              </ol>
+            </div>
+          </article>
+        </ng-container>
+      </div>
+    </section>
+  </div>
+
+</app-company-shell>

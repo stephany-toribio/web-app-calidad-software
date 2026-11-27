@@ -1,6 +1,144 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Admin Audit Log</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Registro de auditoría del sistema - Creo Portal</p>
+<app-admin-shell activeScreen="admin-audit">
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold tracking-tight text-[#111111]">Auditoría</h1>
+    <p class="text-sm mt-1 text-[#64748B]">Bitácora de acciones administrativas · {{ entries.length }} registros</p>
+  </div>
+
+  <!-- Filters Row -->
+  <div class="flex flex-col sm:flex-row gap-4 mb-6 flex-wrap items-start sm:items-center justify-between">
+    <!-- Action Type Filter Tabs -->
+    <div class="flex rounded-xl border overflow-x-auto border-[#E2E8F0] shadow-sm bg-white" style="scrollbar-width: none;">
+      <button
+        type="button"
+        (click)="filter = 'all'"
+        class="flex-shrink-0 h-10 px-3.5 text-xs font-semibold border-r transition-colors cursor-pointer border-[#E2E8F0]"
+        [style.backgroundColor]="filter === 'all' ? '#111111' : '#FFFFFF'"
+        [style.color]="filter === 'all' ? '#FFFFFF' : '#64748B'"
+      >
+        Todos
+      </button>
+
+      <button
+        *ngFor="let t of actionTypes; let i = index"
+        type="button"
+        (click)="filter = t"
+        class="flex-shrink-0 h-10 px-3.5 text-xs font-semibold transition-colors cursor-pointer"
+        [class.border-r]="i < actionTypes.length - 1"
+        style="border-color: #E2E8F0;"
+        [style.backgroundColor]="filter === t ? getActionStyle(t).bg : '#FFFFFF'"
+        [style.color]="filter === t ? getActionStyle(t).text : '#64748B'"
+      >
+        {{ getActionLabel(t) }}
+      </button>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="flex items-center gap-2 flex-wrap sm:ml-auto">
+      <label class="text-xs font-medium text-[#64748B] flex-shrink-0">Desde</label>
+      <input
+        type="date"
+        [(ngModel)]="dateFrom"
+        class="h-10 px-3 rounded-xl border text-sm outline-none bg-white border-[#E2E8F0] text-[#111111]"
+        onfocus="this.style.borderColor='#F2B705';"
+        onblur="this.style.borderColor='#E2E8F0';"
+      />
+
+      <label class="text-xs font-medium text-[#64748B] flex-shrink-0">Hasta</label>
+      <input
+        type="date"
+        [(ngModel)]="dateTo"
+        class="h-10 px-3 rounded-xl border text-sm outline-none bg-white border-[#E2E8F0] text-[#111111]"
+        onfocus="this.style.borderColor='#F2B705';"
+        onblur="this.style.borderColor='#E2E8F0';"
+      />
+
+      <button
+        *ngIf="dateFrom || dateTo"
+        type="button"
+        (click)="clearDates()"
+        class="h-10 px-3 rounded-xl border text-xs font-medium transition-colors cursor-pointer border-[#E2E8F0] text-[#94A3B8] hover:text-[#111111] bg-white"
+      >
+        Limpiar
+      </button>
+    </div>
+  </div>
+
+  <!-- Audit Table -->
+  <div class="bg-white rounded-2xl border overflow-hidden border-[#E2E8F0] shadow-sm">
+    <!-- Header (Desktop) -->
+    <div
+      class="hidden xl:grid gap-4 px-6 py-3 border-b text-xs font-semibold uppercase tracking-wider bg-[#FAFAFA] text-[#94A3B8] border-[#F1F5F9]"
+      style="grid-template-columns: 1.5fr 1.4fr 1fr 1.6fr 1.6fr;"
+    >
+      <span>Usuario</span>
+      <span>Fecha / Hora</span>
+      <span>Tipo</span>
+      <span>Valor anterior</span>
+      <span>Valor nuevo</span>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredEntries.length === 0" class="py-16 text-center">
+      <p class="text-sm font-semibold text-[#111111]">Sin registros con este filtro</p>
+      <p class="text-xs mt-1 text-[#94A3B8]">Prueba seleccionando "Todos"</p>
+    </div>
+
+    <!-- Rows -->
+    <div
+      *ngFor="let entry of filteredEntries; let idx = index; trackBy: trackById"
+      class="px-5 xl:px-6 py-4 border-b last:border-0 flex flex-col xl:grid xl:items-start gap-2 xl:gap-4 transition-colors hover:bg-[#FAFAF8]"
+      [style.backgroundColor]="idx % 2 === 1 ? '#FAFAFA' : '#FFFFFF'"
+      style="grid-template-columns: 1.5fr 1.4fr 1fr 1.6fr 1.6fr; border-color: #F1F5F9;"
+    >
+      <!-- Usuario / Actor -->
+      <div>
+        <p class="text-sm font-semibold text-[#111111]">{{ entry.actor }}</p>
+        <p class="text-xs mt-0.5 xl:hidden text-[#94A3B8]">{{ entry.datetime }}</p>
+        <p class="text-xs font-medium mt-1 xl:hidden text-[#4B5563]">{{ entry.action }}</p>
+      </div>
+
+      <!-- Fecha / Hora & Acción (Desktop) -->
+      <div class="hidden xl:block">
+        <p class="text-sm text-[#64748B]">{{ entry.datetime }}</p>
+        <p class="text-xs mt-0.5 font-medium text-[#111111]">{{ entry.action }}</p>
+      </div>
+
+      <!-- Tipo Badge -->
+      <div>
+        <span
+          class="text-[11px] font-bold px-2.5 py-1 rounded-full inline-block"
+          [style.backgroundColor]="getActionStyle(entry.actionType).bg"
+          [style.color]="getActionStyle(entry.actionType).text"
+        >
+          {{ getActionLabel(entry.actionType) }}
+        </span>
+      </div>
+
+      <!-- Valor Anterior -->
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[10px] font-semibold uppercase tracking-wide xl:hidden text-[#CBD5E1]">Antes</span>
+        <span
+          class="text-xs leading-snug"
+          [style.color]="entry.before === '—' ? '#CBD5E1' : '#4B5563'"
+          [class.italic]="entry.before === '—'"
+        >
+          {{ entry.before }}
+        </span>
+      </div>
+
+      <!-- Valor Nuevo -->
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[10px] font-semibold uppercase tracking-wide xl:hidden text-[#CBD5E1]">Después</span>
+        <span class="text-xs leading-snug text-[#4B5563]">
+          {{ entry.after }}
+        </span>
       </div>
     </div>
+  </div>
+
+  <!-- Table Footer Notice -->
+  <p class="text-xs mt-4 text-center text-[#94A3B8]">
+    Los registros de auditoría son de solo lectura. Retención: 12 meses.
+  </p>
+</app-admin-shell>

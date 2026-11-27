@@ -1,0 +1,221 @@
+<app-company-shell activeScreen="company-profile">
+
+  <main class="profile-container">
+
+    <header class="profile-heading">
+      <span class="eyebrow">MI ORGANIZACIÓN</span>
+      <h1>Perfil de empresa</h1>
+      <p>Consulta y actualiza la información de tu organización.</p>
+    </header>
+
+    <p *ngIf="cargando" role="status">
+      Cargando perfil empresarial...
+    </p>
+
+    <section *ngIf="errorCarga" class="alert-error" role="alert">
+      <p>{{ errorCarga }}</p>
+      <button type="button"
+              class="button-secondary"
+              (click)="cargarPerfil()">
+        Reintentar
+      </button>
+    </section>
+
+    <section
+      *ngIf="empresa && !cargando && !errorCarga"
+      class="profile-card">
+
+      <div class="identity">
+        <div class="avatar">{{ iniciales }}</div>
+
+        <div>
+          <h2>{{ empresa.razon_social }}</h2>
+          <p>{{ empresa.correo }}</p>
+        </div>
+      </div>
+
+      <form (ngSubmit)="guardar()" novalidate>
+
+        <fieldset [disabled]="guardando">
+
+          <div class="form-grid">
+
+            <div class="field">
+              <label for="empresa-razon-social">
+                Razón social
+              </label>
+
+              <input
+                id="empresa-razon-social"
+                name="razon_social"
+                data-testid="empresa-razon-social"
+                [(ngModel)]="formulario.razon_social"
+                maxlength="255"
+                required>
+
+              <small class="field-error">
+                {{ errores['razon_social'] }}
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="empresa-ruc">RUC</label>
+
+              <input
+                id="empresa-ruc"
+                name="ruc"
+                data-testid="empresa-ruc"
+                [(ngModel)]="formulario.ruc"
+                inputmode="numeric"
+                maxlength="11"
+                required>
+
+              <small class="field-error">
+                {{ errores['ruc'] }}
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="empresa-encargado">
+                Encargado de la empresa
+              </label>
+
+              <input
+                id="empresa-encargado"
+                name="encargado_empresa"
+                data-testid="empresa-encargado"
+                [(ngModel)]="formulario.encargado_empresa"
+                maxlength="255"
+                required>
+
+              <small class="field-error">
+                {{ errores['encargado_empresa'] }}
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="empresa-sector">Sector</label>
+
+              <select
+                id="empresa-sector"
+                name="sector"
+                data-testid="empresa-sector"
+                [(ngModel)]="formulario.sector"
+                required>
+
+                <option value="">Selecciona un sector</option>
+
+                <option *ngFor="let sector of sectores"
+                        [value]="sector">
+                  {{ sector }}
+                </option>
+
+              </select>
+
+              <small class="field-error">
+                {{ errores['sector'] }}
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="empresa-correo">
+                Correo electrónico
+              </label>
+
+              <input
+                id="empresa-correo"
+                type="email"
+                [value]="empresa.correo"
+                readonly>
+
+              <small class="help">
+                El correo pertenece a tu cuenta de acceso.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="empresa-web">Sitio web</label>
+
+              <input
+                id="empresa-web"
+                name="sitio_web"
+                type="url"
+                data-testid="empresa-web"
+                [(ngModel)]="formulario.sitio_web"
+                maxlength="255"
+                placeholder="https://">
+
+              <small class="field-error">
+                {{ errores['sitio_web'] }}
+              </small>
+            </div>
+
+            <div class="field full-width">
+              <label for="empresa-descripcion">
+                Descripción de la empresa
+              </label>
+
+              <textarea
+                id="empresa-descripcion"
+                name="descripcion"
+                data-testid="empresa-descripcion"
+                [(ngModel)]="formulario.descripcion"
+                maxlength="250"
+                rows="5">
+              </textarea>
+
+              <small class="help">
+                {{ formulario.descripcion.length }}/250 caracteres
+              </small>
+
+              <small class="field-error">
+                {{ errores['descripcion'] }}
+              </small>
+            </div>
+
+          </div>
+
+        </fieldset>
+
+        <div *ngIf="errores['api']"
+             class="alert-error"
+             role="alert">
+          {{ errores['api'] }}
+        </div>
+
+        <div *ngIf="mensajeExito"
+             class="alert-success"
+             role="status"
+             data-testid="empresa-perfil-exito">
+          {{ mensajeExito }}
+        </div>
+
+        <div class="form-actions">
+
+          <button
+            type="button"
+            class="button-secondary"
+            [disabled]="guardando"
+            (click)="cancelar()">
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="button-primary"
+            data-testid="empresa-guardar"
+            [disabled]="guardando">
+
+            {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </main>
+
+</app-company-shell>

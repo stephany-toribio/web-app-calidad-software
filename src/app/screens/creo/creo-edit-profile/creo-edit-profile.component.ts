@@ -8,10 +8,12 @@ import { CreoCardComponent } from '../../../components/creo-design-system/creo-c
 import { CreoAlertComponent } from '../../../components/creo-design-system/creo-alert/creo-alert.component';
 import { CreoStepIndicatorComponent } from '../../../components/creo-design-system/creo-step-indicator/creo-step-indicator.component';
 import { CreoSkillPickerComponent } from '../../../components/creo-design-system/creo-skill-picker/creo-skill-picker.component';
-import { CareerSelectorComponent, CareerEntry } from '../creo-register-candidate/career-selector/career-selector.component';
-import { CREO_SKILLS, AREA_SKILLS, SkillSection } from '../../../data/creo-skills.data';
+import { StudyListComponent, StudyEntry } from '../creo-register-candidate/study-list/study-list.component';
+import { LanguageListComponent, LanguageEntry } from '../creo-register-candidate/language-list/language-list.component';
+import { CREO_SKILLS, SOFT_SKILLS, AREA_SKILLS, AREA_ESTUDIO_TO_CATEGORIA } from '../../../data/creo-skills.data';
+import { FormsModule } from '@angular/forms';
 
-const STEPS = ['Datos personales', 'Formación y salario', 'Habilidades'];
+const STEPS = ['Datos personales', 'Educación y salario', 'Habilidades'];
 const MAX_SKILLS = 15;
 const GENDER_OPTIONS = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'];
 
@@ -20,32 +22,44 @@ const DEMO_PROFILE = {
   firstName: 'Valeria',
   lastName: 'Rojas',
   email: 'valeria.rojas@ejemplo.com',
-  phone: '+51 999 555 123',
+  phone: '999555123',
   birthdate: '14/03/1999',
   dni: '72845193',
   gender: 'Femenino',
   location: 'Lima, Perú',
   salary: '9000',
-  careers: [{ area: 'Tecnología', specialty: 'Ingeniería de Software', estado: 'Finalizado' }] as CareerEntry[],
+  carreras: [{ 
+    titulo: 'Ingeniería de Software', pais: 'Perú', tipoEstudio: 'Universitario', areaEstudio: 'Tecnología',
+    institucion: 'Universidad Ejemplo', estado: 'Finalizado', fechaInicioMes: 'Marzo', fechaInicioAno: '2017',
+    fechaFinMes: 'Diciembre', fechaFinAno: '2021', alPresente: false
+  }] as StudyEntry[],
+  educacionSuperior: [] as StudyEntry[],
+  idiomas: [] as LanguageEntry[],
   skills: ['React', 'TypeScript', 'Node.js', 'Docker', 'AWS'],
+  softSkills: ['Liderazgo', 'Comunicación efectiva'],
 };
 
 @Component({
   selector: 'app-creo-edit-profile',
   standalone: true,
   imports: [
-    CommonModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent,
+    CommonModule, FormsModule, CreoWordmarkComponent, CreoBtnComponent, CreoFieldComponent,
     CreoCardComponent, CreoAlertComponent, CreoStepIndicatorComponent,
-    CreoSkillPickerComponent, CareerSelectorComponent
+    CreoSkillPickerComponent, StudyListComponent, LanguageListComponent
   ],
   templateUrl: './creo-edit-profile.component.html',
   styleUrl: './creo-edit-profile.component.css'
 })
 export class CreoEditProfileComponent {
   steps = STEPS;
-  catalog = CREO_SKILLS;
+  softCatalog = SOFT_SKILLS;
   genderOptions = GENDER_OPTIONS;
   maxSkills = MAX_SKILLS;
+
+  get catalog(): string[] {
+    const areaSet = this.areaFilteredSkillSet;
+    return areaSet ? CREO_SKILLS.filter(s => areaSet.has(s)) : CREO_SKILLS;
+  }
 
   step = 0;
 
@@ -53,15 +67,41 @@ export class CreoEditProfileComponent {
   lastName = DEMO_PROFILE.lastName;
   email = DEMO_PROFILE.email;
   phone = DEMO_PROFILE.phone;
-  birthdate = DEMO_PROFILE.birthdate;
+  birthDay = '14';
+  birthMonth = 'Mar';
+  birthYear = '1999';
   dni = DEMO_PROFILE.dni;
   gender = DEMO_PROFILE.gender;
   location = DEMO_PROFILE.location;
   salary = DEMO_PROFILE.salary;
-  careers: CareerEntry[] = [...DEMO_PROFILE.careers];
+  private _carreras: StudyEntry[] = [...DEMO_PROFILE.carreras];
+  private _educacionSuperior: StudyEntry[] = [...DEMO_PROFILE.educacionSuperior];
+  idiomas: LanguageEntry[] = [...DEMO_PROFILE.idiomas];
+
+  get carreras(): StudyEntry[] { return this._carreras; }
+  set carreras(v: StudyEntry[]) {
+    this._carreras = v;
+    this.pruneSkillsToArea();
+  }
+
+  get educacionSuperior(): StudyEntry[] { return this._educacionSuperior; }
+  set educacionSuperior(v: StudyEntry[]) {
+    this._educacionSuperior = v;
+    this.pruneSkillsToArea();
+  }
   skills: string[] = [...DEMO_PROFILE.skills];
+  softSkills: string[] = [...DEMO_PROFILE.softSkills];
+
+  dias = Array.from({length: 31}, (_, i) => (i + 1).toString());
+  mesesNac = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  anosNac = Array.from({length: 100}, (_, i) => (new Date().getFullYear() - i).toString());
 
   errors: Record<string, string> = {};
+
+  onSalaryChange(val: string): void {
+    this.salary = val;
+    delete this.errors['salary'];
+  }
   saved = false;
   saving = false;
 
@@ -78,21 +118,55 @@ export class CreoEditProfileComponent {
   }
 
   get primarySpecialty(): string {
-    return this.careers[0]?.specialty || 'Especialidad';
+    return this.carreras[0]?.titulo || 'Especialidad';
   }
+
+  private _cachedAreasStr = '';
+  private _cachedCategorias: string[] = [];
+  private _cachedAreaSkillSet: Set<string> | null = null;
 
   get selectedAreas(): string[] {
-    return [...new Set(this.careers.map(c => c.area))];
+    const allStudies = [...this.carreras, ...this.educacionSuperior];
+    return [...new Set(allStudies.map(c => c.areaEstudio).filter(a => !!a))];
   }
 
-  get suggestedSections(): SkillSection[] {
-    return this.selectedAreas
-      .filter(a => AREA_SKILLS[a])
-      .map(a => ({ label: `Sugeridas para ${a}`, skills: AREA_SKILLS[a] }));
+  /** Categorías de AREA_SKILLS derivadas de las áreas de estudio elegidas ("Otro" no mapea a ninguna). */
+  get selectedSkillCategories(): string[] {
+    const areas = this.selectedAreas;
+    const areasStr = areas.join(',');
+    if (this._cachedAreasStr !== areasStr) {
+      this._cachedAreasStr = areasStr;
+      this._cachedCategorias = [...new Set(areas.map(a => AREA_ESTUDIO_TO_CATEGORIA[a]).filter((c): c is string => !!c))];
+      this._cachedAreaSkillSet = this._cachedCategorias.length > 0
+        ? new Set(this._cachedCategorias.flatMap(c => AREA_SKILLS[c] ?? []))
+        : null;
+    }
+    return this._cachedCategorias;
+  }
+
+  /** Conjunto de habilidades técnicas válidas según el área de estudio, o null si no hay un área reconocida. */
+  get areaFilteredSkillSet(): Set<string> | null {
+    this.selectedSkillCategories; // asegura que el cache esté actualizado
+    return this._cachedAreaSkillSet;
+  }
+
+  get hasAreaFilter(): boolean {
+    return this.areaFilteredSkillSet !== null;
+  }
+
+  private pruneSkillsToArea() {
+    const areaSet = this.areaFilteredSkillSet;
+    if (areaSet) {
+      this.skills = this.skills.filter(s => areaSet.has(s));
+    }
   }
 
   setDni(v: string) {
     this.dni = v.replace(/\D/g, '').slice(0, 8);
+  }
+
+  setPhone(v: string) {
+    this.phone = v.replace(/\D/g, '').slice(0, 9);
   }
 
   toggleSkill(s: string) {
@@ -105,27 +179,62 @@ export class CreoEditProfileComponent {
     this.skills = [...this.skills, s];
   }
 
-  addCareer(c: CareerEntry) {
-    this.careers = [...this.careers, c];
+  toggleSoftSkill(s: string) {
+    if (!SOFT_SKILLS.includes(s)) return;
+    if (this.softSkills.includes(s)) {
+      this.softSkills = this.softSkills.filter(x => x !== s);
+      return;
+    }
+    if (this.softSkills.length >= MAX_SKILLS) return;
+    this.softSkills = [...this.softSkills, s];
   }
 
-  removeCareer(c: CareerEntry) {
-    this.careers = this.careers.filter(x => x.area !== c.area || x.specialty !== c.specialty);
+  validateAge(): boolean {
+    if (this.birthDay && this.birthMonth && this.birthYear) {
+      const bd = parseInt(this.birthDay, 10);
+      const bm = this.mesesNac.indexOf(this.birthMonth);
+      const by = parseInt(this.birthYear, 10);
+      const today = new Date();
+      let age = today.getFullYear() - by;
+      if (today.getMonth() < bm || (today.getMonth() === bm && today.getDate() < bd)) {
+        age--;
+      }
+      if (age < 17) {
+        this.errors['birthdate'] = 'Debes tener al menos 17 años para tener perfil en Creo Portal';
+        return false;
+      }
+    }
+    return true;
   }
 
   validateStep0(): Record<string, string> {
     const e: Record<string, string> = {};
     if (!this.firstName.trim()) e['firstName'] = 'El nombre es obligatorio';
     if (!this.lastName.trim()) e['lastName'] = 'El apellido es obligatorio';
-    if (!this.birthdate.trim()) e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    if (!this.birthDay || !this.birthMonth || !this.birthYear) {
+      e['birthdate'] = 'La fecha de nacimiento es obligatoria';
+    } else {
+      const bd = parseInt(this.birthDay, 10);
+      const bm = this.mesesNac.indexOf(this.birthMonth);
+      const by = parseInt(this.birthYear, 10);
+      const today = new Date();
+      let age = today.getFullYear() - by;
+      if (today.getMonth() < bm || (today.getMonth() === bm && today.getDate() < bd)) {
+        age--;
+      }
+      if (age < 17) {
+        e['birthdate'] = 'Debes tener al menos 17 años para tener perfil en Creo Portal';
+      }
+    }
 
     if (!this.dni.trim()) e['dni'] = 'El DNI es obligatorio';
-    else if (!/^\d{8}$/.test(this.dni)) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
+    else if (this.dni.length !== 8) e['dni'] = 'El DNI debe tener exactamente 8 dígitos numéricos';
 
     if (!this.email.trim()) e['email'] = 'El correo es obligatorio';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e['email'] = 'Correo inválido';
 
     if (!this.phone.trim()) e['phone'] = 'El teléfono es obligatorio';
+    else if (this.phone.length !== 9) e['phone'] = 'El teléfono debe tener exactamente 9 dígitos';
 
     return e;
   }
@@ -144,9 +253,21 @@ export class CreoEditProfileComponent {
     }
 
     if (this.step === 1) {
-      this.errors = {};
-      this.step = 2;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const errs: Record<string, string> = {};
+      if (this.carreras.length === 0) errs['carreras'] = 'Agrega al menos una carrera';
+      if (this.idiomas.length === 0) errs['idiomas'] = 'Agrega al menos un idioma';
+      if (this.salary && Number(this.salary) < 0) {
+        errs['salary'] = 'La expectativa salarial no puede ser negativa';
+      } else if (this.salary && Number(this.salary) > 500000) {
+        errs['salary'] = 'Ingresa un monto mensual válido (máx. S/ 500,000)';
+      }
+      
+      this.errors = errs;
+      if (Object.keys(errs).length === 0) {
+        this.errors = {};
+        this.step = 2;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       return;
     }
 

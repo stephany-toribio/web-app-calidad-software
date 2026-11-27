@@ -1,0 +1,54 @@
+{
+  "run_id": "e263aa23-8d48-4dc4-acb2-2bdb41320278",
+  "candidato": "B",
+  "postulacion_id": 187,
+  "vacante_id": 341,
+  "estado_mysql": "Rechazado",
+  "estado_api_candidato": {
+    "codigo": "rechazado",
+    "nombre": "Rechazado"
+  },
+  "historial_mysql": [
+    {
+      "id": 208,
+      "postulacion_id": 187,
+      "estado_postulacion_id": 2,
+      "motivo_rechazo_id": null,
+      "fecha_cambio": "2026-11-25 21:18:53",
+      "created_at": "2026-11-25 21:18:53",
+      "updated_at": "2026-11-25 21:18:53",
+      "estado_nombre": "En Revisión"
+    },
+    {
+      "id": 209,
+      "postulacion_id": 187,
+      "estado_postulacion_id": 5,
+      "motivo_rechazo_id": 1,
+      "fecha_cambio": "2026-11-25 21:18:56",
+      "created_at": "2026-11-25 21:18:56",
+      "updated_at": "2026-11-25 21:18:56",
+      "estado_nombre": "Rechazado"
+    }
+  ],
+  "historial_api": [
+    {
+      "id": 208,
+      "estado": {
+        "codigo": "en_revision",
+        "nombre": "En Revisión"
+      },
+      "motivo_rechazo": null,
+      "fecha_cambio": "2026-11-25T21:18:53.000000Z"
+    },
+    {
+      "id": 209,
+      "estado": {
+        "codigo": "rechazado",
+        "nombre": "Rechazado"
+      },
+      "motivo_rechazo": "Perfil no se ajusta",
+      "fecha_cambio": "2026-11-25T21:18:56.000000Z"
+    }
+  ],
+  "resultado": "PASS"
+}

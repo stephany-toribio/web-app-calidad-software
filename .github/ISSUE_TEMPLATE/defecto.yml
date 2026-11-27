@@ -1,0 +1,53 @@
+name: Defecto de calidad
+description: Registrar un fallo reproducible vinculado a requisitos y pruebas.
+title: "BUG: "
+body:
+  - type: input
+    id: trazabilidad
+    attributes:
+      label: Requisito y caso
+      description: IDs RF/PWA/RNF y CP, y la issue QA relacionada.
+    validations:
+      required: true
+  - type: dropdown
+    id: severidad
+    attributes:
+      label: Severidad
+      options:
+        - Sev1 - Integridad, datos o autorización
+        - Sev2 - Flujo o entrega bloqueados
+        - Sev3 - Degradación con alternativa
+        - Sev4 - Visual o editorial
+    validations:
+      required: true
+  - type: textarea
+    id: entorno
+    attributes:
+      label: Entorno y versión
+      description: Commit/build, dispositivo/navegador, versiones y datos ficticios de preparación.
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+    validations:
+      required: true
+  - type: textarea
+    id: resultado
+    attributes:
+      label: Resultado esperado y obtenido
+    validations:
+      required: true
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidencia y alcance afectado
+      description: Enlaces o capturas sin contraseñas, tokens ni datos personales reales.
+    validations:
+      required: true
+  - type: textarea
+    id: retest
+    attributes:
+      label: Corrección, retest y regresión
+      description: Completar al resolver con PR, versión probada, resultado y revisor.

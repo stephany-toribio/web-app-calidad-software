@@ -24,8 +24,8 @@ const CONTENT: Record<Role, SuccessContent> = {
     body: 'Tu perfil está listo. Ahora puedes explorar ofertas de empleo y conectar con las mejores empresas del Perú.',
     primaryCta: 'Explorar empleos',
     primaryRoute: '/creo/candidate-dashboard',
-    secondaryCta: 'Completar mi perfil',
-    secondaryRoute: '/creo/edit-profile',
+    secondaryCta: 'Ver mi perfil',
+    secondaryRoute: '/creo/candidate-profile',
     items: [
       'Perfil de habilidades registrado',
       'Acceso a ofertas verificadas por CREO+',

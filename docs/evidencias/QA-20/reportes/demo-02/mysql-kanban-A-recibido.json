@@ -1,0 +1,14 @@
+{
+  "run_id": "bf3875bf-568c-4839-b880-5c72bce6a64e",
+  "candidato": "A",
+  "postulacion_id": 198,
+  "vacante_id": 356,
+  "estado_mysql": "Recibido",
+  "estado_api_candidato": {
+    "codigo": "recibido",
+    "nombre": "Recibido"
+  },
+  "historial_mysql": [],
+  "historial_api": [],
+  "resultado": "PASS"
+}

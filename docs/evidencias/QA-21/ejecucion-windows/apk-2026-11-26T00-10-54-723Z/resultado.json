@@ -1,0 +1,15 @@
+{
+  "started": "2026-11-26T00:10:54.725Z",
+  "scope": "APK",
+  "steps": [],
+  "controlled": false,
+  "outcome": "FAIL",
+  "appium": "4.0.1",
+  "android": "16",
+  "apiLevel": "36",
+  "error": {
+    "code": "unknown error",
+    "message": "Error executing adbExec. Original error: 'Command ''C:\\Users\\vilma\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe' -P 5037 -s <device> install -r --no-incremental 'C:\\Users\\vilma\\OneDrive\\Documentos\\Proyecto-Calidad\\web-app-qa21\\qa\\appium\\node_modules\\appium-uiautomator2-driver\\node_modules\\appium-uiautomator2-server\\apks\\appium-uiautomator2-server-v11.6.1.apk'' exited with code 1'; Command output: adb.exe: failed to install C:\\Users\\vilma\\OneDrive\\Documentos\\Proyecto-Calidad\\web-app-qa21\\qa\\appium\\node_modules\\appium-uiautomator2-driver\\node_modules\\appium-uiautomator2-server\\apks\\appium-uiautomator2-server-v11.6.1.apk: Failure [INSTALL_FAILED_VERIFICATION_FAILURE: Install not allowed for file:///data/app/vmdl1674600835.tmp]\r\n\r\n"
+  },
+  "finished": "2026-11-26T00:11:59.349Z"
+}

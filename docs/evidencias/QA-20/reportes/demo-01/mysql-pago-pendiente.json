@@ -1,0 +1,16 @@
+{
+  "run_id": "388b7c86-e302-456e-b893-648cd74a26b7",
+  "vacante_id": 350,
+  "fase": "pendiente",
+  "estado_api": {
+    "general": "pendiente_pago",
+    "revision": "aprobada",
+    "motivo_no_aprobacion": null,
+    "pago": "sin_pago",
+    "disponibilidad": "activa",
+    "vigente": true,
+    "publicada_en": null
+  },
+  "cantidad_pagos": 0,
+  "resultado": "PASS"
+}

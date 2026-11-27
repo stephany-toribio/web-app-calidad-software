@@ -71,14 +71,14 @@
         <p class="text-slate-500 text-sm">Ingresa tu correo y contraseña para continuar</p>
       </div>
 
-      <!-- Lockout banner -->
-      <div *ngIf="isLocked()" class="mb-4">
-        <app-creo-alert type="error"
-          message="Cuenta bloqueada temporalmente tras 5 intentos fallidos. Intenta nuevamente en 15 minutos."></app-creo-alert>
+      <!-- Session expired notification -->
+      <div *ngIf="sessionMessage()" class="fixed top-5 right-5 z-50 w-full max-w-sm">
+        <app-creo-alert type="error" [message]="sessionMessage()">
+        </app-creo-alert>
       </div>
 
       <!-- Auth error -->
-      <div *ngIf="!isLocked() && attempted() && errors()['auth']" class="mb-4">
+      <div *ngIf="attempted() && errors()['auth']" class="mb-4">
         <app-creo-alert type="error" [message]="errors()['auth']"></app-creo-alert>
       </div>
 
@@ -87,25 +87,21 @@
         <app-creo-alert type="error" message="Corrige los campos indicados para continuar"></app-creo-alert>
       </div>
 
-      <form (submit)="handleSubmit($event)" class="flex flex-col gap-4">
-        <app-creo-field label="Correo electrónico" type="email" [value]="email()" (valueChange)="setEmail($event)"
+      <form (submit)="handleSubmit($event)" class="flex flex-col gap-4" data-testid="login-form">
+        <app-creo-field testId="login-email" autocomplete="username" label="Correo electrónico" type="email" [value]="email()" (valueChange)="setEmail($event)"
           placeholder="correo@ejemplo.com" [error]="errors()['email']" [required]="true"></app-creo-field>
 
-        <app-creo-field label="Contraseña" type="password" [value]="password()" (valueChange)="setPassword($event)"
+        <app-creo-field testId="login-password" autocomplete="current-password" label="Contraseña" type="password" [value]="password()" (valueChange)="setPassword($event)"
           placeholder="••••••••" [error]="errors()['password']" [required]="true"></app-creo-field>
 
-        <div class="flex items-center justify-between">
-          <label class="flex items-center gap-2 text-sm cursor-pointer select-none" style="color: #64748B">
-            <input type="checkbox" class="w-4 h-4 rounded border-slate-300" style="accent-color: #F2B705" />
-            Recordarme
-          </label>
+        <div class="flex items-center justify-end">
           <button type="button" (click)="doNavigate('forgot-password')" class="text-sm font-semibold hover:underline"
             style="color: #111111">
             Olvidé mi contraseña
           </button>
         </div>
 
-        <app-creo-btn type="submit" [fullWidth]="true" [disabled]="isLocked()">
+        <app-creo-btn testId="login-submit" type="submit" [fullWidth]="true" [disabled]="isSubmitting()">
           Iniciar sesión
           <svg icon-right width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M3 7h8M8 4l3 3-3 3" stroke="#111111" stroke-width="1.5" stroke-linecap="round"

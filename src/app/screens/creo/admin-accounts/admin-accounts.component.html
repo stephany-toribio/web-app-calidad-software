@@ -1,6 +1,176 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Admin Accounts</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Gestión de cuentas de administración - Creo Portal</p>
+<app-admin-shell activeScreen="admin-accounts">
+  <!-- Toast -->
+  <div *ngIf="toast" class="fixed top-5 right-5 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border" style="background-color: #FFFFFF; border-color: #F2B705; min-width: 280px;">
+    <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: #F2B705;">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#111111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    <p class="text-sm font-medium" style="color: #111111;">{{ toast }}</p>
+  </div>
+
+  <!-- Page header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight" style="color: #111111;">Revisión de Cuentas</h1>
+      <p class="text-sm mt-1" style="color: #64748B;">
+        {{ accounts.length }} cuentas · {{ activeCount }} activas · {{ suspendedCount }} suspendidas
+      </p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col md:flex-row gap-4 mb-6">
+    <div class="relative flex-1 max-w-md">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input type="search" [(ngModel)]="query" placeholder="Buscar por nombre o correo..."
+             class="w-full h-10 pl-10 pr-4 rounded-xl border text-sm outline-none transition-all"
+             style="background-color: #FFFFFF; border-color: #E2E8F0; color: #111111;" />
+    </div>
+
+    <div class="flex flex-wrap gap-2 md:ml-auto">
+      <div class="flex bg-white border rounded-lg p-1" style="border-color: #E2E8F0;">
+        <button (click)="typeFilter = 'all'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="typeFilter === 'all' ? '#111111' : 'transparent'" [style.color]="typeFilter === 'all' ? '#FFFFFF' : '#64748B'">Todos</button>
+        <button (click)="typeFilter = 'candidate'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="typeFilter === 'candidate' ? '#111111' : 'transparent'" [style.color]="typeFilter === 'candidate' ? '#FFFFFF' : '#64748B'">Candidatos</button>
+        <button (click)="typeFilter = 'company'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="typeFilter === 'company' ? '#111111' : 'transparent'" [style.color]="typeFilter === 'company' ? '#FFFFFF' : '#64748B'">Empresas</button>
+        <button (click)="typeFilter = 'admin'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="typeFilter === 'admin' ? '#111111' : 'transparent'" [style.color]="typeFilter === 'admin' ? '#FFFFFF' : '#64748B'">Admins</button>
+      </div>
+      <div class="flex bg-white border rounded-lg p-1" style="border-color: #E2E8F0;">
+        <button (click)="statusFilter = 'all'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="statusFilter === 'all' ? '#111111' : 'transparent'" [style.color]="statusFilter === 'all' ? '#FFFFFF' : '#64748B'">Todos</button>
+        <button (click)="statusFilter = 'active'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="statusFilter === 'active' ? '#111111' : 'transparent'" [style.color]="statusFilter === 'active' ? '#FFFFFF' : '#64748B'">Activos</button>
+        <button (click)="statusFilter = 'suspended'" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors" [style.background-color]="statusFilter === 'suspended' ? '#111111' : 'transparent'" [style.color]="statusFilter === 'suspended' ? '#FFFFFF' : '#64748B'">Suspendidos</button>
       </div>
     </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white border rounded-2xl overflow-hidden" style="border-color: #E2E8F0;">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse min-w-[800px]">
+        <thead>
+          <tr class="border-b" style="border-color: #F1F5F9; background-color: #F8FAFC;">
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8;">Nombre / Razón Social</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8;">Tipo</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8;">Correo</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center" style="color: #94A3B8;">Estado</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider" style="color: #94A3B8;">Registro</th>
+            <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right" style="color: #94A3B8;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y" style="border-color: #F1F5F9;">
+          <ng-container *ngFor="let acc of filteredAccounts; trackBy: trackById">
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4">
+                <p class="text-sm font-semibold" style="color: #111111;">{{ acc.name }}</p>
+              </td>
+              <td class="px-6 py-4">
+                <span *ngIf="acc.type === 'candidate'" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8]">
+                  Candidato
+                </span>
+                <span *ngIf="acc.type === 'company'" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F3FF] text-[#6D28D9]">
+                  Empresa
+                </span>
+                <span *ngIf="acc.type === 'admin'" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#334155] border border-slate-200">
+                  Administrador
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-sm" style="color: #64748B;">{{ acc.email }}</p>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                      [style.background-color]="acc.status === 'active' ? '#DCFCE7' : '#FEE2E2'"
+                      [style.color]="acc.status === 'active' ? '#15803D' : '#DC2626'">
+                  {{ acc.status === 'active' ? 'Activo' : 'Suspendido' }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <p class="text-xs" style="color: #94A3B8;">{{ acc.registeredAt }}</p>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div *ngIf="acc.type !== 'admin'; else adminActions" class="flex items-center justify-end gap-2">
+                  <button *ngIf="acc.status === 'active'" (click)="beginReset(acc)"
+                          class="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors"
+                          style="border-color: #E2E8F0; color: #64748B;">Restablecer clave</button>
+                  <button *ngIf="acc.status === 'active'" (click)="beginSuspend(acc)"
+                          class="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors hover:bg-red-50 hover:border-red-200"
+                          style="border-color: #FCA5A5; color: #DC2626;">Suspender</button>
+                  <button *ngIf="acc.status === 'suspended'" (click)="reactivate(acc)"
+                          class="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors hover:bg-green-50 hover:border-green-200"
+                          style="border-color: #86EFAC; color: #16A34A;">Reactivar</button>
+                </div>
+                <ng-template #adminActions>
+                  <span class="text-xs text-slate-400 italic">Cuenta protegida</span>
+                </ng-template>
+              </td>
+            </tr>
+            <tr *ngIf="acc.status === 'suspended' && acc.suspendReason" class="bg-red-50">
+              <td colspan="6" class="px-6 py-3 border-l-4" style="border-left-color: #DC2626;">
+                <p class="text-xs flex items-start gap-2" style="color: #991B1B;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mt-0.5 flex-shrink-0"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span><strong>Motivo de suspensión:</strong> {{ acc.suspendReason }}</span>
+                </p>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="filteredAccounts.length === 0">
+            <td colspan="6" class="px-6 py-12 text-center text-slate-500 text-sm">
+              No se encontraron cuentas con los filtros actuales.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div *ngIf="suspending" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl flex flex-col gap-4">
+      <h3 class="text-lg font-bold text-[#111111]">Suspender cuenta</h3>
+      <div *ngIf="suspending.type === 'company'" class="p-3 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B] space-y-1">
+        <p class="font-bold flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-[#991B1B]">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          Impacto inmediato de la suspensión:
+        </p>
+        <p>Todas las ofertas de empleo de esta empresa pasarán a <strong>Inactivo/Oculto</strong> y se bloquearán automáticamente nuevas postulaciones de candidatos.</p>
+      </div>
+      <p class="text-sm text-slate-500">
+        Estás a punto de suspender la cuenta de <strong>{{ suspending.name }}</strong>. El usuario perderá acceso inmediato a la plataforma.
+      </p>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-[#111111]">Motivo de la suspensión <span class="text-red-500">*</span></label>
+        <textarea [(ngModel)]="suspendReason" rows="3"
+                  class="w-full p-3 rounded-xl border text-sm outline-none resize-none"
+                  [style.border-color]="suspendError ? '#E5140D' : '#E2E8F0'"
+                  placeholder="Detalla la razón por la que se suspende esta cuenta..."></textarea>
+        <p *ngIf="suspendError" class="text-xs text-red-500">{{ suspendError }}</p>
+      </div>
+      <div class="flex items-center gap-3 mt-2">
+        <button (click)="suspending = null" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Cancelar</button>
+        <button (click)="confirmSuspend()" class="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors">Suspender</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="resetting" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col gap-4 text-center">
+      <div class="w-12 h-12 rounded-full bg-blue-50 mx-auto flex items-center justify-center text-blue-600 mb-2">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+      </div>
+      <h3 class="text-lg font-bold text-[#111111]">Restablecer contraseña</h3>
+      <p class="text-sm text-slate-500 leading-relaxed">
+        Se enviará un correo a <br/><strong>{{ resetting.email }}</strong><br/> con un enlace seguro de un solo uso para cambiar su contraseña.
+      </p>
+      <div class="flex items-center gap-3 mt-4">
+        <button (click)="resetting = null" [disabled]="submittingReset" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50">Cancelar</button>
+        <button (click)="confirmReset()" [disabled]="submittingReset" class="flex-1 py-2.5 rounded-xl bg-[#111111] text-[#F2B705] text-sm font-semibold hover:bg-black transition-colors disabled:opacity-50">
+          {{ submittingReset ? 'Enviando...' : 'Enviar correo' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</app-admin-shell>

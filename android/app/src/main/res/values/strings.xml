@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Creo Empleos QA</string>
+    <string name="title_activity_main">Creo Empleos QA</string>
+    <string name="package_name">edu.upch.creo.qa</string>
+    <string name="custom_url_scheme">edu.upch.creo.qa</string>
+</resources>

@@ -1,11 +1,11 @@
-<div class="flex flex-col gap-3" style="font-family: Inter, system-ui, sans-serif;">
+<div class="flex flex-col gap-3" (mouseenter)="onFocus()" (click)="onFocus()" style="font-family: Inter, system-ui, sans-serif;">
     <div class="relative">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
             class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
             <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4" />
             <path d="M11 11l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
         </svg>
-        <input type="search" [value]="query" (input)="onQueryChange($event)" placeholder="Buscar habilidad…"
+        <input type="search" [value]="query" (input)="onQueryChange($event)" (focus)="onFocus()" placeholder="Buscar habilidad…"
             class="w-full h-10 pl-9 pr-4 rounded-xl border text-sm placeholder:text-slate-400 outline-none transition-all"
             style="color: #111111; border-color: #E2E8F0; background-color: #FFFFFF;" />
     </div>
@@ -26,14 +26,55 @@
         </div>
     </div>
 
-    <div class="min-h-[120px] max-h-72 overflow-y-auto rounded-xl border p-4 flex flex-col gap-4"
-        style="background-color: #F8FAFC;" [style.border-color]="error ? '#E5140D' : '#E2E8F0'">
+    <!-- Agrupado: el cuadro se extiende y el scroll lo hace la pagina, asi no se cortan
+         filas de habilidades. Sin grupos la lista es muy larga y conserva su propio scroll. -->
+    <div class="skill-scroll min-h-[120px] rounded-xl border p-4 flex flex-col gap-4"
+        style="background-color: #F8FAFC;" [style.border-color]="error ? '#E5140D' : '#E2E8F0'"
+        [style.max-height]="hasGroups ? null : '18rem'"
+        [style.overflow-y]="hasGroups ? 'visible' : 'auto'">
 
-        <p *ngIf="filteredCatalog.length === 0" class="text-sm text-slate-400 text-center py-4">
+        <p *ngIf="(hasGroups ? !hasGroupResults : filteredCatalog.length === 0)"
+            class="text-sm text-slate-400 text-center py-4">
             Sin resultados para "{{ query }}"
         </p>
 
-        <ng-container *ngIf="filteredCatalog.length > 0">
+        <!-- Habilidades agrupadas por área de estudio -->
+        <ng-container *ngIf="hasGroups">
+            <ng-container *ngFor="let group of groupedSections; let i = index">
+                <div *ngIf="groupSkills(group).length > 0" class="rounded-xl border overflow-hidden bg-white"
+                    style="border-color: #E2E8F0;">
+                    <button type="button" (click)="toggleGroup(group)" [attr.aria-expanded]="isGroupOpen(group)"
+                        class="w-full flex items-center gap-3 px-3.5 py-2.5 text-left transition-colors"
+                        [style.background-color]="tint(i)">
+                        <span class="w-1.5 h-6 rounded-full flex-shrink-0" [style.background-color]="accent(i)"></span>
+                        <span class="flex-1 text-sm font-semibold leading-tight" style="color: #111111;">
+                            {{ group.label }}
+                        </span>
+                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-white flex-shrink-0"
+                            [style.border-color]="selectedIn(group) > 0 ? accent(i) : '#E2E8F0'"
+                            [style.color]="selectedIn(group) > 0 ? '#111111' : '#94A3B8'">
+                            {{ selectedIn(group) }} / {{ group.skills.length }}
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                            class="flex-shrink-0 text-slate-400 transition-transform duration-150"
+                            [class.rotate-180]="isGroupOpen(group)">
+                            <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <div *ngIf="isGroupOpen(group)"
+                        class="p-3.5 flex flex-wrap gap-2 border-t"
+                        style="border-color: #F1F5F9;">
+                        <app-creo-chip *ngFor="let skill of groupSkills(group)" [label]="skill"
+                            [selected]="isSelected(skill)" [disabled]="chipDisabled(skill)"
+                            (chipClick)="toggle.emit(skill)">
+                        </app-creo-chip>
+                    </div>
+                </div>
+            </ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="!hasGroups && filteredCatalog.length > 0">
             <div *ngFor="let section of suggestedSections">
                 <ng-container *ngIf="sectionSkills(section).length > 0">
                     <p class="text-[11px] font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5"

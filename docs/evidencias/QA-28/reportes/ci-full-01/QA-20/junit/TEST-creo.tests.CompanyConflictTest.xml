@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="creo.tests.CompanyConflictTest" time="10.148" tests="1" errors="0" skipped="0" failures="0"><testcase name="impedirContratacionPorCupoAgotado" classname="creo.tests.CompanyConflictTest" time="10.146" /></testsuite>

@@ -1,0 +1,36 @@
+[33mÔØ»[39m Building...
+[32mÔ£ö[39m Building...
+[1mInitial chunk files[22m  [2m | [22m[1mNames[22m                            [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-MP4BH4XX.js[39m    [2m | [22m[2m-[22m                                [2m | [22m[36m155.74 kB[39m[2m | [22m               [36m45.70 kB[39m
+[32mchunk-F3BTSML4.js[39m    [2m | [22m[2m-[22m                                [2m | [22m[36m119.87 kB[39m[2m | [22m               [36m30.67 kB[39m
+[32mstyles-TV6P2LJJ.css[39m  [2m | [22m[2mstyles[22m                           [2m | [22m [36m50.75 kB[39m[2m | [22m                [36m8.25 kB[39m
+[32mpolyfills-5CFQRCPP.js[39m[2m | [22m[2mpolyfills[22m                        [2m | [22m [36m34.59 kB[39m[2m | [22m               [36m11.33 kB[39m
+[32mmain-AND6Z3TX.js[39m     [2m | [22m[2mmain[22m                             [2m | [22m [36m26.82 kB[39m[2m | [22m                [36m8.24 kB[39m
+[32mchunk-5AMSJVDT.js[39m    [2m | [22m[2m-[22m                                [2m | [22m  [36m1.41 kB[39m[2m | [22m              [36m558 bytes[39m
+
+[1m [22m                    [2m | [22m[1mInitial total[22m                    [2m | [22m[1m389.19 kB[22m[2m | [22m              [1m104.75 kB[22m
+
+[1mLazy chunk files[22m     [2m | [22m[1mNames[22m                            [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-QR6RXLQH.js[39m    [2m | [22m[2mcreo-admin-skills-component[22m      [2m | [22m [36m85.14 kB[39m[2m | [22m               [36m12.11 kB[39m
+[32mchunk-3552B4SL.js[39m    [2m | [22m[2m-[22m                                [2m | [22m [36m83.63 kB[39m[2m | [22m               [36m14.78 kB[39m
+[32mchunk-KWE5TYHZ.js[39m    [2m | [22m[2mcompany-create-job-component[22m     [2m | [22m [36m68.56 kB[39m[2m | [22m               [36m14.09 kB[39m
+[32mchunk-YRE62ZZM.js[39m    [2m | [22m[2mcompany-kanban-component[22m         [2m | [22m [36m63.99 kB[39m[2m | [22m               [36m13.97 kB[39m
+[32mchunk-2DE6GKWU.js[39m    [2m | [22m[2mcompany-jobs-component[22m           [2m | [22m [36m46.87 kB[39m[2m | [22m               [36m10.63 kB[39m
+[32mchunk-IGLQNGWK.js[39m    [2m | [22m[2m-[22m                                [2m | [22m [36m41.05 kB[39m[2m | [22m               [36m10.56 kB[39m
+[32mchunk-2HOUAZWI.js[39m    [2m | [22m[2mcreo-register-candidate-component[22m[2m | [22m [36m39.73 kB[39m[2m | [22m                [36m9.65 kB[39m
+[32mchunk-U2USXWJS.js[39m    [2m | [22m[2madmin-moderation-component[22m       [2m | [22m [36m39.49 kB[39m[2m | [22m                [36m9.31 kB[39m
+[32mchunk-NNM7WTIJ.js[39m    [2m | [22m[2m-[22m                                [2m | [22m [36m38.90 kB[39m[2m | [22m                [36m8.05 kB[39m
+[32mchunk-2BKI4722.js[39m    [2m | [22m[2mcandidate-profile-component[22m      [2m | [22m [36m34.66 kB[39m[2m | [22m                [36m7.67 kB[39m
+[32mchunk-FJK6PG55.js[39m    [2m | [22m[2mcandidate-jobs-component[22m         [2m | [22m [36m30.96 kB[39m[2m | [22m                [36m7.88 kB[39m
+[32mchunk-SIX2CGN3.js[39m    [2m | [22m[2mcreo-register-company-component[22m  [2m | [22m [36m27.09 kB[39m[2m | [22m                [36m7.01 kB[39m
+[32mchunk-XYI6MWJF.js[39m    [2m | [22m[2mcandidate-applications-component[22m [2m | [22m [36m26.42 kB[39m[2m | [22m                [36m6.39 kB[39m
+[32mchunk-ES2BAAY3.js[39m    [2m | [22m[2mcandidate-job-detail-component[22m   [2m | [22m [36m21.75 kB[39m[2m | [22m                [36m5.76 kB[39m
+[32mchunk-GY4NR3GG.js[39m    [2m | [22m[2mcreo-forgot-password-component[22m   [2m | [22m [36m20.80 kB[39m[2m | [22m                [36m5.58 kB[39m
+[2m...and 32 more lazy chunks files. Use "--verbose" to show all the files.[22m
+
+Application bundle generation complete. [14.337 seconds]
+
+Output location: C:\Users\vilma\OneDrive\Documentos\Proyecto-Calidad\web-app-calidad-software\dist\qa11-releases\QA11-A
+
+Release: QA11-A
+NGSW version: 499db54b17890c3b681b1982f06f68fac979b3cc

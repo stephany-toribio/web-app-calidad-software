@@ -1,0 +1,14 @@
+===== VERSIONES =====
+openjdk version "21.0.13.0.3" 2026-10-24
+OpenJDK Runtime Environment (build 21.0.13.0.3+1-1-26.04.1-Ubuntu)
+OpenJDK 64-Bit Server VM (build 21.0.13.0.3+1-1-26.04.1-Ubuntu, mixed mode, sharing)
+[1mApache Maven 3.9.12[m
+Maven home: /usr/share/maven
+Java version: 21.0.13.0.3, vendor: Ubuntu, runtime: /usr/lib/jvm/java-21-openjdk-amd64
+Default locale: en, platform encoding: UTF-8
+OS name: "linux", version: "6.6.114.1-microsoft-standard-wsl2", arch: "amd64", family: "unix"
+Google Chrome 134.0.6998.35
+ChromeDriver 134.0.6998.35 (ea6ef4c2ac15ae95d2cfd65682da62c093415099-refs/branch-heads/6998@{#1472})
+===== IMAGENES =====
+["selenium/standalone-chrome@sha256:21f5f9b5a36a7480756043e5211a19bdee428933caab71bd910dbb33cfe42fd6"]
+["nginx@sha256:8eb04fe3b385090e9aa02961f77398ad09b6bf33ab07f6669a5bb7acce22c0d3"]

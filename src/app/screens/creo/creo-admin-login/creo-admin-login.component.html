@@ -41,8 +41,7 @@
             <path d="M7 5v2.5M7 9h.01" stroke="#F2B705" stroke-width="1.2" stroke-linecap="round" />
           </svg>
           <p class="text-[13px] leading-relaxed" style="color: #64748B;">
-            Bloqueado tras 5 intentos fallidos. Demo:
-            <span class="font-mono" style="color: #94A3B8;">admin&#64;creo.pe / admin123</span>
+            Bloqueado tras 5 intentos fallidos.
           </p>
         </div>
       </div>
@@ -89,13 +88,8 @@
         </p>
       </div>
 
-      <!-- Lockout -->
-      <div class="mb-4" *ngIf="isLocked">
-        <app-creo-alert type="error" message="Acceso bloqueado. Contacta al soporte técnico de CREO+."></app-creo-alert>
-      </div>
-
       <!-- Auth error -->
-      <div class="mb-4" *ngIf="!isLocked && attempted && errors['auth']">
+      <div class="mb-4" *ngIf="attempted && errors['auth']">
         <app-creo-alert type="error" [message]="errors['auth']"></app-creo-alert>
       </div>
 
@@ -103,10 +97,9 @@
         <app-creo-field label="Correo electrónico" type="email" [value]="email" (valueChange)="onEmailChange($event)"
           placeholder="admin@creo.pe" [error]="errors['email']" [required]="true"></app-creo-field>
 
-        <app-creo-field label="Contraseña" type="password" [value]="password" (valueChange)="onPasswordChange($event)"
-          placeholder="••••••••" [error]="errors['password']" [required]="true"></app-creo-field>
 
-        <app-creo-btn type="submit" [fullWidth]="true" [disabled]="isLocked">
+
+        <app-creo-btn type="submit" [fullWidth]="true" [disabled]="isSubmitting">
           Acceder al panel
           <svg iconRight width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M3 7h8M8 4l3 3-3 3" stroke="#111111" stroke-width="1.5" stroke-linecap="round"

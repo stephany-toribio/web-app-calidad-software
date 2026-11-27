@@ -1,0 +1,29 @@
+{
+  "run_id": "7f343ff4-d43c-409f-8c04-ae0ed8cc2fb5",
+  "vacante_id": 344,
+  "fase": "no_aprobada",
+  "estado_api": {
+    "general": "no_aprobada",
+    "revision": "no_aprobada",
+    "motivo_no_aprobacion": "Vacante sintetica QA20: requisitos por corregir.",
+    "pago": "sin_pago",
+    "disponibilidad": "activa",
+    "vigente": true,
+    "publicada_en": null
+  },
+  "revisiones_mysql": [
+    {
+      "id": 291,
+      "empleo_id": 344,
+      "admin_id": 1029,
+      "decision": "no_aprobada",
+      "motivo": "Vacante sintetica QA20: requisitos por corregir.",
+      "invalidada_en": null,
+      "created_at": "2026-11-25 21:21:41",
+      "updated_at": "2026-11-25 21:21:41"
+    }
+  ],
+  "pagos_mysql": 0,
+  "postulaciones_mysql": 0,
+  "resultado": "PASS"
+}

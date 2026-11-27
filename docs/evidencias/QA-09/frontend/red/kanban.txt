@@ -1,0 +1,354 @@
+
+> creo-angular@1.0.0 test:qa09
+> node --test tests/qa09/*.test.mjs
+
+TAP version 13
+# Subtest: F01: doble avance genera una sola solicitud
+not ok 1 - F01: doble avance genera una sola solicitud
+  ---
+  duration_ms: 5.733567
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:189:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    2 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:197:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: F02: doble confirmacion de rechazo genera una solicitud
+not ok 2 - F02: doble confirmacion de rechazo genera una solicitud
+  ---
+  duration_ms: 0.800901
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:200:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    2 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:213:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: F03: solo lectura impide avanzar desde el metodo
+not ok 3 - F03: solo lectura impide avanzar desde el metodo
+  ---
+  duration_ms: 0.370782
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:216:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:225:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F04: respuesta antigua no reemplaza otra vacante
+not ok 4 - F04: respuesta antigua no reemplaza otra vacante
+  ---
+  duration_ms: 0.829353
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:228:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    10 !== 20
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 20
+  actual: 10
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:247:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F05: respuesta de perfil anterior no expone datos de otro candidato
+not ok 5 - F05: respuesta de perfil anterior no expone datos de otro candidato
+  ---
+  duration_ms: 1.053722
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:251:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'Candidato QA'
+    - 'Segundo candidato QA'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'Segundo candidato QA'
+  actual: 'Candidato QA'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:272:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F06: cerrar rechazo durante solicitud conserva contexto
+not ok 6 - F06: cerrar rechazo durante solicitud conserva contexto
+  ---
+  duration_ms: 0.511038
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:278:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    undefined !== '100'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '100'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:291:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F07: conflicto de contratacion actualiza tablero
+not ok 7 - F07: conflicto de contratacion actualiza tablero
+  ---
+  duration_ms: 0.579937
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:297:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    0 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:312:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F08: respuesta API no elimina solo lectura de la ruta
+not ok 8 - F08: respuesta API no elimina solo lectura de la ruta
+  ---
+  duration_ms: 0.514209
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:316:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    false !== true
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:330:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F09: rechazo exige seleccion explicita de motivo
+not ok 9 - F09: rechazo exige seleccion explicita de motivo
+  ---
+  duration_ms: 1.331586
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:333:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    1 !== null
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:342:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F10: no contratar cuando no existen cupos
+ok 10 - F10: no contratar cuando no existen cupos
+  ---
+  duration_ms: 0.973044
+  type: 'test'
+  ...
+# Subtest: F11: no permite saltar de recibido a contratado
+ok 11 - F11: no permite saltar de recibido a contratado
+  ---
+  duration_ms: 0.337455
+  type: 'test'
+  ...
+# Subtest: F12: estados finales no permiten avanzar
+ok 12 - F12: estados finales no permiten avanzar
+  ---
+  duration_ms: 0.157395
+  type: 'test'
+  ...
+# Subtest: F13: rechazo sin motivo no genera solicitud
+ok 13 - F13: rechazo sin motivo no genera solicitud
+  ---
+  duration_ms: 0.106577
+  type: 'test'
+  ...
+# Subtest: F14: motivo fuera del catalogo no genera rechazo
+not ok 14 - F14: motivo fuera del catalogo no genera rechazo
+  ---
+  duration_ms: 0.382516
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:398:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:411:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F15: candidato de otra vacante no puede avanzar
+not ok 15 - F15: candidato de otra vacante no puede avanzar
+  ---
+  duration_ms: 0.255444
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:414:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:423:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: F16: cerrar perfil impide que respuesta tardia lo restaure
+not ok 16 - F16: cerrar perfil impide que respuesta tardia lo restaure
+  ---
+  duration_ms: 2.640198
+  type: 'test'
+  location: '/home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:426:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + {
+    +   nombre: 'Candidato QA'
+    + }
+    - null
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual:
+    nombre: 'Candidato QA'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/steph/projects/web-app-calidad-software/tests/qa09/kanban.test.mjs:440:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 4
+# fail 12
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1354.388914

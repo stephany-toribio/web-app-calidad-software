@@ -1,6 +1,616 @@
-    <div class="p-8 max-w-7xl mx-auto">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Admin Moderation</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Moderación de contenido y vacantes - Creo Portal</p>
+<app-admin-shell activeScreen="admin-moderation">
+  <!-- Toast notification -->
+  <div
+    *ngIf="toast"
+    class="fixed top-5 right-5 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border bg-white border-[#F2B705] min-w-[280px]"
+  >
+    <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-[#F2B705]">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M2 5l2 2 4-4" stroke="#111111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
+    <p class="text-sm font-medium text-[#111111]">{{ toast }}</p>
+  </div>
+
+  <!-- Page Header & Filter Tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl font-bold tracking-tight text-[#111111]">Revisión de Vacantes</h1>
+      </div>
+      <p class="text-sm mt-1 text-[#64748B]">
+        <ng-container *ngIf="pendingCount > 0">
+          <strong class="text-[#DC2626]">{{ pendingCount }} vacante{{ pendingCount !== 1 ? 's' : '' }}</strong> pendiente{{ pendingCount !== 1 ? 's' : '' }} de revisión previa
+        </ng-container>
+        <ng-container *ngIf="pendingCount === 0">
+          No hay vacantes pendientes de revisión previa.
+        </ng-container>
+      </p>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex rounded-xl border overflow-hidden self-start border-[#E2E8F0] shadow-sm">
+      <button
+        type="button"
+        (click)="cambiarFiltro('pending')"
+        class="h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer border-r border-[#E2E8F0]"
+        [style.backgroundColor]="filter === 'pending' ? '#111111' : '#FFFFFF'"
+        [style.color]="filter === 'pending' ? '#FFFFFF' : '#64748B'"
+      >
+        Pendientes
+        <span
+          *ngIf="pendingCount > 0"
+          class="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          [style.backgroundColor]="filter === 'pending' ? '#F2B705' : '#FEF3C7'"
+          style="color: #111111;"
+        >
+          {{ pendingCount }}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        (click)="cambiarFiltro('unpublished')"
+        class="h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer border-r border-[#E2E8F0]"
+        [style.backgroundColor]="filter === 'unpublished' ? '#111111' : '#FFFFFF'"
+        [style.color]="filter === 'unpublished' ? '#FFFFFF' : '#64748B'"
+      >
+        No Aprobadas
+      </button>
+
+      <button
+        type="button"
+        (click)="cambiarFiltro('approved')"
+        class="h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer border-r border-[#E2E8F0]"
+        [style.backgroundColor]="filter === 'approved' ? '#111111' : '#FFFFFF'"
+        [style.color]="filter === 'approved' ? '#FFFFFF' : '#64748B'"
+      >
+        Aprobadas
+      </button>
+
+      <button
+        type="button"
+        (click)="cambiarFiltro('all')"
+        class="h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer"
+        [style.backgroundColor]="filter === 'all' ? '#111111' : '#FFFFFF'"
+        [style.color]="filter === 'all' ? '#FFFFFF' : '#64748B'"
+      >
+        Todas
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Mass Action Bar (when items are selected) -->
+  <div
+    *ngIf="selectedCount > 0"
+    class="mb-4 p-3.5 rounded-2xl border bg-[#111111] text-white flex items-center justify-between flex-wrap gap-3 shadow-xl transition-all"
+  >
+    <div class="flex items-center gap-3">
+      <span class="w-8 h-8 rounded-xl bg-[#F2B705] text-[#111111] font-bold text-xs flex items-center justify-center">
+        {{ selectedCount }}
+      </span>
+      <p class="text-sm font-medium">
+        {{ selectedCount }} vacante{{ selectedCount !== 1 ? 's' : '' }} seleccionada{{ selectedCount !== 1 ? 's' : '' }} para acción masiva
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        (click)="approveSelected()"
+        class="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all bg-[#22C55E] text-white hover:bg-[#16A34A] shadow-sm flex items-center gap-1.5"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Aprobar seleccionadas ({{ selectedCount }})
+      </button>
+
+      <button
+        type="button"
+        (click)="openMassUnpublish()"
+        class="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all bg-[#DC2626] text-white hover:bg-[#B91C1C] shadow-sm flex items-center gap-1.5"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        No Aprobar / Despublicar ({{ selectedCount }})
+      </button>
+
+      <button
+        type="button"
+        (click)="clearSelection()"
+        class="px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all text-[#94A3B8] hover:text-white hover:bg-white/10"
+      >
+        Cancelar
+      </button>
+    </div>
+  </div>
+
+  <!-- Errores por vacante de la última acción masiva -->
+  <div
+    *ngIf="bulkErrors.length > 0"
+    class="mb-4 p-4 rounded-2xl border bg-[#FEF2F2] border-[#FCA5A5] text-xs text-[#991B1B]"
+  >
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <p class="font-bold mb-1">Algunas vacantes no se pudieron procesar:</p>
+        <ul class="list-disc pl-4 space-y-0.5">
+          <li *ngFor="let e of bulkErrors">{{ e }}</li>
+        </ul>
+      </div>
+      <button type="button" (click)="bulkErrors = []" class="font-semibold hover:underline cursor-pointer">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Carga y error de la cola -->
+  <div *ngIf="loading" class="rounded-2xl border p-10 text-center bg-white border-[#E2E8F0] shadow-sm text-sm text-[#64748B]">
+    Cargando vacantes...
+  </div>
+
+  <div *ngIf="!loading && loadError" class="rounded-2xl border p-6 text-center bg-[#FEF2F2] border-[#FCA5A5] text-sm text-[#991B1B]">
+    <p class="mb-3">{{ loadError }}</p>
+    <button type="button" (click)="cargar()" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#111111] text-white cursor-pointer">
+      Reintentar
+    </button>
+  </div>
+
+  <!-- Empty state -->
+  <div
+    *ngIf="!loading && !loadError && filteredReports.length === 0"
+    class="rounded-2xl border p-16 text-center bg-white border-[#E2E8F0] shadow-sm"
+  >
+    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-[#F0FDF4]">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+    <p class="text-sm font-semibold mb-1 text-[#111111]">No hay vacantes en esta categoría.</p>
+    <p class="text-xs text-[#94A3B8]">Todas las ofertas han sido moderadas o no existen en este filtro.</p>
+  </div>
+
+  <!-- Table -->
+  <div
+    *ngIf="!loading && filteredReports.length > 0"
+    class="bg-white rounded-2xl border overflow-hidden border-[#E2E8F0] shadow-sm"
+  >
+    <div class="overflow-x-auto">
+      <div class="min-w-[980px]">
+        <!-- Table Header (Desktop) -->
+        <div
+          class="hidden lg:grid gap-4 px-6 py-3.5 border-b text-xs font-semibold uppercase tracking-wider bg-[#FAFAFA] text-[#94A3B8] border-[#F1F5F9] items-center"
+          style="grid-template-columns: 36px 1.8fr 1.1fr 1.4fr 90px 145px 230px;"
+        >
+          <!-- Checkbox All -->
+          <div class="flex items-center justify-center">
+            <input
+              type="checkbox"
+              [checked]="isAllSelected"
+              (change)="toggleSelectAll()"
+              class="w-4 h-4 rounded cursor-pointer accent-[#F2B705]"
+              title="Seleccionar todas las pendientes"
+            />
+          </div>
+          <span>Vacante</span>
+          <span>Empresa</span>
+          <span>Origen / Motivo</span>
+          <span>Fecha</span>
+          <span>Estado</span>
+          <span class="text-right pr-1">Acciones</span>
+        </div>
+
+        <!-- Rows -->
+        <div
+          *ngFor="let report of filteredReports; let idx = index; trackBy: trackById"
+          class="px-5 lg:px-6 py-4 border-b last:border-0 flex flex-col lg:grid lg:items-center gap-3 lg:gap-4 transition-colors"
+          [class.bg-[#FFFBEB]]="isSelected(report.id)"
+          [style.backgroundColor]="isSelected(report.id) ? '#FFFBEB' : (idx % 2 === 1 ? '#FAFAFA' : '#FFFFFF')"
+          style="grid-template-columns: 36px 1.8fr 1.1fr 1.4fr 90px 145px 230px; border-color: #F1F5F9;"
+        >
+          <!-- Checkbox Individual -->
+          <div class="flex items-center justify-between lg:justify-center">
+            <span class="lg:hidden text-xs font-semibold text-[#94A3B8]">Seleccionar:</span>
+            <input
+              *ngIf="report.status === 'pending'"
+              type="checkbox"
+              [checked]="isSelected(report.id)"
+              (change)="toggleSelect(report.id, $event)"
+              class="w-4 h-4 rounded cursor-pointer accent-[#F2B705]"
+            />
+            <span *ngIf="report.status !== 'pending'" class="text-xs text-[#CBD5E1] hidden lg:inline">—</span>
+          </div>
+
+          <!-- Title -->
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <p
+                (click)="openReviewDetail(report, $event)"
+                class="text-sm font-semibold truncate text-[#111111] hover:text-[#2563EB] cursor-pointer"
+                title="Ver detalle completo de la vacante"
+              >
+                {{ report.title }}
+              </p>
+              <span
+                *ngIf="report.isInitialReview"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FEF9C3] text-[#A16207] border border-[#FDE68A]"
+              >
+                Nueva
+              </span>
+            </div>
+            <p *ngIf="report.unpublishReason" class="text-[11px] mt-0.5 truncate text-[#DC2626]" [title]="report.unpublishReason">
+              Motivo no aprobación: {{ report.unpublishReason }}
+            </p>
+          </div>
+
+          <!-- Company -->
+          <p class="text-sm truncate text-[#64748B]">{{ report.company }}</p>
+
+          <!-- Reason Badge -->
+          <div>
+            <span
+              class="text-[11px] font-semibold px-2.5 py-1 rounded-full inline-block"
+              [style.backgroundColor]="getReasonStyle(report.reason).bg"
+              [style.color]="getReasonStyle(report.reason).text"
+            >
+              {{ report.reason }}
+            </span>
+          </div>
+
+          <!-- Date -->
+          <p class="text-xs text-[#94A3B8]">{{ report.reportedAt }}</p>
+
+          <!-- Status Badge -->
+          <div>
+            <span
+              class="text-[11px] font-bold px-2.5 py-1 rounded-full inline-block whitespace-nowrap"
+              [style.backgroundColor]="getStatusStyle(report.status).bg"
+              [style.color]="getStatusStyle(report.status).text"
+            >
+              {{ getStatusStyle(report.status).label }}
+            </span>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-1.5 lg:justify-end flex-nowrap">
+            <button
+              type="button"
+              (click)="openReviewDetail(report, $event)"
+              class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border cursor-pointer transition-colors border-[#E2E8F0] text-[#334155] bg-white hover:bg-[#F8FAFC] whitespace-nowrap"
+              title="Ver ficha completa"
+            >
+              Detalle
+            </button>
+            <ng-container *ngIf="report.status === 'pending'">
+              <button
+                type="button"
+                (click)="approve(report)"
+                class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border cursor-pointer transition-colors border-[#86EFAC] text-[#15803D] bg-[#F0FDF4] hover:bg-[#DCFCE7] whitespace-nowrap"
+              >
+                Aprobar
+              </button>
+              <button
+                type="button"
+                (click)="beginUnpublish(report)"
+                class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border cursor-pointer transition-colors border-[#FCA5A5] text-[#DC2626] bg-[#FEF2F2] hover:bg-[#FEE2E2] whitespace-nowrap"
+              >
+                No Aprobar
+              </button>
+            </ng-container>
+            <span *ngIf="report.status !== 'pending'" class="text-xs font-medium text-[#94A3B8] whitespace-nowrap">
+              Revisado
+            </span>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Paginación (meta del servidor) -->
+  <div *ngIf="!loading && !loadError && meta && totalPaginas > 1"
+    class="mt-4 flex items-center justify-between gap-3">
+    <p class="text-xs text-[#64748B]">
+      Página <strong class="text-[#111111]">{{ pagina }}</strong> de <strong class="text-[#111111]">{{ totalPaginas }}</strong>
+      · {{ meta.total }} vacante{{ meta.total !== 1 ? 's' : '' }}
+    </p>
+    <div class="flex items-center gap-2">
+      <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 1"
+        class="h-8 px-3 rounded-lg border text-xs font-semibold transition-colors border-[#E2E8F0] text-[#475569] bg-white hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+        Anterior
+      </button>
+      <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina === totalPaginas"
+        class="h-8 px-3 rounded-lg border text-xs font-semibold transition-colors border-[#E2E8F0] text-[#475569] bg-white hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+        Siguiente
+      </button>
+    </div>
+  </div>
+
+  <!-- Single Unpublish Modal -->
+  <div
+    *ngIf="unpublishing"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45"
+    (click)="unpublishing = null"
+  >
+    <div
+      class="w-full max-w-sm rounded-2xl border p-6 bg-white border-[#E2E8F0] shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="w-11 h-11 rounded-2xl flex items-center justify-center mb-4 bg-[#FEE2E2]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+
+      <h3 class="text-base font-bold mb-1 text-[#111111]">No Aprobar / Despublicar vacante</h3>
+      <p class="text-sm mb-4 text-[#64748B]">
+        <strong class="text-[#111111]">{{ unpublishing.title }}</strong> · {{ unpublishing.company }}
+      </p>
+
+      <label class="text-sm font-medium block mb-1.5 text-[#111111]">
+        Motivo del rechazo <span class="text-[#DC2626]">*</span>
+      </label>
+      <textarea
+        [(ngModel)]="unpublishReason"
+        (ngModelChange)="unpublishError = ''"
+        placeholder="Explica a la empresa por qué la oferta no cumple los lineamientos…"
+        rows="3"
+        class="w-full px-3.5 py-2.5 rounded-xl border text-sm resize-none outline-none text-[#111111]"
+        [style.borderColor]="unpublishError ? '#DC2626' : '#E2E8F0'"
+      ></textarea>
+
+      <p *ngIf="unpublishError" class="text-xs mt-1 text-[#DC2626]">{{ unpublishError }}</p>
+
+      <p class="text-[11px] mt-2 mb-4 text-[#94A3B8]">
+        La empresa recibirá una notificación inmediata con este motivo. La vacante quedará en estado "No Aprobada".
+      </p>
+
+      <div class="flex gap-3">
+        <button
+          type="button"
+          (click)="confirmUnpublish()"
+          class="flex-1 h-10 rounded-xl text-sm font-semibold cursor-pointer transition-colors bg-[#DC2626] text-white hover:bg-[#B91C1C]"
+        >
+          Confirmar
+        </button>
+        <button
+          type="button"
+          (click)="unpublishing = null"
+          class="flex-1 h-10 rounded-xl text-sm font-semibold border cursor-pointer transition-colors border-[#E2E8F0] text-[#111111] hover:bg-[#F8FAFC]"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mass Unpublish Modal -->
+  <div
+    *ngIf="massUnpublishOpen"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45"
+    (click)="massUnpublishOpen = false"
+  >
+    <div
+      class="w-full max-w-sm rounded-2xl border p-6 bg-white border-[#E2E8F0] shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="w-11 h-11 rounded-2xl flex items-center justify-center mb-4 bg-[#FEE2E2]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      </div>
+
+      <h3 class="text-base font-bold mb-1 text-[#111111]">No Aprobar {{ selectedCount }} vacantes</h3>
+      <p class="text-sm mb-4 text-[#64748B]">
+        Se despublicarán simultáneamente todas las vacantes seleccionadas.
+      </p>
+
+      <label class="text-sm font-medium block mb-1.5 text-[#111111]">
+        Motivo general de rechazo <span class="text-[#DC2626]">*</span>
+      </label>
+      <textarea
+        [(ngModel)]="massUnpublishReason"
+        (ngModelChange)="massUnpublishError = ''"
+        placeholder="Ej: Incumplimiento de términos y condiciones de publicación de empleo…"
+        rows="3"
+        class="w-full px-3.5 py-2.5 rounded-xl border text-sm resize-none outline-none text-[#111111]"
+        [style.borderColor]="massUnpublishError ? '#DC2626' : '#E2E8F0'"
+      ></textarea>
+
+      <p *ngIf="massUnpublishError" class="text-xs mt-1 text-[#DC2626]">{{ massUnpublishError }}</p>
+
+      <div class="flex gap-3 mt-4">
+        <button
+          type="button"
+          (click)="confirmMassUnpublish()"
+          class="flex-1 h-10 rounded-xl text-sm font-semibold cursor-pointer transition-colors bg-[#DC2626] text-white hover:bg-[#B91C1C]"
+        >
+          Confirmar masivo
+        </button>
+        <button
+          type="button"
+          (click)="massUnpublishOpen = false"
+          class="flex-1 h-10 rounded-xl text-sm font-semibold border cursor-pointer transition-colors border-[#E2E8F0] text-[#111111] hover:bg-[#F8FAFC]"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Detail Modal Drawer (HU22-T10: Revisión de detalle y aprobación individual) -->
+  <div
+    *ngIf="reviewingJob"
+    class="fixed inset-0 z-50 flex items-center justify-end bg-black/45"
+    (click)="closeReviewDetail()"
+  >
+    <div
+      class="h-full w-full max-w-lg overflow-y-auto shadow-2xl bg-white flex flex-col justify-between"
+      (click)="$event.stopPropagation()"
+    >
+      <div>
+        <!-- Drawer Header -->
+        <div class="sticky top-0 z-10 border-b px-6 py-4 flex items-center justify-between bg-white border-[#E2E8F0]">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">
+              Ficha de Revisión Administrativa
+            </span>
+            <h2 class="text-base font-bold text-[#111111] truncate mt-0.5">{{ reviewingJob.title }}</h2>
+          </div>
+          <button
+            type="button"
+            (click)="closeReviewDetail()"
+            class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-[#94A3B8] hover:bg-[#F1F5F9] hover:text-[#111111]"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Status Banner -->
+          <div class="p-4 rounded-xl border flex items-center justify-between" [ngClass]="reviewingJob.status === 'pending' ? 'bg-[#FEF9C3] border-[#FDE68A]' : (reviewingJob.status === 'approved' ? 'bg-[#DCFCE7] border-[#86EFAC]' : 'bg-[#FEE2E2] border-[#FCA5A5]')">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-[#64748B]">Estado Actual</p>
+              <p class="text-sm font-bold text-[#111111]">{{ getStatusStyle(reviewingJob.status).label }}</p>
+            </div>
+            <span
+              class="text-xs font-bold px-2.5 py-1 rounded-full"
+              [style.backgroundColor]="getReasonStyle(reviewingJob.reason).bg"
+              [style.color]="getReasonStyle(reviewingJob.reason).text"
+            >
+              {{ reviewingJob.reason }}
+            </span>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3 rounded-xl bg-[#FAFAFA] border border-[#F1F5F9]">
+              <span class="text-[#94A3B8] block mb-0.5 uppercase tracking-wide font-semibold text-[10px]">Empresa</span>
+              <span class="font-bold text-[#111111]">{{ reviewingJob.company }}</span>
+            </div>
+            <div class="p-3 rounded-xl bg-[#FAFAFA] border border-[#F1F5F9]">
+              <span class="text-[#94A3B8] block mb-0.5 uppercase tracking-wide font-semibold text-[10px]">Rango Salarial</span>
+              <span class="font-bold text-[#111111]">{{ reviewingJob.salary || 'A convenir' }}</span>
+            </div>
+            <div class="p-3 rounded-xl bg-[#FAFAFA] border border-[#F1F5F9]">
+              <span class="text-[#94A3B8] block mb-0.5 uppercase tracking-wide font-semibold text-[10px]">Nivel y Modalidad</span>
+              <span class="font-bold text-[#111111]">{{ reviewingJob.experience || 'Senior' }} · {{ reviewingJob.modality || 'Remoto' }}</span>
+            </div>
+            <div class="p-3 rounded-xl bg-[#FAFAFA] border border-[#F1F5F9]">
+              <span class="text-[#94A3B8] block mb-0.5 uppercase tracking-wide font-semibold text-[10px]">Cupos y Cierre</span>
+              <span class="font-bold text-[#111111]">{{ reviewingJob.hireLimit || 1 }} vacante(s) · {{ reviewingJob.closeDate || 'En 14 días' }}</span>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Descripción de la vacante</h4>
+            <div class="p-4 rounded-xl bg-[#FAFAFA] border border-[#F1F5F9] text-sm leading-relaxed text-[#334155] space-y-2"
+              [innerHTML]="(reviewingJob.description || 'Sin descripción detallada provista.') | markdown"></div>
+          </div>
+
+          <!-- Habilidades Obligatorias vs Deseables -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Requisitos de Habilidades</h4>
+            <div class="space-y-3">
+              <div>
+                <span class="text-[11px] font-bold text-[#DC2626] block mb-1.5 flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-[#DC2626]"></span>
+                  Obligatorias:
+                </span>
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    *ngFor="let s of reviewingJob.mustHaveSkills"
+                    class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#FEE2E2] text-[#DC2626] border border-[#FECDD3]"
+                  >
+                    {{ s }}
+                  </span>
+                  <span *ngIf="!reviewingJob.mustHaveSkills || reviewingJob.mustHaveSkills.length === 0" class="text-xs text-[#9A948C] italic">
+                    Sin habilidades obligatorias registradas.
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[11px] font-bold text-[#B45309] block mb-1.5 flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-[#F59E0B]"></span>
+                  Deseables:
+                </span>
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    *ngFor="let s of reviewingJob.niceToHaveSkills"
+                    class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]"
+                  >
+                    {{ s }}
+                  </span>
+                  <span *ngIf="!reviewingJob.niceToHaveSkills || reviewingJob.niceToHaveSkills.length === 0" class="text-xs text-[#9A948C] italic">
+                    Sin habilidades deseables registradas.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Requisitos y beneficios escritos por la empresa (también se moderan) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Requisitos</h4>
+              <ul *ngIf="reviewingJob.requirements?.length" class="list-disc pl-4 space-y-1 text-xs text-[#334155]">
+                <li *ngFor="let r of reviewingJob.requirements">{{ r }}</li>
+              </ul>
+              <p *ngIf="!reviewingJob.requirements?.length" class="text-xs text-[#9A948C] italic">Sin requisitos registrados.</p>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Beneficios</h4>
+              <ul *ngIf="reviewingJob.benefits?.length" class="list-disc pl-4 space-y-1 text-xs text-[#334155]">
+                <li *ngFor="let b of reviewingJob.benefits">{{ b }}</li>
+              </ul>
+              <p *ngIf="!reviewingJob.benefits?.length" class="text-xs text-[#9A948C] italic">Sin beneficios registrados.</p>
+            </div>
+          </div>
+
+          <!-- Reject reason if already unpublished -->
+          <div *ngIf="reviewingJob.unpublishReason" class="p-3.5 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B]">
+            <p class="font-bold mb-1">Motivo de no aprobación registrado:</p>
+            <p>{{ reviewingJob.unpublishReason }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Footer Actions -->
+      <div class="p-6 border-t border-[#E2E8F0] bg-[#FAFAFA] flex items-center gap-3">
+        <ng-container *ngIf="reviewingJob.status === 'pending'">
+          <button
+            type="button"
+            (click)="approve(reviewingJob); closeReviewDetail()"
+            class="flex-1 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all bg-[#15803D] text-white hover:bg-[#166534] shadow-sm flex items-center justify-center gap-1.5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Aprobar Vacante
+          </button>
+          <button
+            type="button"
+            (click)="beginUnpublish(reviewingJob); closeReviewDetail()"
+            class="flex-1 py-2.5 rounded-xl text-sm font-semibold border cursor-pointer transition-all border-[#FCA5A5] bg-[#FEF2F2] text-[#DC2626] hover:bg-[#FEE2E2] flex items-center justify-center gap-1.5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            No Aprobar
+          </button>
+        </ng-container>
+        <button
+          type="button"
+          (click)="closeReviewDetail()"
+          class="px-5 py-2.5 rounded-xl text-sm font-medium border cursor-pointer border-[#E2E8F0] text-[#64748B] hover:bg-white"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</app-admin-shell>

@@ -1,0 +1,350 @@
+{
+  "actividad": "QA-20",
+  "herramienta": "Selenium WebDriver 4.29.0",
+  "escenarios_distintos": 9,
+  "ejecuciones_totales": 24,
+  "ejecuciones_aprobadas": 24,
+  "evidencias_mysql": 58,
+  "fallos": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "resultado": "PASS",
+  "regresiones": [
+    {
+      "corrida": "full-01",
+      "run_id": "e263aa23-8d48-4dc4-acb2-2bdb41320278",
+      "modo": "full",
+      "pruebas": 9,
+      "aprobadas": 9,
+      "fallos": 0,
+      "errores": 0,
+      "omitidas": 0,
+      "duracion_s": 108.273,
+      "evidencias_mysql": 17,
+      "capturas": [
+        "admin-forbidden-candidate.png",
+        "admin-login-success.png",
+        "admin-reject-modal.png",
+        "admin-reject-required-reason.png",
+        "admin-vacancy-approved-persisted.png",
+        "admin-vacancy-approved-toast.png",
+        "admin-vacancy-approved.png",
+        "admin-vacancy-pending.png",
+        "admin-vacancy-rejected-persisted.png",
+        "admin-vacancy-rejected.png",
+        "candidate-alfa-hired.png",
+        "candidate-beta-rejected.png",
+        "company-forbidden-admin.png",
+        "company-login-success.png",
+        "company-payment-modal.png",
+        "company-payment-pending.png",
+        "company-payment-persisted.png",
+        "company-payment-postponed.png",
+        "company-payment-published.png",
+        "conflict-capacity-message.png",
+        "conflict-first-hired.png",
+        "conflict-initial.png",
+        "conflict-persisted.png",
+        "kanban-alfa-hired.png",
+        "kanban-alfa-interview.png",
+        "kanban-alfa-locked.png",
+        "kanban-alfa-review.png",
+        "kanban-beta-locked.png",
+        "kanban-beta-reason-required.png",
+        "kanban-beta-reason-selected.png",
+        "kanban-beta-rejected.png",
+        "kanban-beta-review.png",
+        "kanban-final-persisted.png",
+        "kanban-history.png",
+        "kanban-incomplete-profile-regression.png",
+        "kanban-initial.png"
+      ],
+      "registros_residuales": 0,
+      "casos": [
+        {
+          "clase": "creo.tests.AdminModerationTest",
+          "metodo": "rechazarVacanteConMotivoObligatorio",
+          "duracion_s": 9.845,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.AdminModerationTest",
+          "metodo": "aprobarVacanteSinPublicacionAutomatica",
+          "duracion_s": 7.023,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyAdminAuthTest",
+          "metodo": "loginEmpresaValido",
+          "duracion_s": 4.76,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyAdminAuthTest",
+          "metodo": "adminNoAccedePerfilCandidato",
+          "duracion_s": 3.846,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyAdminAuthTest",
+          "metodo": "loginAdminValido",
+          "duracion_s": 3.489,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyAdminAuthTest",
+          "metodo": "empresaNoAccedeAdministracion",
+          "duracion_s": 4.534,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyConflictTest",
+          "metodo": "impedirContratacionPorCupoAgotado",
+          "duracion_s": 17.882,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyKanbanTest",
+          "metodo": "gestionarContratacionYRechazo",
+          "duracion_s": 43.795,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyPaymentTest",
+          "metodo": "pagoSimuladoPublicaVacante",
+          "duracion_s": 13.013,
+          "resultado": "PASS"
+        }
+      ],
+      "resultado": "PASS"
+    },
+    {
+      "corrida": "full-02",
+      "run_id": "7f343ff4-d43c-409f-8c04-ae0ed8cc2fb5",
+      "modo": "full",
+      "pruebas": 9,
+      "aprobadas": 9,
+      "fallos": 0,
+      "errores": 0,
+      "omitidas": 0,
+      "duracion_s": 112.897,
+      "evidencias_mysql": 17,
+      "capturas": [
+        "admin-forbidden-candidate.png",
+        "admin-login-success.png",
+        "admin-reject-modal.png",
+        "admin-reject-required-reason.png",
+        "admin-vacancy-approved-persisted.png",
+        "admin-vacancy-approved-toast.png",
+        "admin-vacancy-approved.png",
+        "admin-vacancy-pending.png",
+        "admin-vacancy-rejected-persisted.png",
+        "admin-vacancy-rejected.png",
+        "candidate-alfa-hired.png",
+        "candidate-beta-rejected.png",
+        "company-forbidden-admin.png",
+        "company-login-success.png",
+        "company-payment-modal.png",
+        "company-payment-pending.png",
+        "company-payment-persisted.png",
+        "company-payment-postponed.png",
+        "company-payment-published.png",
+        "conflict-capacity-message.png",
+        "conflict-first-hired.png",
+        "conflict-initial.png",
+        "conflict-persisted.png",
+        "kanban-alfa-hired.png",
+        "kanban-alfa-interview.png",
+        "kanban-alfa-locked.png",
+        "kanban-alfa-review.png",
+        "kanban-beta-locked.png",
+        "kanban-beta-reason-required.png",
+        "kanban-beta-reason-selected.png",
+        "kanban-beta-rejected.png",
+        "kanban-beta-review.png",
+        "kanban-final-persisted.png",
+        "kanban-history.png",
+        "kanban-incomplete-profile-regression.png",
+        "kanban-initial.png"
+      ],
+      "registros_residuales": 0,
+      "casos": [
+        {
+          "clase": "creo.tests.AdminModerationTest",
+          "metodo": "rechazarVacanteConMotivoObligatorio",
+          "duracion_s": 10.659,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.AdminModerationTest",
+          "metodo": "aprobarVacanteSinPublicacionAutomatica",
+          "duracion_s": 7.229,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyAdminAuthTest",
+          "metodo": "loginEmpresaValido",
+          "duracion_s": 4.87,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyAdminAuthTest",
+          "metodo": "adminNoAccedePerfilCandidato",
+          "duracion_s": 4.583,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyAdminAuthTest",
+          "metodo": "loginAdminValido",
+          "duracion_s": 3.775,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyAdminAuthTest",
+          "metodo": "empresaNoAccedeAdministracion",
+          "duracion_s": 4.044,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyConflictTest",
+          "metodo": "impedirContratacionPorCupoAgotado",
+          "duracion_s": 17.761,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyKanbanTest",
+          "metodo": "gestionarContratacionYRechazo",
+          "duracion_s": 45.641,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyPaymentTest",
+          "metodo": "pagoSimuladoPublicaVacante",
+          "duracion_s": 14.269,
+          "resultado": "PASS"
+        }
+      ],
+      "resultado": "PASS"
+    },
+    {
+      "corrida": "demo-01",
+      "run_id": "388b7c86-e302-456e-b893-648cd74a26b7",
+      "modo": "demo",
+      "pruebas": 3,
+      "aprobadas": 3,
+      "fallos": 0,
+      "errores": 0,
+      "omitidas": 0,
+      "duracion_s": 67.611,
+      "evidencias_mysql": 12,
+      "capturas": [
+        "admin-vacancy-approved-persisted.png",
+        "admin-vacancy-approved-toast.png",
+        "admin-vacancy-approved.png",
+        "admin-vacancy-pending.png",
+        "candidate-alfa-hired.png",
+        "candidate-beta-rejected.png",
+        "company-payment-modal.png",
+        "company-payment-pending.png",
+        "company-payment-persisted.png",
+        "company-payment-postponed.png",
+        "company-payment-published.png",
+        "kanban-alfa-hired.png",
+        "kanban-alfa-interview.png",
+        "kanban-alfa-locked.png",
+        "kanban-alfa-review.png",
+        "kanban-beta-locked.png",
+        "kanban-beta-reason-required.png",
+        "kanban-beta-reason-selected.png",
+        "kanban-beta-rejected.png",
+        "kanban-beta-review.png",
+        "kanban-final-persisted.png",
+        "kanban-history.png",
+        "kanban-incomplete-profile-regression.png",
+        "kanban-initial.png"
+      ],
+      "registros_residuales": 0,
+      "casos": [
+        {
+          "clase": "creo.tests.AdminModerationTest",
+          "metodo": "aprobarVacanteSinPublicacionAutomatica",
+          "duracion_s": 7.374,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyKanbanTest",
+          "metodo": "gestionarContratacionYRechazo",
+          "duracion_s": 46.417,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyPaymentTest",
+          "metodo": "pagoSimuladoPublicaVacante",
+          "duracion_s": 13.783,
+          "resultado": "PASS"
+        }
+      ],
+      "resultado": "PASS"
+    },
+    {
+      "corrida": "demo-02",
+      "run_id": "bf3875bf-568c-4839-b880-5c72bce6a64e",
+      "modo": "demo",
+      "pruebas": 3,
+      "aprobadas": 3,
+      "fallos": 0,
+      "errores": 0,
+      "omitidas": 0,
+      "duracion_s": 65.485,
+      "evidencias_mysql": 12,
+      "capturas": [
+        "admin-vacancy-approved-persisted.png",
+        "admin-vacancy-approved-toast.png",
+        "admin-vacancy-approved.png",
+        "admin-vacancy-pending.png",
+        "candidate-alfa-hired.png",
+        "candidate-beta-rejected.png",
+        "company-payment-modal.png",
+        "company-payment-pending.png",
+        "company-payment-persisted.png",
+        "company-payment-postponed.png",
+        "company-payment-published.png",
+        "kanban-alfa-hired.png",
+        "kanban-alfa-interview.png",
+        "kanban-alfa-locked.png",
+        "kanban-alfa-review.png",
+        "kanban-beta-locked.png",
+        "kanban-beta-reason-required.png",
+        "kanban-beta-reason-selected.png",
+        "kanban-beta-rejected.png",
+        "kanban-beta-review.png",
+        "kanban-final-persisted.png",
+        "kanban-history.png",
+        "kanban-incomplete-profile-regression.png",
+        "kanban-initial.png"
+      ],
+      "registros_residuales": 0,
+      "casos": [
+        {
+          "clase": "creo.tests.AdminModerationTest",
+          "metodo": "aprobarVacanteSinPublicacionAutomatica",
+          "duracion_s": 7.597,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyKanbanTest",
+          "metodo": "gestionarContratacionYRechazo",
+          "duracion_s": 44.185,
+          "resultado": "PASS"
+        },
+        {
+          "clase": "creo.tests.CompanyPaymentTest",
+          "metodo": "pagoSimuladoPublicaVacante",
+          "duracion_s": 13.667,
+          "resultado": "PASS"
+        }
+      ],
+      "resultado": "PASS"
+    }
+  ]
+}

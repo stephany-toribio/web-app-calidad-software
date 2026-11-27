@@ -1,0 +1,71 @@
+===== PREFLIGHT SELENIUM =====
+PASS: Preflight Selenium
+===== SELENIUM diagnostic =====
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -------------------< pe.creo.qa:creo-selenium-tests >-------------------
+[INFO] Building creo-selenium-tests 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- clean:3.2.0:clean (default-clean) @ creo-selenium-tests ---
+[INFO] Deleting /home/steph/projects/web-app-calidad-software/qa/selenium/target
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ creo-selenium-tests ---
+[INFO] skip non existing resourceDirectory /home/steph/projects/web-app-calidad-software/qa/selenium/src/main/resources
+[INFO]
+[INFO] --- compiler:3.13.0:compile (default-compile) @ creo-selenium-tests ---
+[INFO] No sources to compile
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ creo-selenium-tests ---
+[INFO] skip non existing resourceDirectory /home/steph/projects/web-app-calidad-software/qa/selenium/src/test/resources
+[INFO]
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ creo-selenium-tests ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 5 source files with javac [debug release 21] to target/test-classes
+[INFO]
+[INFO] --- surefire:3.5.2:test (default-test) @ creo-selenium-tests ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO]
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running creo.tests.ControlledFailureTest
+Nov 25, 2026 11:53:26 AM org.openqa.selenium.remote.tracing.opentelemetry.OpenTelemetryTracer createTracer
+INFO: Using OpenTelemetry for tracing
+EVIDENCIA: ControlledFailureTest-capturaFalloIntencional
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 2.786 s <<< FAILURE! -- in creo.tests.ControlledFailureTest
+[ERROR] creo.tests.ControlledFailureTest.capturaFalloIntencional -- Time elapsed: 2.736 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: QA18_CONTROLLED_FAILURE
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:38)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:138)
+	at creo.tests.ControlledFailureTest.capturaFalloIntencional(ControlledFailureTest.java:27)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   ControlledFailureTest.capturaFalloIntencional:27 QA18_CONTROLLED_FAILURE
+[INFO]
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.409 s
+[INFO] Finished at: 2026-11-25T11:53:29-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.2:test (default-test) on project creo-selenium-tests: There are test failures.
+[ERROR]
+[ERROR] See /home/steph/projects/web-app-calidad-software/qa/selenium/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

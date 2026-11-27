@@ -1,0 +1,70 @@
+import { Habilidad, ItemCatalogo } from './catalogos.model';
+import { EstadoEstudio, Genero, NivelIdioma } from './registro-candidato.model';
+
+// Respuesta de GET /candidatos/me 
+// personalizado: lo escribió el candidato. activo = false: el admin lo deshabilitó (lo conserva, pero no puede volver a elegirlo)
+export interface PuestoPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
+}
+
+// Mismo criterio que el puesto
+export interface OrganizacionPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
+}
+
+// Mismo criterio que el puesto (antes el nivel era un código fijo como "junior")
+export interface NivelPuestoPerfil extends ItemCatalogo {
+    personalizado: boolean;
+    activo: boolean;
+}
+
+export interface EstudioPerfil {
+    id: number;
+    tipo_estudio: ItemCatalogo;
+    area_estudio: ItemCatalogo;
+    pais: ItemCatalogo | null;          // null en "Sin estudios formales" (solo lleva el área)
+    institucion: ItemCatalogo | null;   // null en Secundario, Terciario y "Sin estudios formales"
+    carrera: ItemCatalogo | null;
+    estado: EstadoEstudio | null;       // null en "Sin estudios formales"
+    ciclo_actual: number | null;
+    fecha_inicio: string | null;        // 'YYYY-MM-DD'; null en "Sin estudios formales"
+    fecha_fin: string | null;
+}
+
+export interface IdiomaPerfil {
+    id: number;
+    idioma: ItemCatalogo;
+    nivel_escrito: NivelIdioma;
+    nivel_oral: NivelIdioma;
+}
+
+export interface ExperienciaPerfil {
+    id: number;
+    puesto: PuestoPerfil;
+    organizacion: OrganizacionPerfil;
+    pais: ItemCatalogo;
+    nivel: NivelPuestoPerfil;
+    fecha_inicio: string;
+    fecha_fin: string | null;
+    descripcion: string | null;
+}
+
+export interface CandidatoPerfil {
+    id: number;
+    usuario_id: number;
+    correo: string;
+    nombre: string;
+    apellidos: string;
+    dni: string;
+    fecha_nacimiento: string;
+    celular: string;
+    genero: Genero | null;
+    busca_primer_empleo: boolean;
+    estudios: EstudioPerfil[];
+    idiomas: IdiomaPerfil[];
+    experiencias: ExperienciaPerfil[];
+    habilidades: Habilidad[];
+    creado_en: string;
+}

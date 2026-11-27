@@ -1,0 +1,203 @@
+name: Frontend QA - Angular y Selenium
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+  push:
+    branches:
+      - develop
+      - main
+
+  workflow_dispatch:
+    inputs:
+      modo_selenium:
+        description: Modo de ejecucion Selenium
+        type: choice
+        required: true
+        default: full
+        options:
+          - full
+          - demo
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  frontend-qa:
+
+    name: Angular y Selenium
+
+    runs-on: ubuntu-24.04
+
+    timeout-minutes: 40
+
+    env:
+      QA_BACKEND_DIR: ${{ github.workspace }}/backend
+      QA_CI_REPORT_DIR: ${{ github.workspace }}/frontend/ci-reportes
+      SELENIUM_MODE: ${{ inputs.modo_selenium || 'full' }}
+
+    steps:
+
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          path: frontend
+          persist-credentials: false
+
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: stephany-toribio/recruitment-api-calidad-software
+          ref: b6d13b5e909222b3a10ad5c725f24a044288a6d3
+          token: ${{ secrets.QA_BACKEND_READ_TOKEN }}
+          path: backend
+          persist-credentials: false
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.1'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: frontend/qa/selenium/pom.xml
+
+      - name: Preparar trazabilidad
+        working-directory: frontend
+        run: |
+          mkdir -p "$QA_CI_REPORT_DIR"
+
+          git rev-parse HEAD \
+            > "$QA_CI_REPORT_DIR/frontend-commit.txt"
+
+          git -C "$QA_BACKEND_DIR" rev-parse HEAD \
+            > "$QA_CI_REPORT_DIR/backend-commit.txt"
+
+          node --version
+          npm --version
+          java -version
+          mvn -version
+          docker compose version
+
+      - name: Instalar dependencias frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Ejecutar regresion Node
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+
+          for suite in qa05 qa06 qa07 qa08 qa09 qa11 qa12
+          do
+            npm run "test:$suite"
+          done
+
+      - name: Compilar produccion
+        working-directory: frontend
+        run: npm run build
+
+      - name: Compilar entorno QA
+        working-directory: frontend
+        run: npm run build:qa
+
+      - name: Preparar backend y MySQL
+        working-directory: backend
+        run: bash qa/ci/bootstrap.sh
+
+      - name: Preparar Selenium Grid
+        working-directory: frontend
+        run: |
+          docker compose \
+            -f qa/selenium/compose.yaml \
+            up -d
+
+          curl --retry 30 \
+            --retry-all-errors \
+            --retry-delay 2 \
+            -fsS http://127.0.0.1:4202/ \
+            -o /tmp/qa28-index.html
+
+          cmp dist/creo-angular-qa/browser/index.html \
+            /tmp/qa28-index.html
+
+          for intento in $(seq 1 60)
+          do
+            if curl -fsS http://127.0.0.1:4444/status |
+              python3 -c 'import json,sys; assert json.load(sys.stdin)["value"]["ready"]'
+            then
+              echo "PASS: Selenium Grid disponible"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          exit 1
+
+      - name: Ejecutar Selenium
+        working-directory: frontend
+        run: qa/ci/run-selenium.sh "$SELENIUM_MODE"
+
+      - name: Verificar artefacto Angular
+        working-directory: frontend
+        run: |
+          test -f dist/creo-angular-qa/browser/index.html
+          test -f dist/creo-angular/browser/index.html
+
+          (
+            cd dist/creo-angular-qa/browser
+
+            find . -type f -print0 |
+              sort -z |
+              xargs -0 sha256sum
+          ) > "$QA_CI_REPORT_DIR/angular-qa-sha256.txt"
+
+      - name: Publicar resultados QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-qa-${{ github.run_id }}-${{ github.run_attempt }}
+          path: frontend/ci-reportes/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Publicar Angular QA
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: angular-qa-${{ github.run_id }}-${{ github.run_attempt }}
+          path: frontend/dist/creo-angular-qa/browser/
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Eliminar Selenium Grid
+        if: always()
+        working-directory: frontend
+        run: |
+          docker compose \
+            -f qa/selenium/compose.yaml \
+            down --remove-orphans
+
+      - name: Eliminar entorno backend
+        if: always()
+        working-directory: backend
+        run: |
+          if [[ -f .env ]]; then
+            docker compose down --volumes --remove-orphans
+            rm -f .env
+          fi

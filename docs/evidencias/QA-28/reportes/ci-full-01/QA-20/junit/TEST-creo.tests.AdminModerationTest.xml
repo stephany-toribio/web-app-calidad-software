@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="creo.tests.AdminModerationTest" time="13.464" tests="2" errors="0" skipped="0" failures="0"><testcase name="rechazarVacanteConMotivoObligatorio" classname="creo.tests.AdminModerationTest" time="7.514" /><testcase name="aprobarVacanteSinPublicacionAutomatica" classname="creo.tests.AdminModerationTest" time="5.911" /></testsuite>

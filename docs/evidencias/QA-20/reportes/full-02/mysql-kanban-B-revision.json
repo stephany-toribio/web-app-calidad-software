@@ -1,0 +1,35 @@
+{
+  "run_id": "7f343ff4-d43c-409f-8c04-ae0ed8cc2fb5",
+  "candidato": "B",
+  "postulacion_id": 191,
+  "vacante_id": 346,
+  "estado_mysql": "En Revisión",
+  "estado_api_candidato": {
+    "codigo": "en_revision",
+    "nombre": "En Revisión"
+  },
+  "historial_mysql": [
+    {
+      "id": 218,
+      "postulacion_id": 191,
+      "estado_postulacion_id": 2,
+      "motivo_rechazo_id": null,
+      "fecha_cambio": "2026-11-25 21:21:11",
+      "created_at": "2026-11-25 21:21:11",
+      "updated_at": "2026-11-25 21:21:11",
+      "estado_nombre": "En Revisión"
+    }
+  ],
+  "historial_api": [
+    {
+      "id": 218,
+      "estado": {
+        "codigo": "en_revision",
+        "nombre": "En Revisión"
+      },
+      "motivo_rechazo": null,
+      "fecha_cambio": "2026-11-25T21:21:11.000000Z"
+    }
+  ],
+  "resultado": "PASS"
+}

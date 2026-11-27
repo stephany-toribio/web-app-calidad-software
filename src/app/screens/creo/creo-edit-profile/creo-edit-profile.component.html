@@ -85,30 +85,56 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <app-creo-field label="Nombres" [value]="firstName" (valueChange)="firstName = $event"
-              placeholder="Ana María" [error]="errors['firstName']" [required]="true"></app-creo-field>
+              placeholder="Ej. Ana María" [error]="errors['firstName']" [required]="true"></app-creo-field>
             <app-creo-field label="Apellidos" [value]="lastName" (valueChange)="lastName = $event"
-              placeholder="Torres Quispe" [error]="errors['lastName']" [required]="true"></app-creo-field>
+              placeholder="Ej. Torres Quispe" [error]="errors['lastName']" [required]="true"></app-creo-field>
 
-            <app-creo-field label="Fecha de nacimiento" [value]="birthdate" (valueChange)="birthdate = $event"
-              placeholder="DD/MM/AAAA" [error]="errors['birthdate']" [required]="true"></app-creo-field>
+            <!-- Fecha de nacimiento -->
+            <div class="sm:col-span-1">
+              <label class="block text-sm font-medium mb-1.5 flex items-center gap-1" style="color: #111111;">
+                Fecha de nacimiento <span class="text-xs font-semibold" style="color: #F2B705;">*</span>
+              </label>
+              <div class="flex gap-2">
+                <select [(ngModel)]="birthDay" name="bday" class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                        [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
+                  <option value="">Día</option>
+                  <option *ngFor="let d of dias" [value]="d">{{ d }}</option>
+                </select>
+                <select [(ngModel)]="birthMonth" name="bmonth" class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                        [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
+                  <option value="">Mes</option>
+                  <option *ngFor="let m of mesesNac" [value]="m">{{ m }}</option>
+                </select>
+                <select [(ngModel)]="birthYear" name="byear" class="flex-1 h-11 px-3 rounded-xl border text-sm outline-none bg-white text-[#111111]"
+                        [ngStyle]="{'border-color': errors['birthdate'] ? '#E5140D' : '#E2E8F0'}">
+                  <option value="">Año</option>
+                  <option *ngFor="let a of anosNac" [value]="a">{{ a }}</option>
+                </select>
+              </div>
+              <p *ngIf="errors['birthdate']" class="text-xs text-red-500 mt-1">{{ errors['birthdate'] }}</p>
+            </div>
 
-            <app-creo-field label="DNI" [value]="dni" (valueChange)="setDni($event)" placeholder="12345678"
-              [error]="errors['dni']" [required]="true"></app-creo-field>
+            <!-- DNI -->
+            <div class="sm:col-span-1">
+              <app-creo-field label="DNI" [value]="dni" (valueChange)="setDni($event)" placeholder="12345678"
+                [error]="errors['dni']" [required]="true" [numbersOnly]="true" [maxLength]="8"></app-creo-field>
+            </div>
 
             <app-creo-field label="Correo electrónico" type="email" [value]="email" (valueChange)="email = $event"
               placeholder="ana.torres@ejemplo.com" [error]="errors['email']"
               hint="Usarás este correo para iniciar sesión" [required]="true"></app-creo-field>
 
-            <app-creo-field label="Teléfono" type="tel" [value]="phone" (valueChange)="phone = $event"
-              placeholder="+51 999 000 111" [error]="errors['phone']" [required]="true"></app-creo-field>
+            <app-creo-field label="Teléfono" type="tel" [value]="phone" (valueChange)="setPhone($event)"
+              placeholder="999000111" [error]="errors['phone']" [required]="true" [numbersOnly]="true" [maxLength]="9"></app-creo-field>
 
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">
+              <label class="block text-sm font-medium mb-1.5" style="color: #111111;">
                 Género <span class="text-[11px] font-normal" style="color: #94A3B8;">(opcional)</span>
               </label>
-              <select [value]="gender" (change)="gender = $any($event.target).value"
-                class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all cursor-pointer"
-                style="border-color: #E2E8F0; background-color: #FFFFFF; color: #111111;">
+              <select [value]="gender" (change)="gender = $any($event.target).value" name="gen"
+                class="w-full h-11 px-3 rounded-xl border text-sm outline-none transition-all cursor-pointer bg-white"
+                style="border-color: #E2E8F0;"
+                [style.color]="gender ? '#111111' : '#94A3B8'">
                 <option value="">Prefiero no indicar</option>
                 <option *ngFor="let g of genderOptions" [value]="g">{{ g }}</option>
               </select>
@@ -126,7 +152,7 @@
           <app-creo-alert *ngIf="hasErrors()" type="error"
             message="Completa todos los campos obligatorios"></app-creo-alert>
           <app-creo-btn type="submit" [fullWidth]="true">
-            Continuar a formación
+            Continuar a educación
             <svg icon-right width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M3 7h8M8 4l3 3-3 3" stroke="#111111" stroke-width="1.5" stroke-linecap="round"
                 stroke-linejoin="round" />
@@ -135,21 +161,25 @@
         </div>
       </app-creo-card>
 
-      <!-- Paso 1: Formación y salario -->
+      <!-- Paso 1: Educación y salario -->
       <app-creo-card *ngIf="step === 1" [padding]="false">
-        <div class="p-6 sm:p-8 flex flex-col gap-5">
+        <div class="p-6 sm:p-8 flex flex-col gap-6">
           <div class="flex items-center gap-2 pb-3 border-b" style="border-color: #F0ECD8;">
             <span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
               style="background-color: #F2B705; color: #111111;">2</span>
-            <span class="text-sm font-semibold" style="color: #111111;">Formación profesional y expectativa
-              salarial</span>
+            <span class="text-sm font-semibold" style="color: #111111;">Educación y expectativa salarial</span>
           </div>
 
-          <app-career-selector [careers]="careers" (add)="addCareer($event)"
-            (remove)="removeCareer($event)"></app-career-selector>
+          <app-study-list title="Carrera" [(studies)]="carreras" [birthYear]="birthYear" [birthMonth]="birthMonth"></app-study-list>
+          <div *ngIf="errors['carreras']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['carreras'] }}</div>
+          
+          <app-study-list title="Educación Superior" [(studies)]="educacionSuperior" [disabled]="carreras.length === 0" [birthYear]="birthYear" [birthMonth]="birthMonth"></app-study-list>
+          
+          <app-language-list [(languages)]="idiomas" [maxLanguages]="10"></app-language-list>
+          <div *ngIf="errors['idiomas']" class="text-xs text-red-500 mt-1 mb-4">{{ errors['idiomas'] }}</div>
 
           <!-- Salario -->
-          <div>
+          <div class="mt-2">
             <label class="block text-xs font-semibold mb-1.5" style="color: #374151;">
               Expectativa salarial mensual (soles)
               <span class="text-[11px] font-normal ml-1" style="color: #94A3B8;">(opcional)</span>
@@ -157,14 +187,15 @@
             <div class="relative">
               <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold select-none"
                 style="color: #9A948C;">S/</span>
-              <input type="number" min="0" [value]="salary" (input)="salary = $any($event.target).value"
+              <input type="number" min="0" [value]="salary" (input)="onSalaryChange($any($event.target).value)"
                 placeholder="9000"
                 class="w-full h-11 pl-9 pr-4 rounded-xl border text-sm outline-none transition-all"
-                style="color: #111111; background-color: #FFFFFF; border-color: #E2E8F0;" />
+                [style.border-color]="errors['salary'] ? '#E5140D' : '#E2E8F0'"
+                style="color: #111111; background-color: #FFFFFF;" />
             </div>
+            <p *ngIf="errors['salary']" class="text-xs text-red-500 mt-1 font-medium">{{ errors['salary'] }}</p>
             <p class="text-[11px] mt-1" style="color: #94A3B8;">
-              Monto exacto mensual en soles. Este dato es privado y solo lo usan los reclutadores para filtros
-              internos.
+              Monto exacto mensual en soles. Este dato es privado y solo lo usan los reclutadores para filtros internos.
             </p>
           </div>
         </div>
@@ -190,10 +221,6 @@
                 style="background-color: #F2B705; color: #111111;">3</span>
               <span class="text-sm font-semibold" style="color: #111111;">Actualizar habilidades</span>
             </div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full border"
-              style="background-color: #FEF3C7; border-color: #F2B705; color: #111111;">
-              {{ skills.length }} / {{ maxSkills }} seleccionadas
-            </span>
           </div>
 
           <p class="text-sm leading-relaxed" style="color: #64748B;">
@@ -201,9 +228,39 @@
             sin afectar tu selección actual.
           </p>
 
-          <app-creo-skill-picker [catalog]="catalog" [selected]="skills" (toggle)="toggleSkill($event)"
-            [error]="errors['skills']" [suggestedSections]="suggestedSections"
-            [maxSkills]="maxSkills"></app-creo-skill-picker>
+          <!-- Habilidades Técnicas -->
+          <div class="flex flex-col gap-2 mt-2">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold" style="color: #111111;">Habilidades Técnicas</h4>
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full border"
+                style="background-color: #FEF3C7; border-color: #F2B705; color: #111111;">
+                {{ skills.length }} / {{ maxSkills }} seleccionadas
+              </span>
+            </div>
+            <p class="text-xs text-slate-500">
+              {{ hasAreaFilter ? 'Mostrando solo habilidades técnicas acordes a tu área de estudio.' : 'Selecciona hasta 15 habilidades técnicas.' }}
+            </p>
+            <app-creo-skill-picker [catalog]="catalog" [selected]="skills" (toggle)="toggleSkill($event)"
+              [suggestedSections]="[]"
+              [maxSkills]="maxSkills"></app-creo-skill-picker>
+          </div>
+
+          <!-- Habilidades Blandas -->
+          <div class="flex flex-col gap-2 mt-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold" style="color: #111111;">Habilidades Blandas</h4>
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full border"
+                style="background-color: #FEF3C7; border-color: #F2B705; color: #111111;">
+                {{ softSkills.length }} / {{ maxSkills }} seleccionadas
+              </span>
+            </div>
+            <p class="text-xs text-slate-500">Selecciona hasta 15 habilidades interpersonales.</p>
+            <app-creo-skill-picker [catalog]="softCatalog" [selected]="softSkills" (toggle)="toggleSoftSkill($event)"
+              [suggestedSections]="[]"
+              [maxSkills]="maxSkills"></app-creo-skill-picker>
+          </div>
+
+          <div *ngIf="errors['skills']" class="text-xs text-red-500 mt-1">{{ errors['skills'] }}</div>
         </div>
 
         <div class="px-6 sm:px-8 py-5 border-t rounded-b-2xl flex flex-col gap-3"

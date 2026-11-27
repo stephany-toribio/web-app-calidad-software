@@ -1,0 +1,7 @@
+/target/
+/target-evidencias/
+*.log
+.env
+.env.*
+
+__pycache__/

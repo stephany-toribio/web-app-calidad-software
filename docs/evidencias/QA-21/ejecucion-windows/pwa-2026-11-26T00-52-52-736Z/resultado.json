@@ -1,0 +1,30 @@
+{
+  "started": "2026-11-26T00:52:52.744Z",
+  "scope": "PWA",
+  "launchPackage": "org.chromium.webapk.a7c47793e9fbea460_v2",
+  "expectedOrigin": "https://maybe-partial-penguin-gadgets.trycloudflare.com",
+  "steps": [
+    "NATIVE_APP",
+    "WEBVIEW_chrome",
+    "NATIVE_APP"
+  ],
+  "outcome": "PASS",
+  "appium": "4.0.1",
+  "chromeBootstrap": true,
+  "launchedByAppium": true,
+  "contexts": [
+    "NATIVE_APP",
+    "WEBVIEW_chrome"
+  ],
+  "web": {
+    "native": false,
+    "origin": "https://maybe-partial-penguin-gadgets.trycloudflare.com",
+    "path": "/creo/company-kanban",
+    "serviceWorker": "https://maybe-partial-penguin-gadgets.trycloudflare.com/ngsw-worker.js",
+    "standalone": true,
+    "title": "Creo - Portal de Empleos",
+    "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36"
+  },
+  "sessionClosed": true,
+  "finished": "2026-11-26T00:52:59.474Z"
+}

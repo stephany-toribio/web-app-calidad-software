@@ -1,0 +1,42 @@
+{
+  "started": "2026-11-26T00:51:17.508Z",
+  "scope": "APK",
+  "steps": [
+    "NATIVE_APP",
+    "WEBVIEW_edu.upch.creo.qa",
+    "NATIVE_APP"
+  ],
+  "controlled": false,
+  "outcome": "PASS",
+  "appium": "4.0.1",
+  "android": "16",
+  "apiLevel": "36",
+  "contexts": [
+    "NATIVE_APP",
+    "WEBVIEW_edu.upch.creo.qa"
+  ],
+  "web": {
+    "native": true,
+    "origin": "https://localhost",
+    "path": "/creo/landing",
+    "title": "Creo - Portal de Empleos",
+    "userAgent": "Mozilla/5.0 (Linux; Android 16; SM-X900 Build/BP2A.250605.031.A3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/157.0.8103.50 Safari/537.36"
+  },
+  "api": {
+    "url": "https://maybe-partial-penguin-gadgets.trycloudflare.com/api/v1",
+    "hostPreflight": {
+      "status": 204,
+      "origin": "https://localhost",
+      "methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+      "headers": "accept, authorization, content-type, x-requested-with, precognition, precognition-validate-only"
+    },
+    "fromWebview": {
+      "json": true,
+      "origin": "https://localhost",
+      "status": 401
+    },
+    "outcome": "PASS"
+  },
+  "sessionClosed": true,
+  "finished": "2026-11-26T00:51:42.171Z"
+}

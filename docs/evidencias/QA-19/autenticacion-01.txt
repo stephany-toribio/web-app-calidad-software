@@ -1,0 +1,15 @@
+===== PREFLIGHT QA-19 =====
+PASS: Preflight QA-19
+Run ID: 7a14bbec-7cec-4798-80f4-ac7a9306ca3a
+PASS: Candidatos sinteticos preparados
+===== SELENIUM QA-19 =====
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.75 s -- in creo.tests.CandidateAuthTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+Exit code Maven: 0
+PASS: Ejecucion Selenium QA-19
+===== LIMPIEZA QA-19 =====
+PASS: Fixtures eliminados: 2
+PASS: Fixtures restantes: 0
+PASS: Limpieza QA-19
+Reportes privados: /tmp/tmp.a9uTRLp6hn
